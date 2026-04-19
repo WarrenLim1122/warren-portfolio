@@ -3,8 +3,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, ChevronRight, Users, BarChart2, Briefcase } from 'lucide-react';
 
-// --- ANIMATION VARIANTS ---
-const revealVariants = {
+// --- SYSTEM SPECIFICATIONS (Bypassing strict type checks for Vercel) ---
+const revealVariants: any = {
   hidden: { opacity: 0, y: 24 },
   visible: { 
     opacity: 1, 
@@ -13,7 +13,7 @@ const revealVariants = {
   }
 };
 
-const staggerContainer = {
+const staggerContainer: any = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -79,7 +79,7 @@ export default function WarrenFinalLaunch() {
             initial={{ opacity: 0, scale: 0.98, y: 20 }}
             whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={{ once: false }}
-            transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: 1.2, ease: [0.25, 0.1, 0.25, 1] as any }}
             className="w-64 h-80 md:w-[380px] md:h-[480px] flex-shrink-0 overflow-hidden rounded-[2.5rem] border border-gray-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] bg-white"
           >
             <img src="/headshot.jpg" alt="Warren, Lim Zhan Feng" className="w-full h-full object-cover" />
@@ -124,7 +124,7 @@ export default function WarrenFinalLaunch() {
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.2 }} variants={revealVariants} className="max-w-4xl mx-auto">
           <div className="flex items-center gap-4 mb-20">
             <Briefcase size={28} className="text-[#C4964D]" />
-            <h2 className="text-4xl font-bold text-[#0F3057] tracking-tight">Experience.</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-[#0F3057] tracking-tight">Experience.</h2>
           </div>
           
           <div className="relative pl-12 border-l-2 border-gray-100 space-y-32">
@@ -135,7 +135,7 @@ export default function WarrenFinalLaunch() {
                  date: "MAY — AUG 2025",
                  bullets: [
                    <>Assisted in automating fund factsheets using <span className="font-bold text-gray-900">Power Automate</span>, contributing to an <span className="font-bold text-gray-900">89% reduction</span> in manual processing cycles.</>,
-                   <>Supported development of <span className="font-bold text-gray-900">Excel VBA tools</span> for cross-fund holdings analysis to identify overlapping equity exposures.</>
+                   <>Supported the development of <span className="font-bold text-gray-900">Excel VBA tools</span> for cross-fund holdings analysis to identify overlapping equity exposures.</>
                  ]
                },
                {
@@ -204,7 +204,7 @@ export default function WarrenFinalLaunch() {
 
           <div className="grid md:grid-cols-2 gap-12">
             {keyProjects.map((proj) => (
-              <motion.div key={proj.title} onClick={() => setActiveDeck(proj)} whileHover={{ y: -10, scale: 1.01 }} className="group relative p-12 rounded-[3.5rem] bg-[#FBFBFD] border border-gray-100 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] transition-all cursor-pointer flex flex-col h-[520px]">
+              <motion.div key={proj.title} onClick={() => setActiveDeck(proj)} whileHover={{ y: -10, scale: 1.01 }} transition={SPRING_UI} className="group relative p-12 rounded-[3.5rem] bg-[#FBFBFD] border border-gray-50 hover:border-gray-200 hover:bg-white hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] transition-all cursor-pointer flex flex-col h-[520px]">
                 <div className="flex justify-between items-start mb-12">
                   <div className="w-20 h-20 bg-white rounded-2xl shadow-sm border border-gray-50 overflow-hidden p-4 group-hover:scale-105 transition-transform duration-500">
                     <img src={proj.thumbnail} alt="Project Icon" className="w-full h-full object-contain" />
@@ -231,7 +231,7 @@ export default function WarrenFinalLaunch() {
             <p className="text-gray-400 text-xl font-light italic">NTU First-Class Honours | GPA 4.61/5.00</p>
             <motion.a 
               href="/resume.pdf" download="Warren_Lim_Resume.pdf"
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05 }} transition={SPRING_UI}
               className="inline-flex items-center gap-4 px-12 py-5 bg-[#0F3057] text-white rounded-full font-bold shadow-2xl active:scale-95"
             >
               <Download size={20} /> Obtain Official CV
@@ -263,7 +263,7 @@ export default function WarrenFinalLaunch() {
         )}
       </AnimatePresence>
 
-      <footer className="py-24 text-center text-xs text-gray-400 uppercase tracking-[0.5em] font-medium bg-white border-t border-gray-50">
+      <footer className="py-24 text-center text-xs text-gray-300 uppercase tracking-[0.5em] font-medium bg-white border-t border-gray-50">
         © 2026 Warren, Lim Zhan Feng
       </footer>
     </main>
