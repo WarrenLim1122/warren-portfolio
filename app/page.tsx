@@ -3,7 +3,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Download, ChevronRight, Users, BarChart2, Briefcase } from 'lucide-react';
 
-// --- SYSTEM SPECIFICATIONS (Bypassing strict type checks for Vercel) ---
+// --- SYSTEM SPECIFICATIONS (The missing pieces that caused the error) ---
+const MOTION_CURVE = [0.25, 0.1, 0.25, 1]; 
+const SPRING_UI: any = { type: "spring", stiffness: 120, damping: 20 };
+
 const revealVariants: any = {
   hidden: { opacity: 0, y: 24 },
   visible: { 
@@ -99,21 +102,21 @@ export default function WarrenFinalLaunch() {
             <motion.div variants={revealVariants} className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 pt-10 border-t border-gray-100">
                <a href="mailto:warrenlimzf@gmail.com" className="flex items-center justify-center md:justify-start gap-4 text-gray-600 group">
                   <div className="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-xl p-2 shadow-sm"><img src="/email-icon.png" className="w-full h-full object-contain" /></div>
-                  <span className="text-sm font-medium hover:underline">warrenlimzf@gmail.com</span>
+                  <span className="text-sm font-medium hover:underline text-gray-900">warrenlimzf@gmail.com</span>
                </a>
                <a href="https://www.linkedin.com/in/warrenlimzf/" target="_blank" className="flex items-center justify-center md:justify-start gap-4 text-gray-600 group">
                   <div className="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-xl p-2 shadow-sm"><img src="/linkedin-icon.png" className="w-full h-full object-contain" /></div>
-                  <span className="text-sm font-medium hover:underline">linkedin.com/in/warrenlimzf</span>
+                  <span className="text-sm font-medium hover:underline text-gray-900">linkedin.com/in/warrenlimzf</span>
                </a>
                <div className="flex items-center justify-center md:justify-start gap-4 text-gray-600 font-medium">
                   <div className="w-10 h-10 flex items-center justify-center bg-gray-50 rounded-xl p-2 shadow-sm"><img src="/phone-icon.png" className="w-full h-full object-contain" /></div>
-                  <span className="text-sm">+65 9454 0155</span>
+                  <span className="text-sm text-gray-900">+65 9454 0155</span>
                </div>
             </motion.div>
 
             <motion.div variants={revealVariants} className="flex gap-4 pt-4 justify-center md:justify-start">
-              <motion.a href="#experience" whileHover={{ scale: 1.03 }} className="px-10 py-4 bg-[#0F3057] text-white rounded-full text-sm font-bold shadow-xl">Experience</motion.a>
-              <motion.a href="/resume.pdf" download="Warren_Lim_Resume.pdf" whileHover={{ scale: 1.03 }} className="px-10 py-4 border border-gray-200 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-white"><Download size={16} /> Download CV</motion.a>
+              <motion.a href="#experience" whileHover={{ scale: 1.03 }} transition={SPRING_UI} className="px-10 py-4 bg-[#0F3057] text-white rounded-full text-sm font-bold shadow-xl">Experience</motion.a>
+              <motion.a href="/resume.pdf" download="Warren_Lim_Resume.pdf" whileHover={{ scale: 1.03 }} transition={SPRING_UI} className="px-10 py-4 border border-gray-200 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-white"><Download size={16} /> Download CV</motion.a>
             </motion.div>
           </motion.div>
         </div>
@@ -122,7 +125,7 @@ export default function WarrenFinalLaunch() {
       {/* 3. EXPERIENCE */}
       <section id="experience" className="py-40 px-6 bg-white">
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: false, amount: 0.2 }} variants={revealVariants} className="max-w-4xl mx-auto">
-          <div className="flex items-center gap-4 mb-20">
+          <div className="flex items-center gap-4 mb-20 text-center md:text-left">
             <Briefcase size={28} className="text-[#C4964D]" />
             <h2 className="text-4xl md:text-5xl font-bold text-[#0F3057] tracking-tight">Experience.</h2>
           </div>
@@ -204,7 +207,13 @@ export default function WarrenFinalLaunch() {
 
           <div className="grid md:grid-cols-2 gap-12">
             {keyProjects.map((proj) => (
-              <motion.div key={proj.title} onClick={() => setActiveDeck(proj)} whileHover={{ y: -10, scale: 1.01 }} transition={SPRING_UI} className="group relative p-12 rounded-[3.5rem] bg-[#FBFBFD] border border-gray-50 hover:border-gray-200 hover:bg-white hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] transition-all cursor-pointer flex flex-col h-[520px]">
+              <motion.div 
+                key={proj.title} 
+                onClick={() => setActiveDeck(proj)} 
+                whileHover={{ y: -10, scale: 1.01 }} 
+                transition={SPRING_UI} 
+                className="group relative p-12 rounded-[3.5rem] bg-[#FBFBFD] border border-gray-50 hover:border-gray-200 hover:bg-white hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] transition-all cursor-pointer flex flex-col h-[520px]"
+              >
                 <div className="flex justify-between items-start mb-12">
                   <div className="w-20 h-20 bg-white rounded-2xl shadow-sm border border-gray-50 overflow-hidden p-4 group-hover:scale-105 transition-transform duration-500">
                     <img src={proj.thumbnail} alt="Project Icon" className="w-full h-full object-contain" />
@@ -228,7 +237,7 @@ export default function WarrenFinalLaunch() {
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: false }} variants={revealVariants} className="max-w-6xl mx-auto flex flex-col items-center">
           <div className="mb-20 space-y-8">
             <h2 className="text-5xl font-bold text-[#0F3057] tracking-tight">Professional Profile.</h2>
-            <p className="text-gray-400 text-xl font-light italic">NTU First-Class Honours | GPA 4.61/5.00</p>
+            <p className="text-gray-400 text-xl font-light italic text-gray-900">NTU First-Class Honours | GPA 4.61/5.00</p>
             <motion.a 
               href="/resume.pdf" download="Warren_Lim_Resume.pdf"
               whileHover={{ scale: 1.05 }} transition={SPRING_UI}
@@ -253,7 +262,7 @@ export default function WarrenFinalLaunch() {
               <div className="p-8 border-b flex justify-between items-center bg-white">
                 <div>
                   <h3 className="font-bold text-xl text-[#0F3057]">{activeDeck.title}</h3>
-                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">{activeDeck.category}</p>
+                  <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1 text-[#C4964D]">{activeDeck.category}</p>
                 </div>
                 <button onClick={() => setActiveDeck(null)} className="px-8 py-3 bg-gray-50 hover:bg-gray-100 rounded-full font-bold text-xs uppercase tracking-widest transition-colors">Close</button>
               </div>
@@ -263,7 +272,7 @@ export default function WarrenFinalLaunch() {
         )}
       </AnimatePresence>
 
-      <footer className="py-24 text-center text-xs text-gray-300 uppercase tracking-[0.5em] font-medium bg-white border-t border-gray-50">
+      <footer className="py-24 text-center text-xs text-gray-400 uppercase tracking-[0.5em] font-medium bg-white border-t border-gray-50">
         © 2026 Warren, Lim Zhan Feng
       </footer>
     </main>
