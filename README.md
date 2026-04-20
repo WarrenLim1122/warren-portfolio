@@ -115,5 +115,17 @@ The app is built for maximum maintainability. **90% of updates** should be done 
 - **Inline Navigation Engine**: Replaced the modal-based expansion with an "Inline Slide" mechanism. Users navigate within the card itself, maintaining context and engagement on the main page.
 - **Data Enrichment**: Integrated high-fidelity placeholders for Coursera (Yale, IBM) and additional Bloomberg certifications to populate the requested 4-layer and BAC/Analytical requirements.
 
+### [2026-04-20] - Certificate Image Fix & Asset Recovery
+- **Source Recovery**: Retrieved all 25 original certificate PDFs directly from OneDrive (`2.0 - Career/2.3 - Certificates`) to replace previously corrupted files.
+- **JPG Generation**: Converted each PDF to a 1200px-wide JPEG thumbnail using `qlmanage` + `sips` (macOS native tools) — no external dependencies required.
+- **File Cleanup**: Removed 52 duplicate certificate files (long-named originals) from the project root; `public/` is now the single source of truth for all static assets.
+
+## 💡 Planned Features (Backlog)
+
+### Golf / Personal Interests Video Section
+- **Idea**: Add a "Beyond Work" or personal interests section showcasing golf videos.
+- **Recommended approach**: Host videos on YouTube (unlisted) and embed via `<iframe>` — avoids GitHub's 100MB file limit and ensures fast loading.
+- **To implement**: Share YouTube video links and a section title/description; the section will be built to match the existing portfolio aesthetic.
+
 ---
 *Created by Warren Lim | Premium Project State: Synced & Verified.*
