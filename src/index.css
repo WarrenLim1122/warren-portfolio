@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Cormorant Garamond", serif;
+  
+  --color-navy: #0F3057;
+  --color-gold: #C4964D;
+  --color-paper: #F9FAFB;
+  --color-ink: #1A1A1A;
+}
+
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+}
+
+h1, h2, h3, .serif {
+  @apply font-sans; /* Theme prompt shows bold sans for names */
+}
+
+.section-padding {
+  @apply py-16 px-6 md:px-12 lg:px-24;
+}
+
+.label-caps {
+  @apply text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold;
+}
+
+.card-minimal {
+  @apply bg-white border border-gray-200 shadow-sm transition-all duration-300;
+}
+
+.experience-card {
+  @apply bg-white p-6 border-l-4 border-navy shadow-sm hover:translate-x-1 transition-transform cursor-default;
+}
+
+.experience-card-muted {
+  @apply bg-white p-6 border-l-4 border-navy/20 shadow-sm opacity-80 hover:opacity-100 transition-opacity;
+}
+
+.btn-primary {
+  @apply bg-navy text-white px-6 py-3 rounded-sm text-xs font-semibold uppercase tracking-wider hover:bg-[#1A4271] transition-colors;
+}
+
+.btn-secondary {
+  @apply border border-navy text-navy px-6 py-3 rounded-sm text-xs font-semibold uppercase tracking-wider hover:bg-navy/5 transition-colors;
+}
