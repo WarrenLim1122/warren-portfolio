@@ -120,6 +120,13 @@ The app is built for maximum maintainability. **90% of updates** should be done 
 - **JPG Generation**: Converted each PDF to a 1200px-wide JPEG thumbnail using `qlmanage` + `sips` (macOS native tools) — no external dependencies required.
 - **File Cleanup**: Removed 52 duplicate certificate files (long-named originals) from the project root; `public/` is now the single source of truth for all static assets.
 
+### [2026-04-20] - Landing Page Redesign
+- **Full opening screen rewrite**: Replaced generic "WELCOME" hero with a premium name-led design. "Warren" renders as a massive gradient headline; "Lim Zhan Feng" follows in a thin gold italic serif beneath it.
+- **Role identity tags**: Added pill tags (Banking & Finance · NTU, FMVA® Certified, Singapore) to immediately establish credentials on first impression.
+- **Canvas particle system**: Replaced the DOM-based grid particle system with a smooth canvas-drawn field — particles react to mouse proximity with a repel effect and wave motion, zero layout thrash.
+- **CTA redesign**: Replaced the boxy "INTERESTED" button with a rounded pill "Enter →" button with a gold hover glow and arrow slide animation.
+- **Vignette + accent lines**: Added radial gradient vignette and two thin horizontal gold accent lines that draw in on load for a cinematic feel.
+
 ### [2026-04-20] - UX Polish & Animation Overhaul
 - **Page title**: Changed from "My Google AI Studio App" to "Warren's Portfolio" in `index.html`.
 - **Landing description**: Updated hero gate text from "Are you interested in knowing me more?" to a friendlier, more energetic line — "A sneak peek into my career, credentials & a little bit of life — click to step inside."
