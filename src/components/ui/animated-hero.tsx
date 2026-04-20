@@ -21,7 +21,7 @@ interface ParticleHeroProps {
 export const ParticleHero: React.FC<ParticleHeroProps> = ({
   title = "WELCOME",
   subtitle = "Warren Lim Zhan Feng",
-  description = "Are you interested in knowing me more?",
+  description = "A sneak peek into my career, credentials & a little bit of life — click to step inside.",
   primaryButton,
   secondaryButton,
   interactiveHint = "Hover to Interact",
