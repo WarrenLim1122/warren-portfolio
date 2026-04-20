@@ -8,95 +8,166 @@ interface ParticleHeroProps {
 }
 
 export const ParticleHero: React.FC<ParticleHeroProps> = ({ primaryButton, className = "" }) => {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: 0, y: 0 });
-  const rafRef = useRef<number>();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const particlesRef = useRef<HTMLDivElement[]>([]);
+  const animationFrameRef = useRef<number>();
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const [cursor, setCursor] = useState({ x: 0, y: 0 });
+  const [staticCursor, setStaticCursor] = useState({ x: 0, y: 0 });
+  const [isAutoMode, setIsAutoMode] = useState(true);
+  const [isStaticAnimation, setIsStaticAnimation] = useState(false);
+  const startTimeRef = useRef(Date.now());
+  const lastMouseMoveRef = useRef(Date.now());
 
+  const COLS = 20;
+  const ROWS = 13;
+  const totalParticles = COLS * ROWS;
+
+  // Build particle grid
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d')!;
+    if (!containerRef.current) return;
+    const container = containerRef.current;
+    container.innerHTML = '';
+    particlesRef.current = [];
 
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener('resize', resize);
+    for (let i = 0; i < totalParticles; i++) {
+      const row = Math.floor(i / COLS);
+      const col = i % COLS;
+      const centerRow = Math.floor(ROWS / 2);
+      const centerCol = Math.floor(COLS / 2);
+      const distFromCenter = Math.sqrt(
+        Math.pow(row - centerRow, 2) + Math.pow(col - centerCol, 2)
+      );
 
-    const COLS = 18, ROWS = 12;
-    type Particle = { x: number; y: number; baseX: number; baseY: number; size: number; alpha: number; speed: number };
-    const particles: Particle[] = [];
+      const scale = Math.max(0.08, 1.1 - distFromCenter * 0.09);
+      const opacity = Math.max(0.03, 0.55 - distFromCenter * 0.07);
+      // Gold hue: hsl(38, 65%, lightness%)
+      const lightness = Math.max(20, 68 - distFromCenter * 5);
+      const glowSize = Math.max(0.5, 5 - distFromCenter * 0.4);
 
-    const init = () => {
-      particles.length = 0;
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          const x = (c / (COLS - 1)) * canvas.width;
-          const y = (r / (ROWS - 1)) * canvas.height;
-          particles.push({
-            x, y, baseX: x, baseY: y,
-            size: Math.random() * 1.8 + 0.4,
-            alpha: Math.random() * 0.4 + 0.05,
-            speed: Math.random() * 0.3 + 0.1,
-          });
+      const particle = document.createElement('div');
+      particle.style.cssText = `
+        position: absolute;
+        width: 0.38rem;
+        height: 0.38rem;
+        border-radius: 9999px;
+        will-change: transform;
+        left: ${col * 2.1}rem;
+        top: ${row * 2.1}rem;
+        transform: scale(${scale});
+        opacity: ${opacity};
+        background: hsl(38, 65%, ${lightness}%);
+        box-shadow: 0 0 ${glowSize * 0.25}rem 0 hsl(38, 65%, 58%);
+        mix-blend-mode: screen;
+        z-index: ${Math.round(totalParticles - distFromCenter * 5)};
+        transition: transform 0.05s linear;
+      `;
+      container.appendChild(particle);
+      particlesRef.current.push(particle);
+    }
+  }, [totalParticles]);
+
+  // Drive cursor position: auto-mode or static-hover animation
+  useEffect(() => {
+    const animate = () => {
+      const currentTime = (Date.now() - startTimeRef.current) * 0.001;
+
+      if (isAutoMode) {
+        const x = Math.sin(currentTime * 0.3) * 180 + Math.sin(currentTime * 0.17) * 90;
+        const y = Math.cos(currentTime * 0.2) * 130 + Math.cos(currentTime * 0.23) * 70;
+        setCursor({ x, y });
+      } else if (isStaticAnimation) {
+        const timeSinceLastMove = Date.now() - lastMouseMoveRef.current;
+        if (timeSinceLastMove > 200) {
+          const strength = Math.min((timeSinceLastMove - 200) / 1000, 1);
+          const subtleX = Math.sin(currentTime * 1.5) * 18 * strength;
+          const subtleY = Math.cos(currentTime * 1.2) * 14 * strength;
+          setCursor({ x: staticCursor.x + subtleX, y: staticCursor.y + subtleY });
         }
       }
+
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
-    init();
 
-    let t = 0;
-    const draw = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      t += 0.006;
+    animate();
+    return () => { if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current); };
+  }, [isAutoMode, isStaticAnimation, staticCursor]);
 
-      particles.forEach((p, i) => {
-        const wave = Math.sin(t + i * 0.18) * 12 + Math.cos(t * 0.7 + i * 0.09) * 8;
-        const dx = mouseRef.current.x - p.baseX;
-        const dy = mouseRef.current.y - p.baseY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const repel = Math.max(0, 1 - dist / 220);
-        const targetX = p.baseX - dx * repel * 0.25 + Math.sin(t * 0.5 + i * 0.3) * wave * 0.3;
-        const targetY = p.baseY - dy * repel * 0.25 + Math.cos(t * 0.4 + i * 0.25) * wave * 0.3;
+  // Apply translate to each particle based on cursor
+  useEffect(() => {
+    particlesRef.current.forEach((particle: HTMLDivElement, i: number) => {
+      const row = Math.floor(i / COLS);
+      const col = i % COLS;
+      const centerRow = Math.floor(ROWS / 2);
+      const centerCol = Math.floor(COLS / 2);
+      const distFromCenter = Math.sqrt(
+        Math.pow(row - centerRow, 2) + Math.pow(col - centerCol, 2)
+      );
 
-        p.x += (targetX - p.x) * p.speed;
-        p.y += (targetY - p.y) * p.speed;
+      const delay = distFromCenter * 7;
+      const originalScale = Math.max(0.08, 1.1 - distFromCenter * 0.09);
+      const dampening = Math.max(0.25, 1 - distFromCenter * 0.07);
 
-        const proximity = Math.max(0, 1 - dist / 180);
-        const finalAlpha = p.alpha + proximity * 0.5;
+      setTimeout(() => {
+        const moveX = cursor.x * dampening;
+        const moveY = cursor.y * dampening;
+        particle.style.transform = `translate(${moveX}px, ${moveY}px) scale(${originalScale})`;
+        particle.style.transition = `transform ${110 + distFromCenter * 18}ms cubic-bezier(0.25, 0.46, 0.45, 0.94)`;
+      }, delay);
+    });
+  }, [cursor]);
 
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size + proximity * 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(196, 150, 77, ${finalAlpha})`;
-        ctx.fill();
-      });
+  const handlePointerMove = (e: React.MouseEvent | React.TouchEvent) => {
+    const event = 'touches' in e ? e.touches[0] : e;
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
 
-      rafRef.current = requestAnimationFrame(draw);
+    const newCursor = {
+      x: (event.clientX - centerX) * 0.75,
+      y: (event.clientY - centerY) * 0.75,
     };
-    draw();
 
-    const onMove = (e: MouseEvent | TouchEvent) => {
-      const ev = 'touches' in e ? e.touches[0] : e;
-      mouseRef.current = { x: ev.clientX, y: ev.clientY };
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('touchmove', onMove as any);
+    setCursor(newCursor);
+    setStaticCursor(newCursor);
+    setIsAutoMode(false);
+    setIsStaticAnimation(false);
+    lastMouseMoveRef.current = Date.now();
 
-    return () => {
-      cancelAnimationFrame(rafRef.current!);
-      window.removeEventListener('resize', resize);
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('touchmove', onMove as any);
-    };
-  }, []);
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => setIsStaticAnimation(true), 500);
 
-  const stagger = (i: number) => ({ initial: { opacity: 0, y: 24 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.9, delay: 0.3 + i * 0.15, ease: [0.22, 1, 0.36, 1] } });
+    setTimeout(() => {
+      if (Date.now() - lastMouseMoveRef.current >= 4000) {
+        setIsAutoMode(true);
+        setIsStaticAnimation(false);
+        startTimeRef.current = Date.now();
+      }
+    }, 4000);
+  };
+
+  const stagger = (i: number) => ({
+    initial: { opacity: 0, y: 24 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.9, delay: 0.3 + i * 0.15, ease: [0.22, 1, 0.36, 1] as const },
+  });
 
   return (
-    <section className={`relative w-full min-h-screen bg-[#0a1628] overflow-hidden flex items-center justify-center ${className}`}>
-
-      {/* Particle canvas */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" />
+    <section
+      className={`relative w-full min-h-screen bg-[#0a1628] overflow-hidden flex items-center justify-center ${className}`}
+      onMouseMove={handlePointerMove}
+      onTouchMove={handlePointerMove}
+    >
+      {/* DOM particle grid */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div
+          ref={containerRef}
+          className="relative"
+          style={{
+            width: `${COLS * 2.1}rem`,
+            height: `${ROWS * 2.1}rem`,
+          }}
+        />
+      </div>
 
       {/* Radial vignette */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,transparent_30%,#0a1628_100%)] pointer-events-none" />
@@ -168,7 +239,7 @@ export const ParticleHero: React.FC<ParticleHeroProps> = ({ primaryButton, class
         {/* Scroll hint */}
         <motion.div {...stagger(5)} className="mt-12 flex items-center justify-center gap-3 text-white/20 text-[10px] uppercase tracking-[0.4em]">
           <div className="w-8 h-px bg-white/10" />
-          <span>Hover to interact</span>
+          <span>Move to interact</span>
           <div className="w-8 h-px bg-white/10" />
         </motion.div>
       </div>

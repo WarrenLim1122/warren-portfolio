@@ -7,6 +7,7 @@ import { useRef } from "react";
 import { motion } from "motion/react";
 import { Download, Sparkles } from "lucide-react";
 import { PERSONAL_INFO } from "../constants";
+import { ContactConnect } from "./ui/connect-with-us";
 
 export default function Hero() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -68,48 +69,9 @@ export default function Hero() {
             </motion.div>
           </div>
 
-          {/* Contact Details in Rectangular One-Row Format */}
-          <motion.div id="contacts" variants={slideFromLeft} className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-10 border-t border-gray-100 w-full">
-             <a 
-               href={`mailto:${PERSONAL_INFO.email}`} 
-               className="group flex flex-row items-center gap-5 p-6 bg-[#FBFBFD] border border-gray-100 rounded-3xl hover:bg-[#D93025] hover:text-white transition-all duration-300 w-full shadow-sm hover:shadow-md"
-             >
-                <div className="w-14 h-14 flex-shrink-0 bg-white shadow-sm rounded-2xl flex items-center justify-center p-3.5 group-hover:scale-110 transition-transform duration-300">
-                  <img src="/email-icon.png" className="w-full h-full object-contain"  />
-                </div>
-                <div className="space-y-1 min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white/60">Email Address</p>
-                  <p className="text-sm sm:text-base font-bold tracking-tight truncate w-full">{PERSONAL_INFO.email}</p>
-                </div>
-             </a>
-
-             <a 
-               href={`https://${PERSONAL_INFO.linkedin}`} 
-               target="_blank" 
-               rel="noreferrer"
-               className="group flex flex-row items-center gap-5 p-6 bg-[#FBFBFD] border border-gray-100 rounded-3xl hover:bg-[#0077B5] hover:text-white transition-all duration-300 w-full shadow-sm hover:shadow-md"
-             >
-                <div className="w-14 h-14 flex-shrink-0 bg-white shadow-sm rounded-2xl flex items-center justify-center p-3.5 group-hover:scale-110 transition-transform duration-300">
-                  <img src="/linkedin-icon.png" className="w-full h-full object-contain"  />
-                </div>
-                <div className="space-y-1 min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white/60">LinkedIn Profile</p>
-                  <p className="text-[13px] sm:text-sm md:text-[15px] font-bold tracking-tighter truncate w-full">https://www.linkedin.com/in/warrenlimzf/</p>
-                </div>
-             </a>
-
-             <a 
-               href={`tel:${PERSONAL_INFO.phone}`} 
-               className="group flex flex-row items-center gap-5 p-6 bg-[#FBFBFD] border border-gray-100 rounded-3xl hover:bg-[#22C55E] hover:text-white transition-all duration-300 w-full shadow-sm hover:shadow-md"
-             >
-                <div className="w-14 h-14 flex-shrink-0 bg-white shadow-sm rounded-2xl flex items-center justify-center p-3.5 group-hover:scale-110 transition-transform duration-300">
-                  <img src="/phone-icon.png" className="w-full h-full object-contain"  />
-                </div>
-                <div className="space-y-1 min-w-0">
-                   <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white/60">Mobile Contact</p>
-                   <p className="text-sm sm:text-base font-bold tracking-tight truncate w-full">{PERSONAL_INFO.phone}</p>
-                </div>
-             </a>
+          {/* Contact Connect */}
+          <motion.div id="contacts" variants={slideFromLeft} className="w-full">
+            <ContactConnect />
           </motion.div>
 
           {/* Action Buttons */}
