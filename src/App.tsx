@@ -14,6 +14,7 @@ import Projects from "./components/Projects";
 import ResumeViewer from "./components/ResumeViewer";
 import { PERSONAL_INFO } from "./constants";
 import { ParticleHero } from "./components/ui/animated-hero";
+import { CursorParticles } from "./components/ui/cursor-particles";
 
 export default function App() {
   const { scrollY } = useScroll();
@@ -47,6 +48,8 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {isUnlocked && <CursorParticles />}
 
       <main className={`relative bg-[#FBFBFD] text-[#1D1D1F] font-sans selection:bg-gold/20 overflow-x-hidden scroll-smooth ${!isUnlocked ? "h-screen overflow-hidden" : "min-h-screen"}`}>
       
