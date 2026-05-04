@@ -12,6 +12,7 @@ export default defineConfig(({mode}) => {
     },
     resolve: {
       alias: {
+        '@journal': path.resolve(__dirname, './src/journal'),
         '@': path.resolve(__dirname, '.'),
       },
     },

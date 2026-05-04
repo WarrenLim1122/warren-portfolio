@@ -13,7 +13,7 @@ const entryVariants = {
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { type: "spring", stiffness: 80, damping: 20, delay: i * 0.15 }
+    transition: { type: "spring" as const, stiffness: 80, damping: 20, delay: i * 0.15 }
   })
 };
 
@@ -22,7 +22,7 @@ const bulletVariants = {
   visible: (i: number) => ({
     opacity: 1,
     x: 0,
-    transition: { type: "spring", stiffness: 100, damping: 18, delay: 0.2 + i * 0.08 }
+    transition: { type: "spring" as const, stiffness: 100, damping: 18, delay: 0.2 + i * 0.08 }
   })
 };
 

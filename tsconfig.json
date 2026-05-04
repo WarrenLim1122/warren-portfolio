@@ -18,6 +18,9 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@journal/*": [
+        "./src/journal/*"
       ]
     },
     "allowImportingTsExtensions": true,
