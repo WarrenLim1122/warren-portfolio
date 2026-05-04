@@ -1,5 +1,5 @@
-import React from "react";
-import { Routes, Route, Navigate, Link } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -20,9 +20,19 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function JournalApp() {
+  // Mirror the source repo's <html class="dark"> approach.
+  // Adding dark to <html> ensures portal-rendered elements (dropdowns, dialogs,
+  // selects, popovers) inherit dark CSS variables even though they render into
+  // document.body, outside any scoped .dark div.
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+    return () => {
+      document.documentElement.classList.remove("dark");
+    };
+  }, []);
+
   return (
     <AuthProvider>
-      {/* dark class activates the journal's dark theme CSS variables */}
       <div className="dark">
         <Routes>
           <Route path="login" element={<Login />} />
