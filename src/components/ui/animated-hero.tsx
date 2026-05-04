@@ -10,8 +10,8 @@ interface ParticleHeroProps {
 export const ParticleHero: React.FC<ParticleHeroProps> = ({ primaryButton, className = "" }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const particlesRef = useRef<HTMLDivElement[]>([]);
-  const animationFrameRef = useRef<number>();
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const animationFrameRef = useRef<number | undefined>(undefined);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [staticCursor, setStaticCursor] = useState({ x: 0, y: 0 });
   const [isAutoMode, setIsAutoMode] = useState(true);

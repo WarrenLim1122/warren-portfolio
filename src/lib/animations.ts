@@ -1,6 +1,6 @@
-export const MOTION_CURVE = [0.25, 0.1, 0.25, 1];
-export const SPRING_UI = { type: "spring", stiffness: 120, damping: 20 };
-export const SPRING_PREMIUM = { type: "spring", stiffness: 80, damping: 15, mass: 1 };
+export const MOTION_CURVE = [0.25, 0.1, 0.25, 1] as const;
+export const SPRING_UI = { type: "spring" as const, stiffness: 120, damping: 20 };
+export const SPRING_PREMIUM = { type: "spring" as const, stiffness: 80, damping: 15, mass: 1 };
 
 export const revealVariants = {
   hidden: { opacity: 0, y: 30, scale: 0.98, filter: "blur(4px)" },
@@ -29,7 +29,7 @@ export const slideUpVariants = {
     transition: {
       delay: i * 0.1,
       duration: 0.8,
-      ease: [0.215, 0.61, 0.355, 1]
+      ease: [0.215, 0.61, 0.355, 1] as const
     }
   })
 };
