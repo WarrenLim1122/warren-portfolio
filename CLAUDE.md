@@ -408,3 +408,81 @@ Shared by `Certificates` (receives a `cert` object: `.image`, `.title`, `.issuer
 - `TechnicalToolkit` is built but not rendered in `App.tsx`. Safe to add or leave out.
 - `AnimatedCard` is imported in `Projects.tsx` but not actually used in the render output. Can be integrated or removed.
 - Portfolio nav has unused lucide imports (`X`, `Mail`, `Linkedin`) — contact icons use image files from `public/`, not lucide.
+
+---
+
+## Latest Session Summary — Journal Integration and Sync Workflow
+
+*Recorded 2026-05-04. Read this section at the start of any new session before touching the journal or the sync workflow.*
+
+### 1. Two-repo setup
+
+| Repo | Purpose | Tooling |
+|---|---|---|
+| `https://github.com/WarrenLim1122/trading-journal.git` | Source trading journal app | Edited in Google AI Studio |
+| `https://github.com/WarrenLim1122/warren-portfolio.git` | This repo — deployed at `warrenlimzf.com` | Edited in Claude Code |
+
+Google AI Studio should maintain `AI_STUDIO_RULES.md` and `CHANGELOG.md` inside the trading-journal repo and update `CHANGELOG.md` automatically after every code change. Claude Code reads those files at the start of every sync.
+
+### 2. Integration method and live routes
+
+- **Method:** manual file copy — not a submodule or subtree.
+- Journal source files → `src/journal/` in this repo.
+- `warrenlimzf.com/journal` → dashboard (redirects to login if unauthenticated).
+- `warrenlimzf.com/journal/login` → login page.
+- This repo owns the `BrowserRouter`. `JournalApp` uses `<Routes>` only — never a nested `BrowserRouter`.
+
+### 3. Compatibility changes already in place — never overwrite these
+
+| File | What was changed |
+|---|---|
+| `src/journal/JournalApp.tsx` | Created here (not from source). Adds/removes `html.dark` via `useEffect`. |
+| `src/journal/lib/firebase.ts` | Import path: `../../` → `../firebase-applet-config.json` |
+| `src/journal/pages/Login.tsx` | `navigate("/")` → `navigate("/journal")` |
+| `src/journal/pages/Dashboard.tsx` | "← Portfolio" back button; `asChild` → `render` prop (Base UI) |
+| `src/journal/components/dashboard/EquityCurve.tsx` | Optional props interface; Recharts formatter type fix |
+| `src/journal/components/dashboard/WinsVsLosses.tsx` | `"LOSS"` → `"LOSE"`; `breakevenRate` added to useMemo return |
+| All `src/journal/**` imports | `@/` → `@journal/` |
+
+Full patch details: `JOURNAL_INTEGRATION.md §15`.
+
+### 4. Files created or updated during this integration
+
+`CLAUDE.md`, `JOURNAL_INTEGRATION.md`, `GOOGLE_AI_STUDIO_RESET_PROMPT.md`, `src/journal/` (all files), `src/App.tsx`, `src/index.css`, `vite.config.ts`, `tsconfig.json`, `vercel.json`.
+
+### 5. Dark theme architecture — why it works this way
+
+The source trading journal sets `class="dark"` on `<html>` in `index.html`. The integrated version cannot do that statically (it would break the portfolio). Instead, `JournalApp.tsx` uses:
+
+```ts
+useEffect(() => {
+  document.documentElement.classList.add("dark");
+  return () => document.documentElement.classList.remove("dark");
+}, []);
+```
+
+This is required because Base UI portals (dropdown, select, dialog, popover) render into `document.body`, outside any scoped `<div class="dark">`. Without `html.dark`, portal elements get `:root` (light) CSS variables and appear white. `index.css` also includes a scoped `@layer base` border reset to fix calendar/grid borders.
+
+### 6. Firebase Auth — already resolved, do not re-debug
+
+Firebase unauthorized-domain error was fixed manually in the Firebase Console. Authorized domains must include:
+- `warrenlimzf.com`
+- `warren-portfolio.vercel.app`
+- `localhost`
+- `127.0.0.1`
+
+Do not change Firebase config or Firestore rules unless explicitly requested.
+
+### 7. GitHub workflow — Claude has automatic permission
+
+Claude may commit, push, create PRs, and merge PRs automatically after every successful edit, **unless Warren says "do not push" or "do not merge"**. Hard stops: secrets detected, build/lint fails, merge conflict, auth failure, destructive change. Full rules: `CLAUDE.md §Automatic GitHub workflow`.
+
+### 8. After every journal sync — mandatory reminder
+
+After syncing the trading journal into this repo, always remind Warren:
+
+> "Please open `GOOGLE_AI_STUDIO_RESET_PROMPT.md`, copy the full prompt inside, and paste it into Google AI Studio before making the next trading journal update."
+
+### 9. Visual styling — current status
+
+The `/journal` dark theme visual match was fixed in this session (2026-05-04, commit `a3ab5eb`). The original trading-journal GitHub/Google AI Studio version is the visual source of truth. If new styling regressions appear, check: (a) whether portals have dark CSS variables, (b) whether `html.dark` is being applied, (c) whether a component was overwritten without preserving the `@journal/` import rewrite.
