@@ -35,6 +35,135 @@
 
 ---
 
+## Automatic GitHub workflow
+
+This workflow runs automatically after every successful code or documentation edit, unless Warren explicitly says **"do not push"** or **"do not merge"**.
+
+### Step 1 — Diagnose
+
+```bash
+git status
+git branch --show-current
+git remote -v
+```
+
+### Step 2 — Classify changes
+
+Label every changed file as one of:
+- `portfolio-related` — anything in `src/` outside `src/journal/`
+- `trading-journal-related` — anything in `src/journal/`
+- `dependency-related` — `package.json`, `package-lock.json`
+- `documentation-related` — `CLAUDE.md`, `JOURNAL_INTEGRATION.md`, `GOOGLE_AI_STUDIO_RESET_PROMPT.md`, `README.md`
+- `deployment-related` — `vercel.json`, `vite.config.ts`, `tsconfig.json`
+- `other` — anything else
+
+### Step 3 — Security check (hard stop if any are detected)
+
+Never commit:
+- `.env` / `.env.local` / any file matching `*.env`
+- Firebase **admin** SDK keys (service account JSON files)
+- Passwords or secret tokens
+- Private API credentials
+
+`src/journal/firebase-applet-config.json` is **safe to commit** — it contains only the public client-side Firebase config. Firebase security is enforced server-side by Firestore Rules.
+
+### Step 4 — Generated folder check
+
+Never commit `dist/`, `node_modules/`, or `.next/`. If any appear in `git status`:
+1. Do not stage them.
+2. Add to `.gitignore` if not already there.
+3. Remove from Git tracking: `git rm -r --cached <folder>`
+4. Then continue.
+
+### Step 5 — Run checks
+
+```bash
+npm run build   # must pass
+npm run lint    # must pass (zero errors)
+```
+
+If either fails:
+- Do not commit, push, or merge.
+- Explain the error and fix it if possible.
+- Re-run checks before proceeding.
+
+### Step 6 — Stage and commit
+
+```bash
+git add -A
+git commit -m "<clear message describing the actual change>"
+```
+
+Commit message conventions:
+- `Add <feature>` — new capability added
+- `Update <thing>` — existing behaviour changed
+- `Fix <bug>` — bug corrected
+- `Sync trading journal — <description>` — journal file sync
+- `Docs: <description>` — documentation only
+
+### Step 7 — Push and PR rules
+
+| Situation | Action |
+|---|---|
+| On a feature branch | Push the feature branch to `origin`; create PR; merge if checks pass |
+| On `main`, change is small/safe | Push directly to `origin main` |
+| On `main`, change is large or risky | Create a feature branch first, push it, create a PR, merge if checks pass |
+
+**Never force push. Never delete branches unless explicitly asked.**
+
+### Step 8 — Pull request and merge
+
+Claude may create **and merge** a PR automatically if **all** of the following are true:
+- `npm run build` passes
+- `npm run lint` passes
+- No secrets detected
+- No generated folders included
+- GitHub reports the branch can be merged cleanly
+- The change matches what Warren requested
+
+If GitHub CLI (`gh`) is available and authenticated:
+```bash
+gh pr create --base main --head <branch> --title "..." --body "..."
+gh pr merge <number> --merge   # or --squash for cleaner history
+```
+
+If GitHub CLI is not available or auth fails:
+- Push the branch
+- Output the PR URL
+- State clearly that manual browser merge is needed
+
+### Step 9 — Stop and ask Warren if any of these occur
+
+- Secrets detected in changed files
+- `npm run build` or `npm run lint` fails and cannot be safely fixed
+- Merge conflict
+- GitHub authentication failure
+- Change is destructive (data deletion, Firebase rules change, DNS/deployment config change)
+- Files outside the expected project scope are modified
+- Warren said "do not push" or "do not merge"
+
+### Step 10 — Post-push summary (always provide)
+
+After pushing and/or merging, always output:
+
+| Item | Value |
+|---|---|
+| Files changed | list them, classified |
+| Commit message | exact message used |
+| Branch | which branch was pushed |
+| Pushed to main? | yes / no |
+| PR created? | yes (link) / no |
+| PR merged? | yes / pending / not applicable |
+| Vercel redeploy? | automatic if `main` was updated |
+| URLs to test | listed below |
+
+Always remind Warren to test:
+- `https://warrenlimzf.com`
+- `https://warrenlimzf.com/journal`
+- `https://warrenlimzf.com/journal/login`
+
+---
+
 ## Project identity
 
 Personal portfolio website for Warren Lim Zhan Feng, a penultimate Banking & Finance undergraduate at NTU Singapore. Deployed at **warrenlimzf.com** via Vercel. The site showcases his professional experience, credentials, case competition wins, and finance research projects.
