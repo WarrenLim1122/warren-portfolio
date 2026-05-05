@@ -9,15 +9,16 @@ import { format } from 'date-fns';
 interface Props {
   trades: Trade[];
   startingBalance?: string;
-  setStartingBalance?: (v: string) => void;
+  setStartingBalance?: (val: string) => void;
 }
 
-export function EquityCurve({ trades, startingBalance: externalBalance, setStartingBalance: externalSetBalance }: Props) {
+export function EquityCurve({ trades, startingBalance: externalSb, setStartingBalance: setExternalSb }: Props) {
   const [isCompounding, setIsCompounding] = useState(false);
-  const [internalBalance, setInternalBalance] = useState("1000");
-  const startingBalance = externalBalance ?? internalBalance;
-  const setStartingBalance = externalSetBalance ?? setInternalBalance;
+  const [internalSb, setInternalSb] = useState("1000");
   const [trackingMode, setTrackingMode] = useState<"Trade" | "Date">("Trade");
+
+  const startingBalance = externalSb !== undefined ? externalSb : internalSb;
+  const setStartingBalance = setExternalSb !== undefined ? setExternalSb : setInternalSb;
 
   const data = useMemo(() => {
     if (trades.length === 0) return [];
@@ -41,7 +42,8 @@ export function EquityCurve({ trades, startingBalance: externalBalance, setStart
       if (isCompounding) {
         currentBalance = currentBalance * (1 + pnlPct / 100);
       } else {
-        currentBalance += balanceNum * (pnlPct / 100);
+        const pnlAmt = trade.pnlAmount !== undefined ? trade.pnlAmount : (balanceNum > 0 ? balanceNum * (pnlPct / 100) : 0);
+        currentBalance += pnlAmt;
       }
       
       allChartData.push({

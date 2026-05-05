@@ -9,6 +9,8 @@ import { format } from "date-fns";
 import { EditTradeDialog } from "./EditTradeDialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../ui/dialog";
 
+import { getTradeDate, getTradeDirection, getTradeOutcome, getTradePnl, getTradeSymbol, getTradeDisplayOutcome, getTradeClosePrice } from "../../lib/tradeUtils";
+
 interface Props {
   trades: Trade[];
   onTradeDeleted: () => void;
@@ -65,32 +67,47 @@ export function ListOverview({ trades, onTradeDeleted, onRowClick }: Props) {
               </TableCell>
             </TableRow>
           ) : (
-            trades.map((trade, i) => (
+            trades.map((trade, i) => {
+              const symbol = getTradeSymbol(trade);
+              const dateObjStr = getTradeDate(trade);
+              const pnlValue = getTradePnl(trade);
+              const direction = getTradeDirection(trade);
+              const outcomeDisplay = getTradeDisplayOutcome(trade);
+              const outcomeRaw = getTradeOutcome(trade);
+              let parsedDate = new Date();
+              try { if (dateObjStr) parsedDate = new Date(dateObjStr); } catch(e) {}
+              
+              return (
               <TableRow key={trade.id} className="border-b border-white/5 hover:bg-muted/20 group cursor-pointer" onClick={() => onRowClick && onRowClick(trade.id)}>
-                <TableCell className="font-mono text-muted-foreground text-center border-r border-white/5 px-1 py-2.5">{i + 1}</TableCell>
+                <TableCell className="font-mono text-muted-foreground text-center border-r border-white/5 px-1 py-2.5">
+                  <div className="flex flex-col items-center justify-center gap-1">
+                     <span>{i + 1}</span>
+                     {trade.source === 'bot' && <span className="text-[8px] bg-indigo-500/20 text-indigo-400 px-1 py-0.5 rounded leading-none">BOT</span>}
+                  </div>
+                </TableCell>
                 <TableCell className="font-bold text-foreground text-center border-r border-white/5 px-2 py-2.5 line-clamp-1">
-                  {trade.pair || "-"}
+                  {symbol || "-"}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-center border-r border-white/5 px-2 py-2.5 whitespace-nowrap">
-                  {format(new Date(trade.date), "MMM d, yyyy")}
+                  {format(parsedDate, "MMM d, yyyy")}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-center border-r border-white/5 px-2 py-2.5 whitespace-nowrap">
-                  {format(new Date(trade.date), "HH:mm")}
+                  {format(parsedDate, "HH:mm")}
                 </TableCell>
                 <TableCell className="text-center border-r border-white/5 px-2 py-2.5">
                   <span className={`inline-flex items-center px-1.5 py-0.5 rounded border text-[10px] uppercase font-bold ${
-                    trade.position === 'Long' ? 'border-[#22c55e]/50 text-[#22c55e]' : 'border-[#ef4444]/50 text-[#ef4444]'
+                    direction === 'LONG' ? 'border-[#22c55e]/50 text-[#22c55e]' : 'border-[#ef4444]/50 text-[#ef4444]'
                   }`}>
-                    {trade.position}
+                    {direction}
                   </span>
                 </TableCell>
                 <TableCell className="text-center border-r border-white/5 px-2 py-2.5">
                   <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                    trade.outcome === 'WIN' ? 'bg-[#22c55e] text-white' :
-                    trade.outcome === 'LOSE' ? 'bg-[#ef4444] text-white' :
+                    outcomeRaw === 'WIN' ? 'bg-[#22c55e] text-white' :
+                    (outcomeRaw === 'LOSE' || outcomeRaw === 'LOSS') ? 'bg-[#ef4444] text-white' :
                     'bg-[#f59e0b] text-white'
                   }`}>
-                    {trade.outcome === 'BREAKEVEN' ? 'B/E' : trade.outcome}
+                    {outcomeDisplay === 'BREAKEVEN' ? 'B/E' : outcomeDisplay}
                   </span>
                 </TableCell>
                 <TableCell className="text-muted-foreground text-center font-mono border-r border-white/5 px-2 py-2.5">
@@ -105,8 +122,8 @@ export function ListOverview({ trades, onTradeDeleted, onRowClick }: Props) {
                 <TableCell className="text-muted-foreground text-center font-mono border-r border-white/5 px-1 py-2.5">
                   {trade.takeProfit !== undefined ? trade.takeProfit : "-"}
                 </TableCell>
-                <TableCell className={`text-center font-mono font-bold border-r border-white/5 px-2 py-2.5 ${trade.pnlAmount && trade.pnlAmount > 0 ? "text-[#22c55e]" : trade.pnlAmount && trade.pnlAmount < 0 ? "text-[#ef4444]" : "text-muted-foreground"}`}>
-                  {trade.pnlAmount !== undefined ? `$${trade.pnlAmount.toFixed(2)}` : "-"}
+                <TableCell className={`text-center font-mono font-bold border-r border-white/5 px-2 py-2.5 ${pnlValue && pnlValue > 0 ? "text-[#22c55e]" : pnlValue && pnlValue < 0 ? "text-[#ef4444]" : "text-muted-foreground"}`}>
+                  {pnlValue !== undefined ? `$${pnlValue.toFixed(2)}` : "-"}
                 </TableCell>
                 <TableCell className="p-0 border-white/5 px-1 py-1">
                   <div className="flex items-center justify-center gap-1 w-full h-full">
@@ -119,7 +136,7 @@ export function ListOverview({ trades, onTradeDeleted, onRowClick }: Props) {
                   </div>
                 </TableCell>
               </TableRow>
-            ))
+            )})
           )}
         </TableBody>
       </Table>

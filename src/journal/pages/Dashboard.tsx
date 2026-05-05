@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { Trade } from "../types/trade";
 import { tradeService } from "../lib/tradeService";
@@ -8,8 +7,7 @@ import { ChartOverview } from "../components/dashboard/ChartOverview";
 import { WinsVsLosses } from "../components/dashboard/WinsVsLosses";
 import { CalendarView } from "../components/dashboard/CalendarView";
 import { EquityCurve } from "../components/dashboard/EquityCurve";
-import { AddTradeDialog } from "../components/dashboard/AddTradeDialog";
-import { Activity, LogOut, ArrowDownAZ, ArrowUpAZ, ArrowDown, ArrowUp, Filter, Pencil, Download } from "lucide-react";
+import { Activity, LogOut, ArrowDownAZ, ArrowUpAZ, ArrowDown, ArrowUp, Filter, Pencil, Download, Plus } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
@@ -18,6 +16,10 @@ import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { Link, useNavigate } from "react-router-dom";
+
+import { TradeDetailDialog } from "../components/dashboard/TradeDetailDialog";
+import { getTradeDate, getTradePnl, getTradeSymbol, getTradeDirection, getTradeOutcome, getTradeDisplayOutcome } from "../lib/tradeUtils";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
@@ -25,21 +27,21 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState("list");
 
-  // Journal Name state
-  const [journalName, setJournalName] = useState(() => localStorage.getItem("journalName") || "The Trading Journal");
-  const [isEditingName, setIsEditingName] = useState(false);
-
   // Filter and Sort states
   const [filterPair, setFilterPair] = useState("");
   const [filterOutcome, setFilterOutcome] = useState("ALL");
   const [filterPosition, setFilterPosition] = useState("ALL");
+  const [filterStrategy, setFilterStrategy] = useState("ALL");
   const [sortKey, setSortKey] = useState<keyof Trade>("date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [selectedChartId, setSelectedChartId] = useState<string | null>(null);
   const [highlightedChartId, setHighlightedChartId] = useState<string | null>(null);
+  const [selectedTradeForDetail, setSelectedTradeForDetail] = useState<Trade | null>(null);
 
   // Global start balance state for dynamic calculation
   const [startBalance, setStartBalance] = useState(() => localStorage.getItem("startBalance") || "1000");
+
+  const navigate = useNavigate();
 
   // Refs for scrolling
   const listRef = useRef<HTMLDivElement>(null);
@@ -49,24 +51,14 @@ export default function Dashboard() {
   const equityRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    localStorage.setItem("journalName", journalName);
-  }, [journalName]);
-
-  useEffect(() => {
     localStorage.setItem("startBalance", startBalance);
   }, [startBalance]);
 
-  const handleNameSave = () => {
-    setIsEditingName(false);
-    if (!journalName.trim()) setJournalName("The Trading Journal");
-  };
-
-  const nameInputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (isEditingName && nameInputRef.current) {
-      nameInputRef.current.focus();
-    }
-  }, [isEditingName]);
+    const handleStartBalanceUpdate = () => setStartBalance(localStorage.getItem("startBalance") || "1000");
+    window.addEventListener("startBalanceUpdate", handleStartBalanceUpdate);
+    return () => window.removeEventListener("startBalanceUpdate", handleStartBalanceUpdate);
+  }, []);
 
   const fetchTrades = async () => {
     if (user) {
@@ -81,6 +73,7 @@ export default function Dashboard() {
     return trades
       .filter(t => (filterOutcome === 'ALL' || t.outcome === filterOutcome))
       .filter(t => (filterPosition === 'ALL' || t.position === filterPosition))
+      .filter(t => (filterStrategy === 'ALL' || t.strategy === filterStrategy))
       .filter(t => (!filterPair || (t.pair && t.pair.toLowerCase().includes(filterPair.toLowerCase()))))
       .sort((a, b) => {
         let aVal: any = a[sortKey];
@@ -89,34 +82,58 @@ export default function Dashboard() {
            aVal = new Date(a.date).getTime();
            bVal = new Date(b.date).getTime();
         } else if (sortKey === 'pair') {
-           aVal = (a.pair || "").toLowerCase();
-           bVal = (b.pair || "").toLowerCase();
+           aVal = (getTradeSymbol(a) || "").toLowerCase();
+           bVal = (getTradeSymbol(b) || "").toLowerCase();
         }
         if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
         if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
         return 0;
       });
-  }, [trades, filterPair, filterOutcome, filterPosition, sortKey, sortDirection]);
+  }, [trades, filterPair, filterOutcome, filterPosition, filterStrategy, sortKey, sortDirection]);
+
+  const { currentEquity, equityPercentChange } = useMemo(() => {
+    const startNum = parseFloat(startBalance) || 0;
+    if (!filteredTrades || filteredTrades.length === 0) return { currentEquity: startNum, equityPercentChange: 0 };
+
+    const sortedTrades = [...filteredTrades].sort((a, b) => new Date(getTradeDate(a)).getTime() - new Date(getTradeDate(b)).getTime());
+    let balance = startNum;
+
+    sortedTrades.forEach(trade => {
+      const pnl = getTradePnl(trade);
+      const pnlAmt = pnl !== undefined
+        ? pnl
+        : (trade.pnlPercentage && startNum > 0 ? startNum * (trade.pnlPercentage / 100) : 0);
+      balance += pnlAmt;
+    });
+
+    const percentChange = startNum > 0 ? ((balance - startNum) / startNum) * 100 : 0;
+
+    return { currentEquity: balance, equityPercentChange: percentChange };
+  }, [filteredTrades, startBalance]);
 
   const downloadCSV = () => {
     if (filteredTrades.length === 0) return;
 
-    const headers = ["Symbol", "Date", "Time", "Type", "Outcome", "Volume", "Price", "SL", "TP", "PnL", "Notes"];
+    const headers = ["Symbol", "Date", "Time", "Type", "Outcome", "Lot Size", "Price", "SL", "TP", "PnL", "Notes"];
     const rows = filteredTrades.map(t => {
-      const date = new Date(t.date);
-      const formattedDate = format(date, "yyyy-MM-dd");
-      const formattedTime = format(date, "HH:mm");
+      let dateObjStr = getTradeDate(t);
+      let parsedDate = new Date();
+      try { if (dateObjStr) parsedDate = new Date(dateObjStr); } catch(e) {}
+
+      const formattedDate = format(parsedDate, "yyyy-MM-dd");
+      const formattedTime = format(parsedDate, "HH:mm");
+      const pnlValue = getTradePnl(t);
       return [
-        t.pair || "",
+        getTradeSymbol(t) || "",
         formattedDate,
         formattedTime,
-        t.position,
-        t.outcome,
+        getTradeDirection(t) || t.position,
+        getTradeDisplayOutcome(t) || t.outcome,
         t.volume !== undefined ? t.volume : "",
         t.entryPrice !== undefined ? t.entryPrice : "",
         t.stopLoss !== undefined ? t.stopLoss : "",
         t.takeProfit !== undefined ? t.takeProfit : "",
-        t.pnlAmount !== undefined ? t.pnlAmount : "",
+        pnlValue !== undefined ? pnlValue : "",
         (t.notes || "").replace(/"/g, '""')
       ];
     });
@@ -132,20 +149,25 @@ export default function Dashboard() {
   const downloadXLSX = () => {
     if (filteredTrades.length === 0) return;
 
-    const headers = ["Symbol", "Date", "Time", "Type", "Outcome", "Volume", "Price", "SL", "TP", "PnL", "Notes"];
+    const headers = ["Symbol", "Date", "Time", "Type", "Outcome", "Lot Size", "Price", "SL", "TP", "PnL", "Notes"];
     const rows = filteredTrades.map(t => {
-      const date = new Date(t.date);
+      let dateObjStr = getTradeDate(t);
+      let parsedDate = new Date();
+      try { if (dateObjStr) parsedDate = new Date(dateObjStr); } catch(e) {}
+
+      const pnlValue = getTradePnl(t);
+
       return [
-        t.pair || "",
-        format(date, "yyyy-MM-dd"),
-        format(date, "HH:mm"),
-        t.position,
-        t.outcome,
+        getTradeSymbol(t) || "",
+        format(parsedDate, "yyyy-MM-dd"),
+        format(parsedDate, "HH:mm"),
+        getTradeDirection(t) || t.position,
+        getTradeDisplayOutcome(t) || t.outcome,
         t.volume !== undefined ? t.volume : "",
         t.entryPrice !== undefined ? t.entryPrice : "",
         t.stopLoss !== undefined ? t.stopLoss : "",
         t.takeProfit !== undefined ? t.takeProfit : "",
-        t.pnlAmount !== undefined ? t.pnlAmount : "",
+        pnlValue !== undefined ? pnlValue : "",
         (t.notes || "")
       ];
     });
@@ -160,20 +182,25 @@ export default function Dashboard() {
     if (filteredTrades.length === 0) return;
 
     const doc = new jsPDF("landscape");
-    const headers = [["Symbol", "Date", "Time", "Type", "Outcome", "Volume", "Price", "SL", "TP", "PnL"]];
+    const headers = [["Symbol", "Date", "Time", "Type", "Outcome", "Lot Size", "Price", "SL", "TP", "PnL"]];
     const rows = filteredTrades.map(t => {
-      const date = new Date(t.date);
+      let dateObjStr = getTradeDate(t);
+      let parsedDate = new Date();
+      try { if (dateObjStr) parsedDate = new Date(dateObjStr); } catch(e) {}
+
+      const pnlValue = getTradePnl(t);
+
       return [
-        t.pair || "",
-        format(date, "yyyy-MM-dd"),
-        format(date, "HH:mm"),
-        t.position,
-        t.outcome,
+        getTradeSymbol(t) || "",
+        format(parsedDate, "yyyy-MM-dd"),
+        format(parsedDate, "HH:mm"),
+        getTradeDirection(t) || t.position,
+        getTradeDisplayOutcome(t) || t.outcome,
         t.volume !== undefined ? t.volume.toString() : "",
         t.entryPrice !== undefined ? t.entryPrice.toString() : "",
         t.stopLoss !== undefined ? t.stopLoss.toString() : "",
         t.takeProfit !== undefined ? t.takeProfit.toString() : "",
-        t.pnlAmount !== undefined ? `$${t.pnlAmount.toFixed(2)}` : ""
+        pnlValue !== undefined ? `$${pnlValue.toFixed(2)}` : ""
       ];
     });
 
@@ -196,7 +223,7 @@ export default function Dashboard() {
     else if (activeSection === 'wins') refToAnchor = winsRef;
 
     const offsetBefore = refToAnchor?.current?.getBoundingClientRect().top;
-    
+
     updateFn();
 
     if (refToAnchor && offsetBefore !== undefined) {
@@ -225,7 +252,6 @@ export default function Dashboard() {
   }, [user]);
 
   useEffect(() => {
-    // If current filter choices are no longer available in the trades list, reset them
     if (filterOutcome !== 'ALL') {
       const availableOutcomes = Array.from(new Set(trades.map(t => t.outcome))).filter(Boolean);
       if (!availableOutcomes.includes(filterOutcome as any)) {
@@ -238,24 +264,42 @@ export default function Dashboard() {
         setFilterPosition('ALL');
       }
     }
-  }, [trades, filterOutcome, filterPosition]);
+    if (filterStrategy !== 'ALL') {
+      const availableStrategies = Array.from(new Set(trades.map(t => t.strategy))).filter(Boolean);
+      if (!availableStrategies.includes(filterStrategy)) {
+        setFilterStrategy('ALL');
+      }
+    }
+  }, [trades, filterOutcome, filterPosition, filterStrategy]);
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPos = window.scrollY + 100;
-      if (equityRef.current && equityRef.current.offsetTop <= scrollPos) {
+      const getPos = (ref: React.RefObject<HTMLDivElement>) => {
+        return ref.current ? ref.current.getBoundingClientRect().top : Infinity;
+      };
+
+      const offset = 200;
+
+      const equityPos = getPos(equityRef);
+      const winsPos = getPos(winsRef);
+      const calendarPos = getPos(calendarRef);
+      const listPos = getPos(listRef);
+      const chartsPos = getPos(chartsRef);
+
+      if (equityPos <= offset) {
         setActiveSection("equity");
-      } else if (winsRef.current && winsRef.current.offsetTop <= scrollPos) {
+      } else if (winsPos <= offset) {
         setActiveSection("wins");
-      } else if (calendarRef.current && calendarRef.current.offsetTop <= scrollPos) {
+      } else if (calendarPos <= offset) {
         setActiveSection("calendar");
-      } else if (listRef.current && listRef.current.offsetTop <= scrollPos) {
+      } else if (listPos <= offset) {
         setActiveSection("list");
-      } else if (chartsRef.current && chartsRef.current.offsetTop <= scrollPos) {
+      } else if (chartsPos <= offset) {
         setActiveSection("charts");
       }
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -267,37 +311,30 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background text-foreground p-6">
       <div className="mx-auto max-w-7xl relative">
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
-          <div className="flex items-center gap-2 group cursor-pointer w-full sm:w-auto" onClick={() => !isEditingName && setIsEditingName(true)}>
-            <div className="bg-primary p-2 rounded-lg">
-               <Activity className="h-5 w-5 text-black flex-shrink-0" />
-            </div>
-            {isEditingName ? (
-              <Input
-                ref={nameInputRef}
-                value={journalName}
-                onChange={(e) => setJournalName(e.target.value)}
-                onBlur={handleNameSave}
-                onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
-                className="text-2xl font-bold font-mono tracking-tight text-white bg-transparent border-none focus-visible:ring-0 p-0 h-auto"
-              />
-            ) : (
-              <h1 className="text-2xl font-bold font-mono tracking-tight text-white flex items-center gap-2">
-                {journalName}
-                <Pencil size={14} className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground" />
+          <div className="flex flex-col">
+            <span className="text-sm font-mono text-muted-foreground uppercase tracking-wider">Current Equity</span>
+            <div className="flex items-baseline gap-3">
+              <h1 className="text-4xl font-black font-mono tracking-tighter text-white">
+                ${currentEquity.toFixed(2)}
               </h1>
-            )}
+              <span className={`text-sm font-mono font-bold ${equityPercentChange >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                 {equityPercentChange >= 0 ? '+' : ''}{equityPercentChange.toFixed(2)}%
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
-             <Link
-               to="/"
-               className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono text-muted-foreground border border-border rounded-lg px-3 h-8 hover:text-white hover:border-white/30 transition-colors"
-             >
-               ← Portfolio
-             </Link>
-             <AddTradeDialog onTradeAdded={fetchTrades} trades={trades} />
-             <Button variant="outline" size="icon" onClick={logout}>
-               <LogOut size={16} />
-             </Button>
+          <div className="flex items-center gap-4 relative z-50">
+            <Link
+              to="/"
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono text-muted-foreground border border-border rounded-lg px-3 h-8 hover:text-white hover:border-white/30 transition-colors"
+            >
+              ← Portfolio
+            </Link>
+            <Button className="gap-2 shrink-0 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 font-mono transition-all hover:scale-105" onClick={() => navigate("/journal/new-trade")}>
+              <Plus size={16} /> New Trade
+            </Button>
+            <Button variant="outline" size="icon" onClick={logout}>
+              <LogOut size={16} />
+            </Button>
           </div>
         </header>
 
@@ -356,6 +393,17 @@ export default function Dashboard() {
                        ))}
                      </SelectContent>
                    </Select>
+                   <Select value={filterStrategy} onValueChange={(val) => updateWithScrollRestoration(() => setFilterStrategy(val))}>
+                     <SelectTrigger className="h-8 w-[120px] bg-black/40 text-xs font-mono">
+                       <SelectValue placeholder="Strategy" />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="ALL">All Strategies</SelectItem>
+                       {Array.from(new Set(trades.map(t => t.strategy))).filter(Boolean).map(strategy => (
+                         <SelectItem key={strategy as string} value={strategy as string}>{strategy}</SelectItem>
+                       ))}
+                     </SelectContent>
+                   </Select>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                    <span className="text-xs text-muted-foreground font-mono uppercase font-semibold mr-1">Sort:</span>
@@ -377,12 +425,12 @@ export default function Dashboard() {
 
             <div ref={chartsRef} className="scroll-mt-40">
               <h2 className="text-4xl font-extrabold font-mono mb-8 text-white tracking-[0.2em] uppercase border-b border-border/50 pb-4">Chart Overview</h2>
-              <ChartOverview 
-                trades={filteredTrades} 
+              <ChartOverview
+                trades={filteredTrades}
                 startBalance={parseFloat(startBalance) || 1000}
-                selectedChartId={selectedChartId} 
-                onOpenChart={setSelectedChartId} 
-                onCloseChart={() => setSelectedChartId(null)} 
+                selectedChartId={selectedChartId}
+                onOpenChart={setSelectedChartId}
+                onCloseChart={() => setSelectedChartId(null)}
                 highlightedChartId={highlightedChartId}
                 onClearHighlight={() => {
                   if (highlightedChartId) setHighlightedChartId(null);
@@ -394,11 +442,9 @@ export default function Dashboard() {
               <div className="flex items-center justify-between border-b border-border/50 mb-8 pb-4">
                 <h2 className="text-4xl font-extrabold font-mono text-white tracking-[0.2em] uppercase">List Overview</h2>
                 <DropdownMenu>
-                  <DropdownMenuTrigger render={
-                    <Button variant="outline" size="sm" className="font-mono h-9 gap-2">
-                      <Download size={16} /> Export
-                    </Button>
-                  } />
+                  <DropdownMenuTrigger render={<Button variant="outline" size="sm" className="font-mono h-9 gap-2" />}>
+                    <Download size={16} /> Export
+                  </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="bg-background border-border min-w-[200px]">
                     <DropdownMenuItem onClick={downloadCSV} className="font-mono cursor-pointer whitespace-nowrap">
                       Export as .csv file
@@ -412,12 +458,15 @@ export default function Dashboard() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
-              <ListOverview trades={filteredTrades} onTradeDeleted={fetchTrades} onRowClick={(id) => { setHighlightedChartId(id); scrollTo(chartsRef); }} />
+              <ListOverview trades={filteredTrades} onTradeDeleted={fetchTrades} onRowClick={(id) => {
+                const t = filteredTrades.find(trade => trade.id === id);
+                if (t) setSelectedTradeForDetail(t);
+              }} />
             </div>
 
             <div ref={calendarRef} className="scroll-mt-40">
               <h2 className="text-4xl font-extrabold font-mono mb-8 text-white tracking-[0.2em] uppercase border-b border-border/50 pb-4">Calendar</h2>
-               <CalendarView trades={filteredTrades} startBalance={parseFloat(startBalance) || 1000} />
+               <CalendarView trades={filteredTrades} startBalance={parseFloat(startBalance) || 1000} onTradeClick={(t) => setSelectedTradeForDetail(t)} />
             </div>
 
             <div ref={winsRef} className="scroll-mt-40">
@@ -427,14 +476,22 @@ export default function Dashboard() {
 
             <div ref={equityRef} className="scroll-mt-40">
               <h2 className="text-4xl font-extrabold font-mono mb-8 text-white tracking-[0.2em] uppercase border-b border-border/50 pb-4">Equity Curve</h2>
-              <EquityCurve 
-                trades={filteredTrades} 
-                startingBalance={startBalance} 
-                setStartingBalance={setStartBalance} 
+              <EquityCurve
+                trades={filteredTrades}
+                startingBalance={startBalance}
+                setStartingBalance={setStartBalance}
               />
             </div>
           </div>
         )}
+
+        <TradeDetailDialog
+          trade={selectedTradeForDetail}
+          open={!!selectedTradeForDetail}
+          onOpenChange={(open) => {
+            if (!open) setSelectedTradeForDetail(null);
+          }}
+        />
       </div>
     </div>
   );

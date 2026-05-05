@@ -3,15 +3,17 @@ import { Trade } from "../../types/trade";
 import { startOfMonth, endOfMonth, eachDayOfInterval, format, getDay, isSameMonth, addMonths, subMonths, startOfWeek, endOfWeek, addWeeks, subWeeks, addDays, subDays, startOfYear, endOfYear, addYears, subYears, eachMonthOfInterval } from "date-fns";
 import { Button } from "../ui/button";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, CalendarDays, CalendarRange, Clock } from "lucide-react";
+import { getTradeOutcome, getTradePnl, getTradeSymbol, getTradeDate } from "../../lib/tradeUtils";
 
 interface Props {
   trades: Trade[];
   startBalance?: number;
+  onTradeClick?: (trade: Trade) => void;
 }
 
 type ViewMode = 'Day' | 'Week' | 'Month' | 'Year';
 
-export function CalendarView({ trades, startBalance = 1000 }: Props) {
+export function CalendarView({ trades, startBalance = 1000, onTradeClick }: Props) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('Month');
 
@@ -42,22 +44,32 @@ export function CalendarView({ trades, startBalance = 1000 }: Props) {
     else if (viewMode === 'Year') setCurrentDate(subYears(currentDate, 1));
   };
 
-  const getDayTrades = (day: Date) => trades.filter(t => format(new Date(t.date), "yyyy-MM-dd") === format(day, "yyyy-MM-dd"));
+  const getDayTrades = (day: Date) => trades.filter(t => {
+    try {
+      const tradeDateStr = getTradeDate(t);
+      if (!tradeDateStr) return false;
+      return format(new Date(tradeDateStr), "yyyy-MM-dd") === format(day, "yyyy-MM-dd")
+    } catch(e) { return false; }
+  });
 
   const renderTradeNode = (trade: Trade) => {
+    const pnlResult = getTradePnl(trade);
     const dynPct = trade.pnlAmount !== undefined ? (trade.pnlAmount / startBalance) * 100 : trade.pnlPercentage;
+    const isWin = getTradeOutcome(trade) === 'WIN';
+    const isLose = getTradeOutcome(trade) === 'LOSE' || getTradeOutcome(trade) === 'LOSS';
+    
     return (
-      <div key={trade.id} className="flex items-center justify-between text-[10px] px-1.5 py-1 bg-black/20 hover:bg-black/40 transition-colors rounded border border-transparent hover:border-white/5">
+      <div key={trade.id} onClick={() => onTradeClick && onTradeClick(trade)} className="flex items-center justify-between text-[10px] px-1.5 py-1 bg-black/20 hover:bg-black/40 transition-colors rounded border border-transparent hover:border-white/5 cursor-pointer">
         <div className="flex items-center gap-2 min-w-0">
           <span className={`w-1 h-3 rounded-full shrink-0 opacity-80 ${
-            trade.outcome === 'WIN' ? 'bg-[#22c55e]' :
-            trade.outcome === 'LOSE' ? 'bg-[#ef4444]' :
+            isWin ? 'bg-[#22c55e]' :
+            isLose ? 'bg-[#ef4444]' :
             'bg-[#f59e0b]'
           }`} />
-          <span className="font-mono font-semibold text-white/80 truncate uppercase tracking-tight">{trade.pair || 'TRADE'}</span>
+          <span className="font-mono font-semibold text-white/80 truncate uppercase tracking-tight">{getTradeSymbol(trade) || 'TRADE'}</span>
         </div>
-        <span className={`font-mono font-bold shrink-0 ml-1 ${dynPct !== undefined && dynPct > 0 ? 'text-[#22c55e]' : dynPct !== undefined && dynPct < 0 ? 'text-[#ef4444]' : 'text-muted-foreground'}`}>
-          {dynPct !== undefined ? `${dynPct > 0 ? '+' : ''}${dynPct.toFixed(2)}%` : (trade.outcome === 'BREAKEVEN' ? 'B/E' : '')}
+        <span className={`font-mono font-bold shrink-0 ml-1 ${pnlResult > 0 ? 'text-[#22c55e]' : pnlResult < 0 ? 'text-[#ef4444]' : 'text-muted-foreground'}`}>
+          {dynPct !== undefined ? `${dynPct > 0 ? '+' : ''}${dynPct.toFixed(2)}%` : (pnlResult > 0 ? `+$${pnlResult.toFixed(2)}` : pnlResult < 0 ? `-$${Math.abs(pnlResult).toFixed(2)}` : 'B/E')}
         </span>
       </div>
     );
@@ -100,7 +112,14 @@ export function CalendarView({ trades, startBalance = 1000 }: Props) {
           {daysInMonth.map((day, i) => {
             const dayTrades = getDayTrades(day);
             let pnlPct = 0;
-            dayTrades.forEach(t => pnlPct += (t.pnlAmount !== undefined ? (t.pnlAmount / startBalance) * 100 : t.pnlPercentage || 0));
+            dayTrades.forEach(t => {
+               const pnl = getTradePnl(t);
+               if (t.pnlAmount !== undefined || pnl) {
+                  pnlPct += ((pnl) / startBalance) * 100;
+               } else if (t.pnlPercentage) {
+                  pnlPct += t.pnlPercentage;
+               }
+            });
             return (
               <div key={i} className={`bg-card h-[160px] p-1 border-t border-r hover:bg-muted/10 transition-colors flex flex-col overflow-hidden`}>
                  <div className="flex justify-between items-center mb-1 shrink-0 px-1">

@@ -19,13 +19,13 @@ interface EditTradeDialogProps {
 export function EditTradeDialog({ trade, open, onOpenChange, onTradeEdited, trades = [] }: EditTradeDialogProps) {
   const { user } = useAuth();
   const [pair, setPair] = useState("");
-  const [outcome, setOutcome] = useState<"WIN" | "LOSE" | "BREAKEVEN" | "">("");
+  const [outcome, setOutcome] = useState<"WIN" | "LOSE" | "LOSS" | "BREAKEVEN" | "">("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [time, setTime] = useState(() => {
     const now = new Date();
     return `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
   });
-  const [position, setPosition] = useState<"Long" | "Short" | "">("");
+  const [position, setPosition] = useState<"Long" | "Short" | "LONG" | "SHORT" | "">("");
   const [strategy, setStrategy] = useState("");
   const [entryPrice, setEntryPrice] = useState("");
   const [takeProfit, setTakeProfit] = useState("");

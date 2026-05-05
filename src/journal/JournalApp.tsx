@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
+import { NewTrade } from "./pages/NewTrade";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -41,6 +42,14 @@ export default function JournalApp() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="new-trade"
+            element={
+              <ProtectedRoute>
+                <NewTrade />
               </ProtectedRoute>
             }
           />

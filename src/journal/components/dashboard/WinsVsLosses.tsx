@@ -2,6 +2,7 @@ import React, { useMemo } from "react";
 import { Trade } from "../../types/trade";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, YAxis, CartesianGrid, ReferenceLine } from "recharts";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+import { getTradePnl, getTradeOutcome, getTradeSymbol, getTradeDisplayOutcome, getTradeDate } from "../../lib/tradeUtils";
 
 interface Props {
   trades: Trade[];
@@ -9,35 +10,46 @@ interface Props {
 
 export function WinsVsLosses({ trades }: Props) {
   const stats = useMemo(() => {
-    if (trades.length === 0) return { winRate: 0, lossesRate: 0, totalProfit: 0, strategyData: [], dayData: [] };
+    if (trades.length === 0) return { winRate: 0, lossesRate: 0, totalProfit: 0, strategyData: [], dayData: [], breakevenRate: 0 };
     
-    const wins = trades.filter(t => t.outcome === "WIN").length;
-    const losses = trades.filter(t => t.outcome === "LOSE").length;
-    const breakevens = trades.filter(t => t.outcome === "BREAKEVEN").length;
-    const total = trades.length;
-    const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
-    const lossesRate = total > 0 ? Math.round((losses / total) * 100) : 0;
-    const breakevenRate = total > 0 ? Math.round((breakevens / total) * 100) : 0;
-    
+    let wins = 0;
+    let losses = 0;
+    let breakevens = 0;
     let totalProfit = 0;
     
-    // Group by strategy
     const stratMap: Record<string, { win: number, loss: number, be: number }> = {};
     const dayMap: Record<string, number> = {};
 
     trades.forEach(t => {
-      if (t.pnlAmount) totalProfit += t.pnlAmount;
+      const outcomeRaw = getTradeOutcome(t);
+      if (outcomeRaw === "WIN") wins++;
+      if (outcomeRaw === "LOSE" || outcomeRaw === "LOSS") losses++;
+      if (outcomeRaw === "BREAKEVEN") breakevens++;
 
-      const strat = t.strategy || "Unknown";
+      const pnl = getTradePnl(t);
+      if (pnl !== undefined) {
+         totalProfit += pnl;
+      }
+
+      const strat = t.strategyName || t.strategy || "Unknown";
       if (!stratMap[strat]) stratMap[strat] = { win: 0, loss: 0, be: 0 };
-      if (t.outcome === "WIN") stratMap[strat].win += 1;
-      if (t.outcome === "LOSE") stratMap[strat].loss += 1;
-      if (t.outcome === "BREAKEVEN") stratMap[strat].be += 1;
+      if (outcomeRaw === "WIN") stratMap[strat].win += 1;
+      if (outcomeRaw === "LOSE" || outcomeRaw === "LOSS") stratMap[strat].loss += 1;
+      if (outcomeRaw === "BREAKEVEN") stratMap[strat].be += 1;
 
-      const dayStr = new Date(t.date).toLocaleDateString("en-US", { month: 'short', day: 'numeric' });
+      const dateStr = getTradeDate(t);
+      let dayStr = "Unknown";
+      try {
+         if (dateStr) dayStr = new Date(dateStr).toLocaleDateString("en-US", { month: 'short', day: 'numeric' });
+      } catch(e) {}
       if (!dayMap[dayStr]) dayMap[dayStr] = 0;
-      if (t.pnlAmount) dayMap[dayStr] += t.pnlAmount;
+      if (pnl) dayMap[dayStr] += pnl;
     });
+    
+    const total = trades.length;
+    const winRate = total > 0 ? Math.round((wins / total) * 100) : 0;
+    const lossesRate = total > 0 ? Math.round((losses / total) * 100) : 0;
+    const breakevenRate = total > 0 ? Math.round((breakevens / total) * 100) : 0;
 
       const strategyData = Object.keys(stratMap).map(k => ({
       name: k,
@@ -47,9 +59,9 @@ export function WinsVsLosses({ trades }: Props) {
     }));
 
     const tradeData = trades.map((t, i) => ({
-       name: t.pair || `Trade ${i + 1}`,
-       pnl: t.pnlAmount || 0,
-       outcome: t.outcome
+       name: getTradeSymbol(t) || `Trade ${i + 1}`,
+       pnl: getTradePnl(t) || 0,
+       outcome: getTradeDisplayOutcome(t)
     }));
 
     return { winRate, lossesRate, breakevenRate, breakevens, totalProfit, totalTrades: total, wins, losses, strategyData, tradeData };
@@ -173,30 +185,32 @@ export function WinsVsLosses({ trades }: Props) {
               <BarChart data={stats.strategyData}>
                  <CartesianGrid strokeDasharray="3 3" stroke="#333" vertical={false} />
                  <XAxis dataKey="name" stroke="#888" tick={{fontSize: 12}} />
-                 <YAxis stroke="#888" tick={{fontSize: 12}} />
+                 <YAxis stroke="#888" tick={{fontSize: 12}} allowDecimals={false} />
                  <Tooltip cursor={{fill: 'rgba(255,255,255,0.05)'}} 
                     content={({ active, payload, label }) => {
                        if (active && payload && payload.length) {
-                         // The hovered payload has a dataKey that matches the bar hovered when shared={false} or we just grab the one with the non-zero value or just use payload[0].
-                         // To be safe, let's see if Recharts passes only the hovered item when shared=false.
-                         // Actually, shared={false} passes only one payload item.
-                         const data = payload[0];
                          return (
                            <div className="bg-[#111] border border-[#333] p-2 rounded text-xs font-mono">
                              <div className="mb-1 text-muted-foreground">{label}</div>
-                             <div style={{ color: data.color }}>
-                               {data.name}: {data.value}
-                             </div>
+                             {payload.map((data, idx) => {
+                               if (data.value && Number(data.value) > 0) {
+                                 return (
+                                   <div key={idx} style={{ color: data.color }}>
+                                     {data.name}: {data.value}
+                                   </div>
+                                 )
+                               }
+                               return null;
+                             })}
                            </div>
                          );
                        }
                        return null;
                     }}
-                    shared={false} 
                  />
-                 <Bar dataKey="Win" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                 <Bar dataKey="Lose" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                 <Bar dataKey="Break Even" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                 <Bar dataKey="Win" stackId="a" fill="#22c55e" radius={[0, 0, 0, 0]} maxBarSize={60} />
+                 <Bar dataKey="Lose" stackId="a" fill="#ef4444" radius={[0, 0, 0, 0]} maxBarSize={60} />
+                 <Bar dataKey="Break Even" stackId="a" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={60} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
