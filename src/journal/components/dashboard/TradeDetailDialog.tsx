@@ -63,10 +63,11 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
       )}
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl bg-background border-border/50 text-foreground p-0 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-          <DialogHeader className="p-6 pb-4 shrink-0 border-b border-border/50 bg-muted/20">
-            <div className="flex items-start justify-between">
-              <div className="flex flex-col gap-2">
+        <DialogContent className="max-w-6xl w-[95vw] bg-background border-border/50 text-foreground p-0 overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+          {/* Header */}
+          <DialogHeader className="px-6 py-4 shrink-0 border-b border-border/50 bg-muted/20">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-3 flex-wrap">
                   <DialogTitle className="text-2xl font-mono tracking-tight font-bold">
                     {symbol}
@@ -78,170 +79,159 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
                     {outcomeDisplay}
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3 flex-wrap text-xs font-mono text-muted-foreground">
+                <div className="flex items-center gap-2 flex-wrap text-xs font-mono text-muted-foreground">
                   <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded-md bg-black/20">
-                    <CalendarIcon className="w-3.5 h-3.5" />
+                    <CalendarIcon className="w-3 h-3" />
                     {format(parsedDate, "MMM d, yyyy • h:mm a")}
                   </div>
-
                   {trade.source === "bot" && (
                     <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400">
-                      <Activity className="w-3.5 h-3.5" />
+                      <Activity className="w-3 h-3" />
                       BOT: {trade.botName || "Unknown"}
                     </div>
                   )}
-
                   {trade.accountType && (
                     <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded-md bg-zinc-800">
-                      <Box className="w-3.5 h-3.5" />
+                      <Box className="w-3 h-3" />
                       {trade.accountType.toUpperCase()}
                     </div>
                   )}
                 </div>
               </div>
-
               <div className="flex flex-col items-end shrink-0">
-                <span className="text-xs uppercase font-mono text-muted-foreground mb-1">Net PNL</span>
-                <span className={cn("text-2xl font-mono font-bold tracking-tight", pnlResult > 0 ? "text-green-500" : pnlResult < 0 ? "text-red-500" : "text-amber-500")}>
+                <span className="text-[10px] uppercase font-mono text-muted-foreground mb-0.5">Net PNL</span>
+                <span className={cn("text-3xl font-mono font-bold tracking-tight", pnlResult > 0 ? "text-green-500" : pnlResult < 0 ? "text-red-500" : "text-amber-500")}>
                   {pnlResult > 0 ? "+" : ""}{trade.accountCurrency === "USD" ? "$" : ""}{pnlResult?.toFixed(2)}{trade.accountCurrency && trade.accountCurrency !== "USD" ? ` ${trade.accountCurrency}` : ""}
                 </span>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Body: horizontal split — screenshot left, stats right */}
+          <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
 
-              {/* Left Column: Stats */}
-              <div className="lg:col-span-1 space-y-5">
-
-                {/* Execution Details */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold font-mono uppercase text-muted-foreground border-b border-border/50 pb-2 flex items-center gap-2">
-                    <Activity className="w-3.5 h-3.5" /> Execution Details
-                  </h4>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Entry</span>
-                      <span className="font-mono text-sm font-semibold">{trade.entryPrice || "-"}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Exit</span>
-                      <span className="font-mono text-sm font-semibold">{closePrice || "-"}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Volume</span>
-                      <span className="font-mono text-sm font-semibold">{trade.volume || "-"}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Close Reason</span>
-                      <span className="font-mono text-sm font-semibold">{trade.closeReason || "-"}</span>
+            {/* Left: Screenshot — takes ~60% width */}
+            <div className="md:w-[60%] flex flex-col bg-zinc-950 border-b md:border-b-0 md:border-r border-border/50 min-h-[280px] md:min-h-0">
+              {screenshotUrl ? (
+                <div
+                  className="relative flex-1 flex items-center justify-center p-3 group cursor-zoom-in"
+                  onClick={() => setImageExpanded(true)}
+                  title="Click to expand"
+                >
+                  <img
+                    src={screenshotUrl}
+                    alt="Trade Chart"
+                    className="max-w-full max-h-full object-contain rounded-md transition-opacity group-hover:opacity-90"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-md">
+                    <div className="bg-black/70 text-white text-xs font-mono px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                      <Expand size={12} /> Expand
                     </div>
                   </div>
-                </div>
-
-                <div className="h-px w-full bg-border/50" />
-
-                {/* Risk & Reward */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold font-mono uppercase text-muted-foreground border-b border-border/50 pb-2 flex items-center gap-2">
-                    <DollarSign className="w-3.5 h-3.5" /> Risk / Reward
-                  </h4>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-3">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] uppercase text-red-400 tracking-wide">Stop Loss</span>
-                      <span className="font-mono text-sm font-semibold">{trade.stopLoss || "-"}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] uppercase text-green-400 tracking-wide">Take Profit</span>
-                      <span className="font-mono text-sm font-semibold">{trade.takeProfit || "-"}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Gross PnL</span>
-                      <span className="font-mono text-sm font-semibold">{trade.grossPnl !== undefined ? trade.grossPnl : "-"}</span>
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Est. RR</span>
-                      <span className="font-mono text-sm font-semibold">{trade.rrRatio ? `1:${trade.rrRatio}` : "-"}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Classification */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold font-mono uppercase text-muted-foreground border-b border-border/50 pb-2 flex items-center gap-2">
-                    <TagIcon className="w-3.5 h-3.5" /> Classification
-                  </h4>
-                  <div className="flex flex-col gap-3">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Strategy</span>
-                      <span className="font-mono text-sm text-foreground">{trade.strategyName || trade.strategy || "None"}</span>
-                    </div>
-                    {trade.tags && trade.tags.length > 0 && (
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Tags</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {trade.tags.map(t => (
-                            <span key={t} className="text-xs bg-muted/40 px-2 py-0.5 rounded text-muted-foreground">{t}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-              </div>
-
-              {/* Right Column: Screenshot */}
-              <div className="lg:col-span-2 flex flex-col gap-4">
-                <div className="flex-1 flex flex-col rounded-xl overflow-hidden border border-white/10 bg-[#0c0c0c] min-h-[280px]">
-                  {screenshotUrl ? (
-                    <div
-                      className="relative w-full h-full min-h-[280px] flex items-center justify-center bg-zinc-950 p-2 group cursor-zoom-in"
-                      onClick={() => setImageExpanded(true)}
-                      title="Click to expand"
-                    >
-                      <img
-                        src={screenshotUrl}
-                        alt="Trade Chart"
-                        className="max-w-full max-h-full object-contain rounded-md transition-opacity group-hover:opacity-90"
-                        onError={(e) => {
-                           const tgt = e.target as HTMLImageElement;
-                           tgt.style.display = 'none';
-                        }}
-                      />
-                      {/* Expand hint overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-md">
-                        <div className="bg-black/70 text-white text-xs font-mono px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                          <Expand size={12} /> Expand
-                        </div>
-                      </div>
-                      {trade.outcomeScreenshotSource && (
-                         <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md border border-white/10 text-[10px] font-mono px-2 py-1 rounded text-white/70">
-                           Source: {trade.outcomeScreenshotSource}
-                         </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center h-full min-h-[280px] text-muted-foreground gap-3">
-                      <ImageIcon className="w-10 h-10 opacity-20" />
-                      <p className="font-mono text-sm opacity-50">No screenshot attached.</p>
+                  {trade.outcomeScreenshotSource && (
+                    <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md border border-white/10 text-[10px] font-mono px-2 py-1 rounded text-white/70">
+                      Source: {trade.outcomeScreenshotSource}
                     </div>
                   )}
                 </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-3">
+                  <ImageIcon className="w-12 h-12 opacity-20" />
+                  <p className="font-mono text-sm opacity-50">No screenshot attached.</p>
+                </div>
+              )}
+            </div>
 
-                {trade.notes && (
-                  <div className="bg-muted/20 border border-white/5 rounded-xl p-4 shrink-0">
-                    <h4 className="text-xs font-bold font-mono uppercase text-muted-foreground mb-3">
-                      Notes
-                    </h4>
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground/90">
-                      {trade.notes}
-                    </p>
+            {/* Right: Stats — takes ~40% width, scrollable */}
+            <div className="md:w-[40%] overflow-y-auto custom-scrollbar p-5 space-y-5">
+
+              {/* Execution Details */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold font-mono uppercase text-muted-foreground border-b border-border/50 pb-2 flex items-center gap-2">
+                  <Activity className="w-3.5 h-3.5" /> Execution Details
+                </h4>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Entry</span>
+                    <span className="font-mono text-sm font-semibold">{trade.entryPrice || "-"}</span>
                   </div>
-                )}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Exit</span>
+                    <span className="font-mono text-sm font-semibold">{closePrice || "-"}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Volume</span>
+                    <span className="font-mono text-sm font-semibold">{trade.volume || "-"}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Close Reason</span>
+                    <span className="font-mono text-sm font-semibold">{trade.closeReason || "-"}</span>
+                  </div>
+                </div>
               </div>
+
+              <div className="h-px w-full bg-border/50" />
+
+              {/* Risk & Reward */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold font-mono uppercase text-muted-foreground border-b border-border/50 pb-2 flex items-center gap-2">
+                  <DollarSign className="w-3.5 h-3.5" /> Risk / Reward
+                </h4>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase text-red-400 tracking-wide">Stop Loss</span>
+                    <span className="font-mono text-sm font-semibold">{trade.stopLoss || "-"}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase text-green-400 tracking-wide">Take Profit</span>
+                    <span className="font-mono text-sm font-semibold">{trade.takeProfit || "-"}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Gross PnL</span>
+                    <span className="font-mono text-sm font-semibold">{trade.grossPnl !== undefined ? trade.grossPnl : "-"}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Est. RR</span>
+                    <span className="font-mono text-sm font-semibold">{trade.rrRatio ? `1:${trade.rrRatio}` : "-"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="h-px w-full bg-border/50" />
+
+              {/* Classification */}
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold font-mono uppercase text-muted-foreground border-b border-border/50 pb-2 flex items-center gap-2">
+                  <TagIcon className="w-3.5 h-3.5" /> Classification
+                </h4>
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Strategy</span>
+                    <span className="font-mono text-sm text-foreground">{trade.strategyName || trade.strategy || "None"}</span>
+                  </div>
+                  {trade.tags && trade.tags.length > 0 && (
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Tags</span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {trade.tags.map(t => (
+                          <span key={t} className="text-xs bg-muted/40 px-2 py-0.5 rounded text-muted-foreground">{t}</span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {trade.notes && (
+                <>
+                  <div className="h-px w-full bg-border/50" />
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold font-mono uppercase text-muted-foreground">Notes</h4>
+                    <p className="text-sm whitespace-pre-wrap leading-relaxed text-foreground/90">{trade.notes}</p>
+                  </div>
+                </>
+              )}
 
             </div>
           </div>
