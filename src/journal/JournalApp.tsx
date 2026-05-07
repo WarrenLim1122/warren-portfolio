@@ -4,6 +4,10 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import { NewTrade } from "./pages/NewTrade";
+import { RiskCalculator } from "./pages/RiskCalculator";
+import { StrategiesDashboard } from "./pages/StrategiesDashboard";
+import { Settings } from "./pages/Settings";
+import { AppLayout } from "./components/layout/AppLayout";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -17,11 +21,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (!user) {
     return <Navigate to="/journal/login" replace />;
   }
-  return <>{children}</>;
+  return <AppLayout>{children}</AppLayout>;
 }
 
 export default function JournalApp() {
-  // Mirror the source repo's <html class="dark"> approach.
   // Adding dark to <html> ensures portal-rendered elements (dropdowns, dialogs,
   // selects, popovers) inherit dark CSS variables even though they render into
   // document.body, outside any scoped .dark div.
@@ -50,6 +53,30 @@ export default function JournalApp() {
             element={
               <ProtectedRoute>
                 <NewTrade />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="strategies"
+            element={
+              <ProtectedRoute>
+                <StrategiesDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="risk-calculator"
+            element={
+              <ProtectedRoute>
+                <RiskCalculator />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
               </ProtectedRoute>
             }
           />

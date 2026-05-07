@@ -308,8 +308,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6">
-      <div className="mx-auto max-w-7xl relative">
+    <div className="mx-auto max-w-7xl relative">
         <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
           <div className="flex flex-col">
             <span className="text-sm font-mono text-muted-foreground uppercase tracking-wider">Current Equity</span>
@@ -323,18 +322,9 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4 relative z-50">
-            <Link
-              to="/"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono text-muted-foreground border border-border rounded-lg px-3 h-8 hover:text-white hover:border-white/30 transition-colors"
-            >
-              ← Portfolio
-            </Link>
-            <Button className="gap-2 shrink-0 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 font-mono transition-all hover:scale-105" onClick={() => navigate("/journal/new-trade")}>
-              <Plus size={16} /> New Trade
-            </Button>
-            <Button variant="outline" size="icon" onClick={logout}>
-              <LogOut size={16} />
-            </Button>
+             <Button className="gap-2 shrink-0 bg-primary/20 hover:bg-primary/30 text-primary border border-primary/30 font-mono transition-all hover:scale-105" onClick={() => navigate("/journal/new-trade")}>
+               <Plus size={16} /> New Trade
+             </Button>
           </div>
         </header>
 
@@ -492,7 +482,6 @@ export default function Dashboard() {
             if (!open) setSelectedTradeForDetail(null);
           }}
         />
-      </div>
     </div>
   );
 }
