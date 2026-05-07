@@ -67,48 +67,49 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
         <DialogContent className="sm:max-w-[90vw] w-[90vw] max-w-[90vw] bg-background border-border/50 text-foreground p-0 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
           {/* Header */}
           <DialogHeader className="px-6 py-4 shrink-0 border-b border-border/50 bg-muted/20">
-            {/* 3-column: symbol left | PNL center | spacer right (for X button) */}
-            <div className="flex items-center gap-4 pr-8">
-              <div className="flex-1 min-w-0 flex flex-col gap-1.5">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <DialogTitle className="text-2xl font-mono tracking-tight font-bold">
-                    {symbol}
-                  </DialogTitle>
-                  <div className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-xs font-bold uppercase", dirColor)}>
-                    {direction}
-                  </div>
-                  <div className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-xs font-bold uppercase", outcomeColor)}>
-                    {outcomeDisplay}
-                  </div>
+            <div className="flex flex-col gap-2 pr-10">
+              {/* Row 1: Symbol | Net PNL   badges */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <DialogTitle className="text-2xl font-mono tracking-tight font-bold">
+                  {symbol}
+                </DialogTitle>
+                {/* Pipe divider */}
+                <div className="w-px h-7 bg-white/25 shrink-0" />
+                {/* Net PNL inline */}
+                <div className="flex flex-col justify-center">
+                  <span className="text-[10px] uppercase font-mono text-muted-foreground leading-none mb-0.5">Net PNL</span>
+                  <span className={cn("text-xl font-mono font-bold tracking-tight leading-none", pnlResult > 0 ? "text-green-500" : pnlResult < 0 ? "text-red-500" : "text-amber-500")}>
+                    {pnlResult > 0 ? "+" : ""}{trade.accountCurrency === "USD" ? "$" : ""}{pnlResult?.toFixed(2)}{trade.accountCurrency && trade.accountCurrency !== "USD" ? ` ${trade.accountCurrency}` : ""}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 flex-wrap text-xs font-mono text-muted-foreground">
-                  <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded-md bg-black/20">
-                    <CalendarIcon className="w-3 h-3" />
-                    {format(parsedDate, "MMM d, yyyy • h:mm a")}
-                  </div>
-                  {trade.source === "bot" && (
-                    <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400">
-                      <Activity className="w-3 h-3" />
-                      BOT: {trade.botName || "Unknown"}
-                    </div>
-                  )}
-                  {trade.accountType && (
-                    <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded-md bg-zinc-800">
-                      <Box className="w-3 h-3" />
-                      {trade.accountType.toUpperCase()}
-                    </div>
-                  )}
+                {/* Pipe divider before badges */}
+                <div className="w-px h-7 bg-white/25 shrink-0" />
+                <div className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-xs font-bold uppercase", dirColor)}>
+                  {direction}
+                </div>
+                <div className={cn("inline-flex items-center rounded-full border px-2.5 py-0.5 font-mono text-xs font-bold uppercase", outcomeColor)}>
+                  {outcomeDisplay}
                 </div>
               </div>
-              {/* Net PNL — centered */}
-              <div className="shrink-0 text-center px-6">
-                <span className="text-[10px] uppercase font-mono text-muted-foreground block mb-0.5">Net PNL</span>
-                <span className={cn("text-3xl font-mono font-bold tracking-tight", pnlResult > 0 ? "text-green-500" : pnlResult < 0 ? "text-red-500" : "text-amber-500")}>
-                  {pnlResult > 0 ? "+" : ""}{trade.accountCurrency === "USD" ? "$" : ""}{pnlResult?.toFixed(2)}{trade.accountCurrency && trade.accountCurrency !== "USD" ? ` ${trade.accountCurrency}` : ""}
-                </span>
+              {/* Row 2: date, bot, account */}
+              <div className="flex items-center gap-2 flex-wrap text-xs font-mono text-muted-foreground">
+                <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded-md bg-black/20">
+                  <CalendarIcon className="w-3 h-3" />
+                  {format(parsedDate, "MMM d, yyyy • h:mm a")}
+                </div>
+                {trade.source === "bot" && (
+                  <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-400">
+                    <Activity className="w-3 h-3" />
+                    BOT: {trade.botName || "Unknown"}
+                  </div>
+                )}
+                {trade.accountType && (
+                  <div className="flex items-center gap-1.5 border border-white/10 px-2 py-0.5 rounded-md bg-zinc-800">
+                    <Box className="w-3 h-3" />
+                    {trade.accountType.toUpperCase()}
+                  </div>
+                )}
               </div>
-              {/* Spacer so PNL stays centered; X button occupies this zone */}
-              <div className="flex-1" />
             </div>
           </DialogHeader>
 
