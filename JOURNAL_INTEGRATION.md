@@ -267,19 +267,21 @@ User visits warrenlimzf.com/journal
   → Vercel rewrite sends request to index.html
   → React app boots, BrowserRouter reads the path
   → Route path="/journal/*" matches → renders <JournalApp />
-  → JournalApp wraps everything in <AuthProvider> and <div class="dark">
-  → If user is not authenticated → <Navigate to="/journal/login" replace />
-  → If user is authenticated → renders <Dashboard />
+  → JournalApp index route → <Navigate to="/journal/dashboard" replace />
+
+User visits warrenlimzf.com/journal/dashboard
+  → Same Vercel rewrite → index.html → BrowserRouter → JournalApp
+  → "dashboard" path matches <Route path="dashboard"> inside JournalApp
+  → Wrapped in <ProtectedRoute> → if not authenticated → <Navigate to="/journal/login" replace />
+  → If authenticated → renders <Dashboard /> inside <AppLayout>
 
 User visits warrenlimzf.com/journal/login
-  → Same Vercel rewrite → index.html → BrowserRouter
-  → Route path="/journal/*" matches
-  → "login" relative path matches the <Route path="login"> inside JournalApp
-  → Renders <Login />
-  → After successful sign-in, Login navigates to "/journal"
+  → Same Vercel rewrite → index.html → BrowserRouter → JournalApp
+  → "login" path matches <Route path="login"> → renders <Login />
+  → After successful sign-in, Login navigates to "/journal/dashboard"
 ```
 
-The `<Route path="/journal/*">` in App.tsx strips `/journal` from the path before passing it to JournalApp's `<Routes>`. So inside JournalApp, `path="login"` matches `/journal/login` and `index` matches `/journal` exactly.
+The `<Route path="/journal/*">` in App.tsx strips `/journal` from the path before passing it to JournalApp's `<Routes>`. So inside JournalApp, `path="login"` matches `/journal/login`, `path="dashboard"` matches `/journal/dashboard`, and `index` matches bare `/journal` (redirects to `/journal/dashboard`).
 
 ---
 
@@ -308,10 +310,10 @@ npm run dev
 | URL | Expected behaviour |
 |---|---|
 | `http://localhost:PORT/` | Portfolio — entry gate (ParticleHero), then scrollable sections |
-| `http://localhost:PORT/journal` | Redirects to `/journal/login` if not signed in |
-| `http://localhost:PORT/journal/login` | Login page with 3D Spline background |
-| `http://localhost:PORT/journal` (after login) | Dashboard with trade data |
-| Hard refresh on `/journal` | Should NOT 404 (Vite dev server handles all paths; Vercel rewrite handles production) |
+| `http://localhost:PORT/journal` | Redirects to `/journal/dashboard` |
+| `http://localhost:PORT/journal/dashboard` | Redirects to `/journal/login` if not signed in; shows Dashboard if authenticated |
+| `http://localhost:PORT/journal/login` | Login page with 3D Spline background; redirects to `/journal/dashboard` after sign-in |
+| Hard refresh on `/journal/dashboard` | Should NOT 404 (Vite dev server handles all paths; Vercel rewrite handles production) |
 
 Type-check (no build required):
 ```bash
@@ -396,6 +398,22 @@ Do not copy `package.json` from the source repo.
 
 These are changes made to copied files that fix bugs or adapt the code to this repo's context. If a future sync overwrites these files, re-apply the patches below.
 
+### `src/journal/JournalApp.tsx` (portfolio-created, not from source)
+Index route must redirect to `/journal/dashboard`, not render Dashboard directly:
+```tsx
+<Route index element={<Navigate to="/journal/dashboard" replace />} />
+<Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+```
+The `html.dark` useEffect must remain. Do not add a nested `BrowserRouter`.
+
+### `src/journal/components/layout/AppLayout.tsx` (portfolio-created, not from source)
+All nav `path` values must include the `/journal/` prefix (source repo uses bare paths).
+Dashboard nav path must be `/journal/dashboard` (not `/journal`):
+```tsx
+{ name: "Dashboard", path: "/journal/dashboard", icon: LayoutDashboard },
+```
+The "← Portfolio" `<Link to="/">` must remain in both sidebar and mobile header.
+
 ### `src/journal/lib/firebase.ts`
 **Change:** Import path for `firebase-applet-config.json`
 ```ts
@@ -410,27 +428,24 @@ import firebaseConfig from "../firebase-applet-config.json";
 **Change:** Post-login redirect path
 ```ts
 // CORRECT for this repo
-navigate("/journal");
+navigate("/journal/dashboard");
 
 // Source repo has (WRONG here — sends user to portfolio homepage):
 // navigate("/");
 ```
 
-### `src/journal/pages/Dashboard.tsx`
-**Change 1:** "← Portfolio" back button in header (added above the existing logout button area):
-```tsx
-import { Link } from "react-router-dom";
+### `src/journal/pages/NewTrade.tsx`
+**Change:** Both `navigate` calls after save and the back button use `/journal/dashboard`:
+```ts
+// CORRECT for this repo (both in handleCreate and the back button onClick)
+navigate("/journal/dashboard");
 
-// In the header section:
-<Link
-  to="/"
-  className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono text-muted-foreground border border-border rounded-lg px-3 h-8 hover:text-white hover:border-white/30 transition-colors"
->
-  ← Portfolio
-</Link>
+// Source repo has (WRONG here — bare /journal is now only a redirect stub):
+// navigate("/journal");
 ```
 
-**Change 2:** Export dropdown trigger — Base UI uses `render` prop, not `asChild`:
+### `src/journal/pages/Dashboard.tsx`
+**Change:** Export dropdown trigger — Base UI uses `render` prop, not `asChild`:
 ```tsx
 // CORRECT for this repo (Base UI pattern)
 <DropdownMenuTrigger render={
@@ -440,12 +455,10 @@ import { Link } from "react-router-dom";
 } />
 
 // Source repo uses Radix UI asChild (WRONG here — TypeScript error with @base-ui/react):
-// <DropdownMenuTrigger asChild>
-//   <Button variant="outline" size="sm" className="font-mono h-9 gap-2">
-//     <Download size={16} /> Export
-//   </Button>
-// </DropdownMenuTrigger>
+// <DropdownMenuTrigger asChild>...</DropdownMenuTrigger>
 ```
+
+Note: the "← Portfolio" back button and manual logout button were in an earlier version of the Dashboard. These are now handled by `AppLayout`. Do not re-add them to Dashboard.tsx.
 
 ### `src/journal/components/dashboard/EquityCurve.tsx`
 **Change 1:** Props interface accepts optional external controlled state (Dashboard.tsx passes these props):
@@ -530,3 +543,4 @@ Open `GOOGLE_AI_STUDIO_RESET_PROMPT.md`, copy the full prompt inside, and paste 
 | 2026-05-04 | Initial integration | Full copy of trading-journal `src/` into `src/journal/`. All TypeScript errors resolved. `npm run lint` zero errors. Production build passes. |
 | 2026-05-06 | Bot journaling infrastructure & UI fixes | Synced from trading-journal commit `5b7dc24`. New files: `tradeUtils.ts`, `mt5Calculation.ts`, `TradeDetailDialog.tsx`, `NewTrade.tsx`. Updated: `trade.ts` (bot fields + LOSS union), `AuthContext.tsx` (resetPassword), `ListOverview.tsx` (BOT badges, onRowClick), `CalendarView.tsx` (onTradeClick), `ChartOverview.tsx` (screenshotUrl, BOT badges), `WinsVsLosses.tsx` (tradeUtils), `EquityCurve.tsx` (pnlAmt fix), `Dashboard.tsx` (TradeDetailDialog overlay, New Trade → /journal/new-trade), `Login.tsx` (password visibility toggle fix), `select.tsx` (w-full). Routing: added /journal/new-trade. Compat patches preserved: navigate("/journal"), ← Portfolio button, logout button, formatter type fix. |
 | 2026-05-07 | AppLayout sidebar + new pages (UI overhaul) | Synced from trading-journal commits `e1a1249`+`79a983c`. New files: `components/layout/AppLayout.tsx` (sidebar with nav, user profile, mobile header, Portfolio back link, logout), `pages/RiskCalculator.tsx`, `pages/StrategiesDashboard.tsx`, `pages/Settings.tsx`. Updated: `JournalApp.tsx` (ProtectedRoute now wraps with AppLayout; routes for /journal/strategies, /journal/risk-calculator, /journal/settings added), `Dashboard.tsx` (removed old min-h-screen wrapper and manual header buttons — AppLayout now owns layout, nav, logout). Compat patches: AppLayout nav paths use `/journal/*` prefix; navigate("/journal/new-trade") kept in Dashboard. Portfolio back link added to AppLayout sidebar bottom. |
+| 2026-05-07 | Routing restructure + UI polish (portfolio-side only, no source sync) | Dashboard moved from `/journal` to `/journal/dashboard`. `/journal` index route now redirects. Files changed: `JournalApp.tsx` (index redirect + dashboard route), `AppLayout.tsx` (Dashboard nav path → `/journal/dashboard`), `Login.tsx` (navigate → `/journal/dashboard`), `NewTrade.tsx` (navigate + back button → `/journal/dashboard`). Also: `TradeDetailDialog.tsx` redesigned with horizontal split layout (screenshot left 60%, stats right 40%, `max-w-6xl`); `ListOverview.tsx` BOT badge removed entirely from rows; `Dashboard.tsx` scroll spy initial state fixed to `"charts"`, filter dropdowns given labels. |

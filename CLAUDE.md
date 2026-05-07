@@ -24,8 +24,9 @@
 7. Run `npm install` only if new dependencies were added in the trading-journal's `package.json`.
 8. After a sync, test:
    - `/` — portfolio entry gate and sections
-   - `/journal` — redirects to login if unauthenticated
+   - `/journal` — redirects to `/journal/dashboard` (then to login if unauthenticated)
    - `/journal/login` — login page renders
+   - `/journal/dashboard` — dashboard loads when authenticated
 9. After every successful journal sync, provide a summary covering: files changed, dependencies changed, Firebase/Auth/Firestore impact, routing impact, styling impact, and whether a push is needed.
 10. After every successful journal sync, remind Warren:
 
@@ -159,8 +160,9 @@ After pushing and/or merging, always output:
 
 Always remind Warren to test:
 - `https://warrenlimzf.com`
-- `https://warrenlimzf.com/journal`
+- `https://warrenlimzf.com/journal` (should redirect to `/journal/dashboard`)
 - `https://warrenlimzf.com/journal/login`
+- `https://warrenlimzf.com/journal/dashboard`
 
 ---
 
@@ -239,9 +241,14 @@ Do not remove the `AnimatePresence` wrapper around the gate — the exit animati
 `JournalApp` (`src/journal/JournalApp.tsx`) uses `<Routes>` only — no nested `BrowserRouter`. Routes inside it are relative to `/journal`:
 
 - `path="login"` → `<Login />` (matches `/journal/login`)
-- `index` → `<Dashboard />` guarded by `<ProtectedRoute>` (matches `/journal`)
+- `index` → `<Navigate to="/journal/dashboard" replace />` (bare `/journal` redirects to dashboard)
+- `path="dashboard"` → `<Dashboard />` guarded by `<ProtectedRoute>` (matches `/journal/dashboard`)
+- `path="new-trade"` → `<NewTrade />`
+- `path="strategies"` → `<StrategiesDashboard />`
+- `path="risk-calculator"` → `<RiskCalculator />`
+- `path="settings"` → `<Settings />`
 
-Unauthenticated access redirects to `/journal/login`. After sign-in, Login navigates to `/journal`.
+Unauthenticated access redirects to `/journal/login`. After sign-in, Login navigates to `/journal/dashboard`.
 
 ---
 
@@ -284,12 +291,15 @@ my-portfolio/
         ├── JournalApp.tsx        ← created here, not from source
         ├── firebase-applet-config.json
         ├── contexts/AuthContext.tsx
-        ├── lib/firebase.ts / tradeService.ts / utils.ts
+        ├── lib/firebase.ts / tradeService.ts / tradeUtils.ts / mt5Calculation.ts / utils.ts
         ├── types/trade.ts
-        ├── pages/Login.tsx / Dashboard.tsx
+        ├── pages/Login.tsx / Dashboard.tsx / NewTrade.tsx
+        │         RiskCalculator.tsx / StrategiesDashboard.tsx / Settings.tsx
         └── components/
+            ├── layout/AppLayout.tsx  ← sidebar, mobile nav, user profile, logout
             ├── dashboard/  (AddTradeDialog, CalendarView, ChartOverview,
-            │               EditTradeDialog, EquityCurve, ListOverview, WinsVsLosses)
+            │               EditTradeDialog, EquityCurve, ListOverview,
+            │               TradeDetailDialog, WinsVsLosses)
             └── ui/         (14 shadcn/Base UI components)
 ```
 
@@ -411,9 +421,9 @@ Shared by `Certificates` (receives a `cert` object: `.image`, `.title`, `.issuer
 
 ---
 
-## Latest Session Summary — Journal Integration and Sync Workflow
+## Latest Session Summary — Journal UI polish and routing restructure
 
-*Recorded 2026-05-04. Read this section at the start of any new session before touching the journal or the sync workflow.*
+*Recorded 2026-05-07. Read this section at the start of any new session before touching the journal or the sync workflow.*
 
 ### 1. Two-repo setup
 
@@ -428,29 +438,30 @@ Google AI Studio should maintain `AI_STUDIO_RULES.md` and `CHANGELOG.md` inside 
 
 - **Method:** manual file copy — not a submodule or subtree.
 - Journal source files → `src/journal/` in this repo.
-- `warrenlimzf.com/journal` → dashboard (redirects to login if unauthenticated).
-- `warrenlimzf.com/journal/login` → login page.
+- `warrenlimzf.com/journal` → redirects to `/journal/dashboard`.
+- `warrenlimzf.com/journal/dashboard` → main dashboard (redirects to login if unauthenticated).
+- `warrenlimzf.com/journal/login` → login page; redirects to `/journal/dashboard` after sign-in.
 - This repo owns the `BrowserRouter`. `JournalApp` uses `<Routes>` only — never a nested `BrowserRouter`.
 
 ### 3. Compatibility changes already in place — never overwrite these
 
 | File | What was changed |
 |---|---|
-| `src/journal/JournalApp.tsx` | Created here (not from source). Adds/removes `html.dark` via `useEffect`. |
+| `src/journal/JournalApp.tsx` | Created here (not from source). Adds/removes `html.dark`. Index route redirects to `/journal/dashboard`. |
+| `src/journal/components/layout/AppLayout.tsx` | Created here. All nav paths use `/journal/*` prefix. Dashboard path is `/journal/dashboard`. |
 | `src/journal/lib/firebase.ts` | Import path: `../../` → `../firebase-applet-config.json` |
-| `src/journal/pages/Login.tsx` | `navigate("/")` → `navigate("/journal")` |
-| `src/journal/pages/Dashboard.tsx` | "← Portfolio" back button; `asChild` → `render` prop (Base UI) |
+| `src/journal/pages/Login.tsx` | `navigate("/")` → `navigate("/journal/dashboard")` |
+| `src/journal/pages/NewTrade.tsx` | `navigate("/journal")` → `navigate("/journal/dashboard")` (save + back button) |
+| `src/journal/pages/Dashboard.tsx` | Removed old min-h-screen wrapper and manual header; `asChild` → `render` prop (Base UI) |
 | `src/journal/components/dashboard/EquityCurve.tsx` | Optional props interface; Recharts formatter type fix |
 | `src/journal/components/dashboard/WinsVsLosses.tsx` | `"LOSS"` → `"LOSE"`; `breakevenRate` added to useMemo return |
+| `src/journal/components/dashboard/TradeDetailDialog.tsx` | Horizontal layout: screenshot left 60%, scrollable stats right 40%; `max-w-6xl` |
+| `src/journal/components/dashboard/ListOverview.tsx` | BOT badge removed; Symbol cell is plain text |
 | All `src/journal/**` imports | `@/` → `@journal/` |
 
 Full patch details: `JOURNAL_INTEGRATION.md §15`.
 
-### 4. Files created or updated during this integration
-
-`CLAUDE.md`, `JOURNAL_INTEGRATION.md`, `GOOGLE_AI_STUDIO_RESET_PROMPT.md`, `src/journal/` (all files), `src/App.tsx`, `src/index.css`, `vite.config.ts`, `tsconfig.json`, `vercel.json`.
-
-### 5. Dark theme architecture — why it works this way
+### 4. Dark theme architecture — why it works this way
 
 The source trading journal sets `class="dark"` on `<html>` in `index.html`. The integrated version cannot do that statically (it would break the portfolio). Instead, `JournalApp.tsx` uses:
 
@@ -463,7 +474,7 @@ useEffect(() => {
 
 This is required because Base UI portals (dropdown, select, dialog, popover) render into `document.body`, outside any scoped `<div class="dark">`. Without `html.dark`, portal elements get `:root` (light) CSS variables and appear white. `index.css` also includes a scoped `@layer base` border reset to fix calendar/grid borders.
 
-### 6. Firebase Auth — already resolved, do not re-debug
+### 5. Firebase Auth — already resolved, do not re-debug
 
 Firebase unauthorized-domain error was fixed manually in the Firebase Console. Authorized domains must include:
 - `warrenlimzf.com`
@@ -473,16 +484,16 @@ Firebase unauthorized-domain error was fixed manually in the Firebase Console. A
 
 Do not change Firebase config or Firestore rules unless explicitly requested.
 
-### 7. GitHub workflow — Claude has automatic permission
+### 6. GitHub workflow — Claude has automatic permission
 
 Claude may commit, push, create PRs, and merge PRs automatically after every successful edit, **unless Warren says "do not push" or "do not merge"**. Hard stops: secrets detected, build/lint fails, merge conflict, auth failure, destructive change. Full rules: `CLAUDE.md §Automatic GitHub workflow`.
 
-### 8. After every journal sync — mandatory reminder
+### 7. After every journal sync — mandatory reminder
 
 After syncing the trading journal into this repo, always remind Warren:
 
 > "Please open `GOOGLE_AI_STUDIO_RESET_PROMPT.md`, copy the full prompt inside, and paste it into Google AI Studio before making the next trading journal update."
 
-### 9. Visual styling — current status
+### 8. Visual styling — current status
 
-The `/journal` dark theme visual match was fixed in this session (2026-05-04, commit `a3ab5eb`). The original trading-journal GitHub/Google AI Studio version is the visual source of truth. If new styling regressions appear, check: (a) whether portals have dark CSS variables, (b) whether `html.dark` is being applied, (c) whether a component was overwritten without preserving the `@journal/` import rewrite.
+The `/journal` dark theme is stable. `AppLayout` provides `min-h-screen bg-background` for all protected routes. If new regressions appear, check: (a) portals have dark CSS variables, (b) `html.dark` is applied by `JournalApp.tsx`, (c) `@journal/` import rewrite is intact after any sync.
