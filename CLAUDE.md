@@ -388,7 +388,6 @@ Current `vercel.json`:
   "buildCommand": "npx vite build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "cleanUrls": true,
   "rewrites": [
     { "source": "/:path*", "destination": "/index.html" }
   ]
@@ -396,6 +395,17 @@ Current `vercel.json`:
 ```
 
 The SPA rewrite is required so all `/journal/*` paths don't 404 on hard refresh. Use `/:path*` (Vercel's glob syntax) — **not** `/(.*)`  (regex syntax). The regex form fails silently on nested paths like `/journal/dashboard` at Vercel's edge layer. Do not change this pattern.
+
+### ⚠ Do NOT add `cleanUrls`, `trailingSlash`, or `i18n` to `vercel.json`
+
+These three Vercel options interfere with SPA catch-all rewrites. **`cleanUrls` was removed in commit `720e1da` after it caused hard-refresh 404s on `/journal/dashboard`.**
+
+Why it broke: Vercel's routing pipeline runs in this order:
+`headers → redirects → rewrites (pre-filesystem) → filesystem + cleanUrls → rewrites (post-filesystem fallthrough)`
+
+`cleanUrls: true` lives in the **filesystem stage**. For any path without a file extension (e.g. `/journal/dashboard`), Vercel looks for `dist/journal/dashboard.html` — not found — and returns `NOT_FOUND` from the filesystem stage, **before the post-filesystem rewrites ever run**. The `/:path*` catch-all was correct; it just never got evaluated.
+
+**Diagnostic sign:** if you ever see Vercel's own 404 error page (not your React app's UI) on a nested path after a hard refresh, a rewrite is not firing — check for `cleanUrls`, `trailingSlash`, or `i18n` in `vercel.json` first.
 
 ---
 
