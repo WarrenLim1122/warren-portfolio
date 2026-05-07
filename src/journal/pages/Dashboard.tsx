@@ -25,7 +25,7 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState("list");
+  const [activeSection, setActiveSection] = useState("charts");
 
   // Filter and Sort states
   const [filterPair, setFilterPair] = useState("");
@@ -348,52 +348,64 @@ export default function Dashboard() {
                       <Filter size={16} />
                       <span className="text-xs font-mono uppercase font-semibold">Filter:</span>
                    </div>
-                   <Select value={filterPair || 'ALL'} onValueChange={(val) => updateWithScrollRestoration(() => setFilterPair(val === 'ALL' ? '' : val))}>
-                     <SelectTrigger className="h-8 w-[130px] bg-black/40 text-xs font-mono">
-                       <SelectValue placeholder="All Pairs" />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="ALL">All Pairs</SelectItem>
-                       {Array.from(new Set(trades.map(t => t.pair?.toUpperCase()))).filter(Boolean).map(pair => (
-                         <SelectItem key={pair} value={pair as string}>{pair}</SelectItem>
-                       ))}
-                     </SelectContent>
-                   </Select>
-                   <Select value={filterOutcome} onValueChange={(val) => updateWithScrollRestoration(() => setFilterOutcome(val))}>
-                     <SelectTrigger className="h-8 w-[120px] bg-black/40 text-xs font-mono">
-                       <SelectValue placeholder="Outcome" />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="ALL">All Outcomes</SelectItem>
-                       {Array.from(new Set(trades.map(t => t.outcome))).filter(Boolean).map(outcome => (
-                         <SelectItem key={outcome} value={outcome}>
-                           {outcome === "BREAKEVEN" ? "Break Even" : outcome === "WIN" ? "Win" : "Lose"}
-                         </SelectItem>
-                       ))}
-                     </SelectContent>
-                   </Select>
-                   <Select value={filterPosition} onValueChange={(val) => updateWithScrollRestoration(() => setFilterPosition(val))}>
-                     <SelectTrigger className="h-8 w-[120px] bg-black/40 text-xs font-mono">
-                       <SelectValue placeholder="Position" />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="ALL">All Positions</SelectItem>
-                       {Array.from(new Set(trades.map(t => t.position))).filter(Boolean).map(position => (
-                         <SelectItem key={position} value={position}>{position}</SelectItem>
-                       ))}
-                     </SelectContent>
-                   </Select>
-                   <Select value={filterStrategy} onValueChange={(val) => updateWithScrollRestoration(() => setFilterStrategy(val))}>
-                     <SelectTrigger className="h-8 w-[120px] bg-black/40 text-xs font-mono">
-                       <SelectValue placeholder="Strategy" />
-                     </SelectTrigger>
-                     <SelectContent>
-                       <SelectItem value="ALL">All Strategies</SelectItem>
-                       {Array.from(new Set(trades.map(t => t.strategy))).filter(Boolean).map(strategy => (
-                         <SelectItem key={strategy as string} value={strategy as string}>{strategy}</SelectItem>
-                       ))}
-                     </SelectContent>
-                   </Select>
+                   <div className="flex flex-col gap-0.5">
+                     <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60 pl-0.5">Symbol</span>
+                     <Select value={filterPair || 'ALL'} onValueChange={(val) => updateWithScrollRestoration(() => setFilterPair(val === 'ALL' ? '' : val))}>
+                       <SelectTrigger className="h-8 w-[130px] bg-black/40 text-xs font-mono">
+                         <SelectValue placeholder="All" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="ALL">All Symbols</SelectItem>
+                         {Array.from(new Set(trades.map(t => t.pair?.toUpperCase()))).filter(Boolean).map(pair => (
+                           <SelectItem key={pair} value={pair as string}>{pair}</SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   <div className="flex flex-col gap-0.5">
+                     <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60 pl-0.5">Outcome</span>
+                     <Select value={filterOutcome} onValueChange={(val) => updateWithScrollRestoration(() => setFilterOutcome(val))}>
+                       <SelectTrigger className="h-8 w-[120px] bg-black/40 text-xs font-mono">
+                         <SelectValue placeholder="All" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="ALL">All Outcomes</SelectItem>
+                         {Array.from(new Set(trades.map(t => t.outcome))).filter(Boolean).map(outcome => (
+                           <SelectItem key={outcome} value={outcome}>
+                             {outcome === "BREAKEVEN" ? "Break Even" : outcome === "WIN" ? "Win" : "Lose"}
+                           </SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   <div className="flex flex-col gap-0.5">
+                     <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60 pl-0.5">Direction</span>
+                     <Select value={filterPosition} onValueChange={(val) => updateWithScrollRestoration(() => setFilterPosition(val))}>
+                       <SelectTrigger className="h-8 w-[120px] bg-black/40 text-xs font-mono">
+                         <SelectValue placeholder="All" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="ALL">All Directions</SelectItem>
+                         {Array.from(new Set(trades.map(t => t.position))).filter(Boolean).map(position => (
+                           <SelectItem key={position} value={position}>{position}</SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
+                   <div className="flex flex-col gap-0.5">
+                     <span className="text-[9px] font-mono uppercase tracking-wider text-muted-foreground/60 pl-0.5">Strategy</span>
+                     <Select value={filterStrategy} onValueChange={(val) => updateWithScrollRestoration(() => setFilterStrategy(val))}>
+                       <SelectTrigger className="h-8 w-[120px] bg-black/40 text-xs font-mono">
+                         <SelectValue placeholder="All" />
+                       </SelectTrigger>
+                       <SelectContent>
+                         <SelectItem value="ALL">All Strategies</SelectItem>
+                         {Array.from(new Set(trades.map(t => t.strategy))).filter(Boolean).map(strategy => (
+                           <SelectItem key={strategy as string} value={strategy as string}>{strategy}</SelectItem>
+                         ))}
+                       </SelectContent>
+                     </Select>
+                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                    <span className="text-xs text-muted-foreground font-mono uppercase font-semibold mr-1">Sort:</span>

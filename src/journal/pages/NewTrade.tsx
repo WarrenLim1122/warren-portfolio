@@ -173,6 +173,12 @@ export function NewTrade() {
   return (
     <div className="mx-auto max-w-3xl pb-24">
       <header className="mb-8">
+        <button
+          onClick={() => navigate("/journal")}
+          className="mb-4 inline-flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-white transition-colors border border-border hover:border-white/30 rounded-lg px-3 py-1.5"
+        >
+          ← Dashboard
+        </button>
         <h1 className="text-3xl font-bold font-mono tracking-tight text-white flex items-center gap-3">
           <PlusCircle className="h-8 w-8 text-primary shrink-0" />
           <span>Log a New Trade</span>

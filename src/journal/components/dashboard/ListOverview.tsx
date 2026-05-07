@@ -80,13 +80,15 @@ export function ListOverview({ trades, onTradeDeleted, onRowClick }: Props) {
               return (
               <TableRow key={trade.id} className="border-b border-white/5 hover:bg-muted/20 group cursor-pointer" onClick={() => onRowClick && onRowClick(trade.id)}>
                 <TableCell className="font-mono text-muted-foreground text-center border-r border-white/5 px-1 py-2.5">
-                  <div className="flex flex-col items-center justify-center gap-1">
-                     <span>{i + 1}</span>
-                     {trade.source === 'bot' && <span className="text-[8px] bg-indigo-500/20 text-indigo-400 px-1 py-0.5 rounded leading-none">BOT</span>}
-                  </div>
+                  {i + 1}
                 </TableCell>
-                <TableCell className="font-bold text-foreground text-center border-r border-white/5 px-2 py-2.5 line-clamp-1">
-                  {symbol || "-"}
+                <TableCell className="text-center border-r border-white/5 px-2 py-2.5">
+                  <div className="flex flex-col items-center gap-0.5">
+                    <span className="font-bold text-foreground font-mono leading-tight">{symbol || "-"}</span>
+                    {trade.source === 'bot' && (
+                      <span className="text-[8px] bg-indigo-500/20 text-indigo-400 px-1.5 py-0.5 rounded leading-none tracking-wide uppercase font-bold">BOT</span>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-muted-foreground text-center border-r border-white/5 px-2 py-2.5 whitespace-nowrap">
                   {format(parsedDate, "MMM d, yyyy")}
