@@ -11,24 +11,22 @@ import { slideUpVariants, staggerContainer, revealVariants } from "../lib/animat
 const entryVariants = {
   hidden: { opacity: 0, y: 40 },
   visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring" as const, stiffness: 80, damping: 20, delay: i * 0.15 }
-  })
+    opacity: 1, y: 0,
+    transition: { type: "spring" as const, stiffness: 80, damping: 20, delay: i * 0.15 },
+  }),
 };
 
 const bulletVariants = {
   hidden: { opacity: 0, x: -16 },
   visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: { type: "spring" as const, stiffness: 100, damping: 18, delay: 0.2 + i * 0.08 }
-  })
+    opacity: 1, x: 0,
+    transition: { type: "spring" as const, stiffness: 100, damping: 18, delay: 0.2 + i * 0.08 },
+  }),
 };
 
 export default function Experience() {
   return (
-    <section id="experience" className="py-40 px-6 bg-white overflow-hidden">
+    <section id="experience" className="py-40 px-6 bg-deep overflow-hidden">
       <div className="max-w-4xl mx-auto">
         <motion.div
           initial="hidden"
@@ -38,21 +36,20 @@ export default function Experience() {
           className="relative"
         >
           <motion.div variants={revealVariants} className="flex items-center gap-4 mb-24 justify-center md:justify-start">
-            <div className="w-14 h-14 rounded-2xl bg-gold/5 flex items-center justify-center text-gold border border-gold/10 shadow-sm">
+            <div className="w-14 h-14 rounded-2xl bg-gold/8 flex items-center justify-center text-gold border border-gold/15 shadow-sm">
               <Briefcase size={28} />
             </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-navy tracking-tight">Professional History.</h2>
+            <h2 className="text-4xl md:text-6xl font-bold text-white tracking-tight">Professional History.</h2>
           </motion.div>
 
           <div className="relative">
-            {/* Timeline line — draws once on enter */}
             <motion.div
               initial={{ scaleY: 0 }}
               whileInView={{ scaleY: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] as const }}
               style={{ originY: 0 }}
-              className="absolute left-6 md:left-6 top-4 w-[2px] h-full bg-gradient-to-b from-gold via-navy to-gray-100 hidden sm:block"
+              className="absolute left-6 md:left-6 top-4 w-[2px] h-full bg-gradient-to-b from-gold via-white/10 to-transparent hidden sm:block"
             />
 
             <div className="space-y-40">
@@ -64,26 +61,25 @@ export default function Experience() {
                   viewport={{ once: true }}
                   className="relative pl-0 sm:pl-24"
                 >
-                  {/* Timeline dot */}
                   <motion.div
                     initial={{ scale: 0, opacity: 0 }}
                     whileInView={{ scale: 1, opacity: 1 }}
                     viewport={{ once: true }}
                     transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.3 + idx * 0.15 }}
-                    className="absolute left-4 md:left-[18px] top-3 w-5 h-5 rounded-full bg-white border-4 border-gold shadow-md z-10 hidden sm:block"
+                    className="absolute left-4 md:left-[18px] top-3 w-5 h-5 rounded-full bg-void border-4 border-gold shadow-[0_0_12px_rgba(196,150,77,0.4)] z-10 hidden sm:block"
                   />
 
                   <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 w-full gap-4">
                     <div className="space-y-2">
-                      <h4 className="text-4xl font-bold text-navy tracking-tight">{exp.company}</h4>
+                      <h4 className="text-4xl font-bold text-white tracking-tight">{exp.company}</h4>
                       <div className="flex items-center gap-3">
-                        <span className="text-gold font-black text-xs uppercase tracking-[0.2em] px-3 py-1 bg-gold/5 rounded-full border border-gold/10">
+                        <span className="text-gold font-black text-xs uppercase tracking-[0.2em] px-3 py-1 bg-gold/8 rounded-full border border-gold/15">
                           {exp.role}
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-400 font-bold text-xs tracking-widest uppercase bg-gray-50 px-4 py-2 rounded-xl">
-                      <Calendar size={14} className="text-gray-300" />
+                    <div className="flex items-center gap-2 text-white/30 font-bold text-xs tracking-widest uppercase bg-white/5 px-4 py-2 rounded-xl">
+                      <Calendar size={14} className="text-white/20" />
                       {exp.duration}
                     </div>
                   </div>
@@ -95,10 +91,10 @@ export default function Experience() {
                         custom={i}
                         variants={bulletVariants}
                         viewport={{ once: true }}
-                        className="text-gray-500 text-lg font-light leading-relaxed max-w-3xl flex items-start gap-5 group"
+                        className="text-white/45 text-lg font-light leading-relaxed max-w-3xl flex items-start gap-5 group"
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-gold mt-3.5 flex-shrink-0 group-hover:scale-150 transition-transform duration-300 shadow-[0_0_10px_rgba(196,150,77,0.4)]" />
-                        <div className="group-hover:text-navy transition-colors duration-300">{bullet}</div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-gold mt-3.5 flex-shrink-0 group-hover:scale-150 transition-transform duration-300 shadow-[0_0_10px_rgba(196,150,77,0.5)]" />
+                        <div className="group-hover:text-white/80 transition-colors duration-300">{bullet}</div>
                       </motion.li>
                     ))}
                   </ul>
@@ -111,4 +107,3 @@ export default function Experience() {
     </section>
   );
 }
-

@@ -45,9 +45,9 @@ function StackCard({ cert, position, onSelect, onFullscreen }: StackCardProps) {
           onSelect();
         }
       }}
-      className={`absolute inset-0 bg-white rounded-[2.5rem] border-4 border-navy/5 shadow-xl p-6 md:p-8 flex flex-col justify-between overflow-hidden cursor-pointer ${isActive ? "shadow-navy/10" : ""}`}
+      className={`absolute inset-0 bg-glass rounded-[2.5rem] border border-white/8 shadow-xl p-6 md:p-8 flex flex-col justify-between overflow-hidden cursor-pointer ${isActive ? "shadow-[0_0_40px_rgba(196,150,77,0.1)]" : ""}`}
     >
-      {!isActive && <div className="absolute inset-0 bg-white/50 z-[101]" />}
+      {!isActive && <div className="absolute inset-0 bg-[#0B0E1A]/60 z-[101]" />}
 
       {/* Background frame */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none p-8">
@@ -61,25 +61,25 @@ function StackCard({ cert, position, onSelect, onFullscreen }: StackCardProps) {
         <div className="space-y-1 pr-10">
           <div className="flex items-center gap-3">
             <Award size={18} className="text-gold" />
-            <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-navy/40">
+            <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-white/30">
               {cert.issuer}
             </h4>
           </div>
-          <h3 className="text-lg md:text-xl font-bold text-navy leading-tight font-serif italic">
+          <h3 className="text-lg md:text-xl font-bold text-white leading-tight font-serif italic">
             {cert.title}
           </h3>
         </div>
         {isActive && (
           <button
             onClick={(e) => { e.stopPropagation(); onFullscreen(); }}
-            className="absolute top-0 right-0 w-10 h-10 bg-paper border border-navy/5 text-navy rounded-full flex items-center justify-center shadow-sm hover:bg-navy hover:text-white transition-all active:scale-90"
+            className="absolute top-0 right-0 w-10 h-10 bg-[#0B0E1A] border border-white/10 text-white/60 rounded-full flex items-center justify-center shadow-sm hover:bg-gold hover:text-[#0B0E1A] transition-all active:scale-90"
           >
             <LayoutGrid size={16} />
           </button>
         )}
       </div>
 
-      <div className="relative flex-1 bg-white rounded-2xl border border-navy/10 overflow-hidden shadow-inner mb-2 bg-paper group/preview">
+      <div className="relative flex-1 bg-[#0F1220] rounded-2xl border border-white/8 overflow-hidden shadow-inner mb-2 group/preview">
         <img
           src={cert.image}
           alt={cert.title}
@@ -158,7 +158,7 @@ export default function Certificates() {
   };
 
   return (
-    <section id="credentials" className="py-24 md:py-40 bg-white px-6 overflow-hidden">
+    <section id="credentials" className="py-24 md:py-40 bg-void px-6 overflow-hidden">
       <div className="max-w-7xl mx-auto">
 
         {/* Section header */}
@@ -173,7 +173,7 @@ export default function Certificates() {
             <Award size={20} />
             <span className="text-[10px] font-black uppercase tracking-[0.4em]">Validation of Expertise</span>
           </div>
-          <h2 className="text-5xl md:text-8xl font-bold text-navy tracking-tight leading-[0.9]">
+          <h2 className="text-5xl md:text-8xl font-bold text-white tracking-tight leading-[0.9]">
             Professional <br /> <span className="text-gold italic font-serif">Credentials.</span>
           </h2>
         </motion.div>
@@ -184,7 +184,7 @@ export default function Certificates() {
           {/* Left category arrow */}
           <button
             onClick={goPrevCategory}
-            className="mt-[200px] flex-shrink-0 w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-navy hover:border-navy transition-all duration-200 active:scale-95"
+            className="mt-[200px] flex-shrink-0 w-11 h-11 rounded-full border border-white/10 flex items-center justify-center text-white/30 hover:text-white hover:border-white/30 transition-all duration-200 active:scale-95"
           >
             <ChevronLeft size={20} />
           </button>
@@ -203,10 +203,10 @@ export default function Certificates() {
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                   className="space-y-3"
                 >
-                  <h3 className="text-3xl md:text-4xl font-bold text-navy tracking-tight">
+                  <h3 className="text-3xl md:text-4xl font-bold text-white tracking-tight">
                     {CERTIFICATES[activeCategory].category}
                   </h3>
-                  <p className="text-gray-500 text-base leading-relaxed max-w-lg mx-auto">
+                  <p className="text-white/40 text-base leading-relaxed max-w-lg mx-auto">
                     {CATEGORY_META[activeCategory].description}
                   </p>
                 </motion.div>
@@ -216,13 +216,13 @@ export default function Certificates() {
               <div className="flex gap-3">
                 <button
                   onClick={goPrevCard}
-                  className="w-10 h-10 rounded-full border border-navy/10 flex items-center justify-center hover:bg-navy hover:text-white transition-all text-navy active:scale-95"
+                  className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:bg-white hover:text-[#0B0E1A] transition-all text-white/50 active:scale-95"
                 >
                   <ChevronLeft size={18} />
                 </button>
                 <button
                   onClick={goNextCard}
-                  className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center hover:bg-gold transition-all active:scale-95"
+                  className="w-10 h-10 rounded-full bg-gold text-[#0B0E1A] flex items-center justify-center hover:bg-white transition-all active:scale-95"
                 >
                   <ChevronRight size={18} />
                 </button>
@@ -280,13 +280,13 @@ export default function Certificates() {
                   <div
                     className={`h-1.5 rounded-full transition-all duration-300 ${
                       i === activeCategory
-                        ? "w-8 bg-navy"
-                        : "w-4 bg-gray-300 group-hover:bg-gray-400"
+                        ? "w-8 bg-gold"
+                        : "w-4 bg-white/15 group-hover:bg-white/30"
                     }`}
                   />
                   <span
                     className={`text-[9px] font-bold uppercase tracking-[0.2em] transition-colors duration-200 ${
-                      i === activeCategory ? "text-navy" : "text-gray-400 group-hover:text-gray-500"
+                      i === activeCategory ? "text-gold" : "text-white/25 group-hover:text-white/40"
                     }`}
                   >
                     {cat.category.split(" ")[0]}
@@ -296,7 +296,7 @@ export default function Certificates() {
             </div>
 
             {/* Card counter */}
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-[0.3em] -mt-2">
+            <p className="text-[10px] text-white/25 font-medium uppercase tracking-[0.3em] -mt-2">
               {currentStep + 1} / {currentItems.length}
             </p>
           </div>
@@ -304,7 +304,7 @@ export default function Certificates() {
           {/* Right category arrow */}
           <button
             onClick={goNextCategory}
-            className="mt-[200px] flex-shrink-0 w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-navy hover:border-navy transition-all duration-200 active:scale-95"
+            className="mt-[200px] flex-shrink-0 w-11 h-11 rounded-full border border-white/10 flex items-center justify-center text-white/30 hover:text-white hover:border-white/30 transition-all duration-200 active:scale-95"
           >
             <ChevronRight size={20} />
           </button>
