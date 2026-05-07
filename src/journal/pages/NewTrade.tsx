@@ -161,7 +161,7 @@ export function NewTrade() {
         imageUrl: imageBase64 || undefined,
       });
       // Redirect to Dashboard after saving
-      navigate("/journal");
+      navigate("/journal/dashboard");
     } catch (e) {
       console.error(e);
       alert("Failed to create trade. Sometimes this happens if an image is too large even after compression.");
@@ -174,7 +174,7 @@ export function NewTrade() {
     <div className="mx-auto max-w-3xl pb-24">
       <header className="mb-8">
         <button
-          onClick={() => navigate("/journal")}
+          onClick={() => navigate("/journal/dashboard")}
           className="mb-4 inline-flex items-center gap-1.5 text-xs font-mono text-muted-foreground hover:text-white transition-colors border border-border hover:border-white/30 rounded-lg px-3 py-1.5"
         >
           ← Dashboard

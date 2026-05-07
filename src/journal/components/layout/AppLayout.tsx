@@ -14,7 +14,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
   const navItems = [
     { name: "New Trade", path: "/journal/new-trade", icon: PlusCircle },
-    { name: "Dashboard", path: "/journal", icon: LayoutDashboard },
+    { name: "Dashboard", path: "/journal/dashboard", icon: LayoutDashboard },
     { name: "Strategies", path: "/journal/strategies", icon: FolderGit2 },
     { name: "Risk Calculator", path: "/journal/risk-calculator", icon: Calculator },
     { name: "Settings", path: "/journal/settings", icon: SettingsIcon },

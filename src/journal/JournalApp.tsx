@@ -40,8 +40,9 @@ export default function JournalApp() {
       <div className="dark">
         <Routes>
           <Route path="login" element={<Login />} />
+          <Route index element={<Navigate to="/journal/dashboard" replace />} />
           <Route
-            index
+            path="dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
