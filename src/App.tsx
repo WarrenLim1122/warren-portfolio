@@ -4,8 +4,8 @@
  */
 
 import { useState, useEffect } from "react";
-import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
-import { motion, AnimatePresence, useScroll } from "motion/react";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
+import { motion, AnimatePresence, useScroll, useReducedMotion } from "motion/react";
 import Hero from "./components/Hero";
 import Experience from "./components/Experience";
 import Certificates from "./components/Certificates";
@@ -17,34 +17,90 @@ import { ParticleHero } from "./components/ui/animated-hero";
 import { CursorParticles } from "./components/ui/cursor-particles";
 import JournalApp from "./journal/JournalApp";
 
-// ─── Portfolio page — all existing layout logic lives here, untouched ───────
-function Portfolio() {
-  const { scrollY } = useScroll();
-  const showIconsThreshold = 600;
+// ─── Stealth sigil — hidden easter egg entry to /journal ────────────────────
+function StealthSigil({ onActivate }: { onActivate: () => void }) {
+  const [hovered, setHovered] = useState(false);
+
+  return (
+    <div
+      className="relative inline-flex items-center cursor-pointer select-none"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onClick={onActivate}
+      onKeyDown={(e) => e.key === "Enter" && onActivate()}
+      role="button"
+      tabIndex={0}
+      aria-label="Access terminal"
+    >
+      <AnimatePresence>
+        {hovered && (
+          <motion.span
+            key="tooltip"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 6 }}
+            transition={{ duration: 0.18 }}
+            className="absolute -top-7 right-0 whitespace-nowrap pointer-events-none"
+            style={{ fontFamily: "monospace", fontSize: "10px", color: "#64FFDA" }}
+          >
+            {">"} access terminal
+            <motion.span
+              animate={{ opacity: [1, 0] }}
+              transition={{ duration: 0.5, repeat: Infinity, repeatType: "reverse" as const }}
+            >
+              _
+            </motion.span>
+          </motion.span>
+        )}
+      </AnimatePresence>
+
+      <motion.span
+        style={{ fontFamily: "monospace", fontSize: "11px" }}
+        animate={{
+          opacity: hovered ? 1 : 0.15,
+          color: hovered ? "#64FFDA" : "#9CA3AF",
+        }}
+        transition={{ duration: 0.25 }}
+      >
+        {"{ }"}
+      </motion.span>
+    </div>
+  );
+}
+
+// ─── Portfolio page ──────────────────────────────────────────────────────────
+function Portfolio({ onJournalEnter }: { onJournalEnter: () => void }) {
+  const { scrollY, scrollYProgress } = useScroll();
   const [showIcons, setShowIcons] = useState(false);
   const [isUnlocked, setIsUnlocked] = useState(false);
 
   useEffect(() => {
     return scrollY.on("change", (latest) => {
-      setShowIcons(latest > showIconsThreshold);
+      setShowIcons(latest > 600);
     });
   }, [scrollY]);
 
   return (
     <>
+      {/* Gold scroll progress thread */}
+      <motion.div
+        className="fixed top-0 left-0 right-0 h-[1px] z-[102] origin-left"
+        style={{ scaleX: scrollYProgress, backgroundColor: "#C4964D" }}
+      />
+
       <AnimatePresence>
         {!isUnlocked && (
           <motion.div
             key="hero-gate"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, y: "-100vh" }}
-            transition={{ duration: 1.2, ease: [0.25, 1, 0.5, 1] }}
+            transition={{ duration: 1.2, ease: [0.25, 1, 0.5, 1] as const }}
             className="fixed inset-0 z-[9999]"
           >
             <ParticleHero
               primaryButton={{
                 text: "Interested",
-                onClick: () => setIsUnlocked(true)
+                onClick: () => setIsUnlocked(true),
               }}
             />
           </motion.div>
@@ -53,91 +109,113 @@ function Portfolio() {
 
       {isUnlocked && <CursorParticles />}
 
-      <main className={`relative bg-[#FBFBFD] text-[#1D1D1F] font-sans selection:bg-gold/20 overflow-x-hidden scroll-smooth ${!isUnlocked ? "h-screen overflow-hidden" : "min-h-screen"}`}>
+      <main
+        className={`relative bg-[#FBFBFD] text-[#1D1D1F] font-sans selection:bg-gold/20 overflow-x-hidden scroll-smooth ${
+          !isUnlocked ? "h-screen overflow-hidden" : "min-h-screen"
+        }`}
+      >
+        {/* NAVIGATION */}
+        <nav className="fixed top-0 w-full z-[100] bg-white/60 backdrop-blur-xl border-b border-gray-100 px-8 py-5 flex justify-between items-center transition-all duration-300">
+          <div className="flex items-center gap-6">
+            <motion.span
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="font-bold tracking-tight text-base text-navy"
+            >
+              {PERSONAL_INFO.fullName}
+            </motion.span>
 
-      {/* NAVIGATION */}
-      <nav className="fixed top-0 w-full z-[100] bg-white/60 backdrop-blur-xl border-b border-gray-100 px-8 py-5 flex justify-between items-center transition-all duration-300">
-        <div className="flex items-center gap-6">
-          <motion.span
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="font-bold tracking-tight text-base text-navy"
-          >
-            {PERSONAL_INFO.fullName}
-          </motion.span>
-
-          <AnimatePresence>
-            {showIcons && (
-              <motion.div
-                initial={{ opacity: 0, x: -20, scale: 0.8 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -20, scale: 0.8 }}
-                className="flex items-center gap-3 pl-6 border-l border-gray-200"
-              >
-                  <a
-                    href="#contacts"
-                    className="w-8 h-8 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
-                    title="Email Contact Info"
-                  >
-                    <img src="/email-icon.png" className="w-full h-full object-contain"  />
+            <AnimatePresence>
+              {showIcons && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20, scale: 0.8 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -20, scale: 0.8 }}
+                  className="flex items-center gap-3 pl-6 border-l border-gray-200"
+                >
+                  <a href="#contacts" className="w-8 h-8 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform" title="Email Contact Info">
+                    <img src="/email-icon.png" className="w-full h-full object-contain" />
                   </a>
-                  <a
-                    href="#contacts"
-                    className="w-8 h-8 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
-                    title="LinkedIn Contact Info"
-                  >
-                    <img src="/linkedin-icon.png" className="w-full h-full object-contain"  />
+                  <a href="#contacts" className="w-8 h-8 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform" title="LinkedIn Contact Info">
+                    <img src="/linkedin-icon.png" className="w-full h-full object-contain" />
                   </a>
-                  <a
-                    href="#contacts"
-                    className="w-8 h-8 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform"
-                    title="Mobile Contact Info"
-                  >
-                    <img src="/phone-icon.png" className="w-full h-full object-contain"  />
+                  <a href="#contacts" className="w-8 h-8 flex items-center justify-center hover:scale-110 active:scale-95 transition-transform" title="Mobile Contact Info">
+                    <img src="/phone-icon.png" className="w-full h-full object-contain" />
                   </a>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-        <div className="hidden md:flex gap-8 text-xs font-bold uppercase tracking-widest text-gray-500">
-          <a href="#experience" className="hover:text-navy transition-colors duration-300">Experience</a>
-          <a href="#work" className="hover:text-navy transition-colors duration-300">Work</a>
-          <a href="#resume" className="hover:text-navy transition-colors duration-300">Resume</a>
-          <Link
-            to="/journal"
-            className="hover:text-navy transition-colors duration-300 text-gold"
-          >
-            Journal
-          </Link>
-        </div>
-      </nav>
+          <div className="hidden md:flex gap-8 text-xs font-bold uppercase tracking-widest text-gray-500">
+            <a href="#experience" className="hover:text-navy transition-colors duration-300">Experience</a>
+            <a href="#work" className="hover:text-navy transition-colors duration-300">Work</a>
+            <a href="#resume" className="hover:text-navy transition-colors duration-300">Resume</a>
+          </div>
+        </nav>
 
-      {/* SECTIONS */}
-      <Hero />
-      <Experience />
-      <Certificates />
-      <CaseCompetition />
-      <Projects onSelectProject={() => {}} />
-      <ResumeViewer />
+        {/* SECTIONS */}
+        <Hero />
+        <Experience />
+        <Certificates />
+        <CaseCompetition />
+        <Projects onSelectProject={() => {}} />
+        <ResumeViewer />
 
-      {/* FOOTER */}
-      <footer className="py-24 text-center text-[10px] text-gray-400 uppercase tracking-[0.5em] font-medium bg-white border-t border-gray-50">
-        © 2026 {PERSONAL_INFO.fullName} — All Rights Reserved.
-      </footer>
-    </main>
+        {/* FOOTER */}
+        <footer className="py-24 px-8 bg-white border-t border-gray-50">
+          <div className="flex items-center justify-between max-w-7xl mx-auto">
+            <span className="text-[10px] text-gray-400 uppercase tracking-[0.5em] font-medium">
+              © 2026 {PERSONAL_INFO.fullName} — All Rights Reserved.
+            </span>
+            <StealthSigil onActivate={onJournalEnter} />
+          </div>
+        </footer>
+      </main>
     </>
   );
 }
 
-// ─── Root app — owns the router ──────────────────────────────────────────────
+// ─── App content — inside Router, owns dark-wipe transition ─────────────────
+function AppContent() {
+  const [wiping, setWiping] = useState(false);
+  const navigate = useNavigate();
+  const prefersReduced = useReducedMotion();
+
+  return (
+    <>
+      {wiping && (
+        <motion.div
+          className="fixed inset-0 z-[9998] bg-[#0A0A0F]"
+          initial={{ y: "100%" }}
+          animate={{ y: "0%" }}
+          transition={{
+            duration: prefersReduced ? 0 : 0.9,
+            ease: [0.76, 0, 0.24, 1] as const,
+          }}
+          onAnimationComplete={() => {
+            navigate("/journal");
+            setWiping(false);
+          }}
+        />
+      )}
+
+      <Routes>
+        <Route path="/journal/*" element={<JournalApp />} />
+        <Route
+          path="/*"
+          element={<Portfolio onJournalEnter={() => setWiping(true)} />}
+        />
+      </Routes>
+    </>
+  );
+}
+
+// ─── Root — owns the router ──────────────────────────────────────────────────
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/journal/*" element={<JournalApp />} />
-        <Route path="/*" element={<Portfolio />} />
-      </Routes>
+      <AppContent />
     </BrowserRouter>
   );
 }
