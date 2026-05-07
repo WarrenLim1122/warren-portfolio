@@ -67,8 +67,9 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
         <DialogContent className="sm:max-w-[90vw] w-[90vw] max-w-[90vw] bg-background border-border/50 text-foreground p-0 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
           {/* Header */}
           <DialogHeader className="px-6 py-4 shrink-0 border-b border-border/50 bg-muted/20">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex flex-col gap-1.5">
+            {/* 3-column: symbol left | PNL center | spacer right (for X button) */}
+            <div className="flex items-center gap-4 pr-8">
+              <div className="flex-1 min-w-0 flex flex-col gap-1.5">
                 <div className="flex items-center gap-3 flex-wrap">
                   <DialogTitle className="text-2xl font-mono tracking-tight font-bold">
                     {symbol}
@@ -99,12 +100,15 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
                   )}
                 </div>
               </div>
-              <div className="flex flex-col items-end shrink-0">
-                <span className="text-[10px] uppercase font-mono text-muted-foreground mb-0.5">Net PNL</span>
+              {/* Net PNL — centered */}
+              <div className="shrink-0 text-center px-6">
+                <span className="text-[10px] uppercase font-mono text-muted-foreground block mb-0.5">Net PNL</span>
                 <span className={cn("text-3xl font-mono font-bold tracking-tight", pnlResult > 0 ? "text-green-500" : pnlResult < 0 ? "text-red-500" : "text-amber-500")}>
                   {pnlResult > 0 ? "+" : ""}{trade.accountCurrency === "USD" ? "$" : ""}{pnlResult?.toFixed(2)}{trade.accountCurrency && trade.accountCurrency !== "USD" ? ` ${trade.accountCurrency}` : ""}
                 </span>
               </div>
+              {/* Spacer so PNL stays centered; X button occupies this zone */}
+              <div className="flex-1" />
             </div>
           </DialogHeader>
 
@@ -121,20 +125,20 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
                 </h4>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Entry</span>
-                    <span className="font-mono text-sm font-semibold">{trade.entryPrice || "-"}</span>
+                    <span className="text-xs uppercase text-muted-foreground tracking-wide">Entry</span>
+                    <span className="font-mono text-base font-semibold">{trade.entryPrice || "-"}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Exit</span>
-                    <span className="font-mono text-sm font-semibold">{closePrice || "-"}</span>
+                    <span className="text-xs uppercase text-muted-foreground tracking-wide">Exit</span>
+                    <span className="font-mono text-base font-semibold">{closePrice || "-"}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Volume</span>
-                    <span className="font-mono text-sm font-semibold">{trade.volume || "-"}</span>
+                    <span className="text-xs uppercase text-muted-foreground tracking-wide">Volume</span>
+                    <span className="font-mono text-base font-semibold">{trade.volume || "-"}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Close Reason</span>
-                    <span className="font-mono text-sm font-semibold">{trade.closeReason || "-"}</span>
+                    <span className="text-xs uppercase text-muted-foreground tracking-wide">Close Reason</span>
+                    <span className="font-mono text-base font-semibold">{trade.closeReason || "-"}</span>
                   </div>
                 </div>
               </div>
@@ -148,20 +152,20 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
                 </h4>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase text-red-400 tracking-wide">Stop Loss</span>
-                    <span className="font-mono text-sm font-semibold">{trade.stopLoss || "-"}</span>
+                    <span className="text-xs uppercase text-red-400 tracking-wide">Stop Loss</span>
+                    <span className="font-mono text-base font-semibold">{trade.stopLoss || "-"}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase text-green-400 tracking-wide">Take Profit</span>
-                    <span className="font-mono text-sm font-semibold">{trade.takeProfit || "-"}</span>
+                    <span className="text-xs uppercase text-green-400 tracking-wide">Take Profit</span>
+                    <span className="font-mono text-base font-semibold">{trade.takeProfit || "-"}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Gross PnL</span>
-                    <span className="font-mono text-sm font-semibold">{trade.grossPnl !== undefined ? trade.grossPnl : "-"}</span>
+                    <span className="text-xs uppercase text-muted-foreground tracking-wide">Gross PnL</span>
+                    <span className="font-mono text-base font-semibold">{trade.grossPnl !== undefined ? trade.grossPnl : "-"}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Est. RR</span>
-                    <span className="font-mono text-sm font-semibold">{trade.rrRatio ? `1:${trade.rrRatio}` : "-"}</span>
+                    <span className="text-xs uppercase text-muted-foreground tracking-wide">Est. RR</span>
+                    <span className="font-mono text-base font-semibold">{trade.rrRatio ? `1:${trade.rrRatio}` : "-"}</span>
                   </div>
                 </div>
               </div>
@@ -175,12 +179,12 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
                 </h4>
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-col gap-1">
-                    <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Strategy</span>
-                    <span className="font-mono text-sm text-foreground">{trade.strategyName || trade.strategy || "None"}</span>
+                    <span className="text-xs uppercase text-muted-foreground tracking-wide">Strategy</span>
+                    <span className="font-mono text-base text-foreground">{trade.strategyName || trade.strategy || "None"}</span>
                   </div>
                   {trade.tags && trade.tags.length > 0 && (
                     <div className="flex flex-col gap-1.5">
-                      <span className="text-[10px] uppercase text-muted-foreground tracking-wide">Tags</span>
+                      <span className="text-xs uppercase text-muted-foreground tracking-wide">Tags</span>
                       <div className="flex flex-wrap gap-1.5">
                         {trade.tags.map(t => (
                           <span key={t} className="text-xs bg-muted/40 px-2 py-0.5 rounded text-muted-foreground">{t}</span>
