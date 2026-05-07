@@ -63,7 +63,8 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
       )}
 
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl w-[95vw] bg-background border-border/50 text-foreground p-0 overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+        {/* sm:max-w-[90vw] explicitly overrides the base DialogContent sm:max-w-sm constraint */}
+        <DialogContent className="sm:max-w-[90vw] w-[90vw] max-w-[90vw] bg-background border-border/50 text-foreground p-0 overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
           {/* Header */}
           <DialogHeader className="px-6 py-4 shrink-0 border-b border-border/50 bg-muted/20">
             <div className="flex items-center justify-between gap-4 flex-wrap">
@@ -107,44 +108,11 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
             </div>
           </DialogHeader>
 
-          {/* Body: horizontal split — screenshot left, stats right */}
+          {/* Body: stats LEFT (35%), chart RIGHT (65%) */}
           <div className="flex flex-col md:flex-row flex-1 overflow-hidden min-h-0">
 
-            {/* Left: Screenshot — takes ~60% width */}
-            <div className="md:w-[60%] flex flex-col bg-zinc-950 border-b md:border-b-0 md:border-r border-border/50 min-h-[280px] md:min-h-0">
-              {screenshotUrl ? (
-                <div
-                  className="relative flex-1 flex items-center justify-center p-3 group cursor-zoom-in"
-                  onClick={() => setImageExpanded(true)}
-                  title="Click to expand"
-                >
-                  <img
-                    src={screenshotUrl}
-                    alt="Trade Chart"
-                    className="max-w-full max-h-full object-contain rounded-md transition-opacity group-hover:opacity-90"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-md">
-                    <div className="bg-black/70 text-white text-xs font-mono px-3 py-1.5 rounded-full flex items-center gap-1.5">
-                      <Expand size={12} /> Expand
-                    </div>
-                  </div>
-                  {trade.outcomeScreenshotSource && (
-                    <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md border border-white/10 text-[10px] font-mono px-2 py-1 rounded text-white/70">
-                      Source: {trade.outcomeScreenshotSource}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-3">
-                  <ImageIcon className="w-12 h-12 opacity-20" />
-                  <p className="font-mono text-sm opacity-50">No screenshot attached.</p>
-                </div>
-              )}
-            </div>
-
-            {/* Right: Stats — takes ~40% width, scrollable */}
-            <div className="md:w-[40%] overflow-y-auto custom-scrollbar p-5 space-y-5">
+            {/* Left: Stats panel — scrollable */}
+            <div className="md:w-[35%] overflow-y-auto custom-scrollbar p-5 space-y-5 border-b md:border-b-0 md:border-r border-border/50 shrink-0">
 
               {/* Execution Details */}
               <div className="space-y-3">
@@ -232,8 +200,41 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: TradeDetailDial
                   </div>
                 </>
               )}
-
             </div>
+
+            {/* Right: Chart — takes remaining 65% */}
+            <div className="flex-1 flex flex-col bg-zinc-950 min-h-[300px] md:min-h-0">
+              {screenshotUrl ? (
+                <div
+                  className="relative flex-1 flex items-center justify-center p-4 group cursor-zoom-in"
+                  onClick={() => setImageExpanded(true)}
+                  title="Click to expand"
+                >
+                  <img
+                    src={screenshotUrl}
+                    alt="Trade Chart"
+                    className="max-w-full max-h-full object-contain rounded-md transition-opacity group-hover:opacity-90"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 rounded-md">
+                    <div className="bg-black/70 text-white text-xs font-mono px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                      <Expand size={12} /> Expand
+                    </div>
+                  </div>
+                  {trade.outcomeScreenshotSource && (
+                    <div className="absolute bottom-3 right-3 bg-black/80 backdrop-blur-md border border-white/10 text-[10px] font-mono px-2 py-1 rounded text-white/70">
+                      Source: {trade.outcomeScreenshotSource}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-3">
+                  <ImageIcon className="w-16 h-16 opacity-20" />
+                  <p className="font-mono text-sm opacity-50">No screenshot attached.</p>
+                </div>
+              )}
+            </div>
+
           </div>
         </DialogContent>
       </Dialog>
