@@ -398,6 +398,15 @@ Do not copy `package.json` from the source repo.
 
 These are changes made to copied files that fix bugs or adapt the code to this repo's context. If a future sync overwrites these files, re-apply the patches below.
 
+### `src/journal/components/dashboard/TradeDetailDialog.tsx`
+**Key gotcha — dialog width:** The base `DialogContent` in `dialog.tsx` includes `sm:max-w-sm` which caps the dialog at 384px on desktop regardless of any `max-w-*` class you pass. To override it, the `className` prop must explicitly pass `sm:max-w-[90vw]` at the same breakpoint:
+```tsx
+<DialogContent className="sm:max-w-[90vw] w-[90vw] max-w-[90vw] ...">
+```
+Do not remove these classes — without them the dialog renders phone-width on all desktop screens.
+
+**Layout:** stats panel left (35%, `md:w-[35%] shrink-0`), chart right (`flex-1`). Net PNL centered in header via 3-col flex: `flex-1` left div + `shrink-0 text-center` PNL + `flex-1` right spacer with `pr-8` on the container to clear the X button.
+
 ### `src/journal/JournalApp.tsx` (portfolio-created, not from source)
 Index route must redirect to `/journal/dashboard`, not render Dashboard directly:
 ```tsx
@@ -425,13 +434,29 @@ import firebaseConfig from "../firebase-applet-config.json";
 ```
 
 ### `src/journal/pages/Login.tsx`
-**Change:** Post-login redirect path
+**Change 1:** Post-login redirect path
 ```ts
 // CORRECT for this repo
 navigate("/journal/dashboard");
 
 // Source repo has (WRONG here — sends user to portfolio homepage):
 // navigate("/");
+```
+
+**Change 2:** Dark-card text visibility — `text-white` on heading and Google button:
+```tsx
+// CORRECT — explicit white text overrides any CSS variable resolution issue
+<h1 className="text-3xl font-bold tracking-tight text-white">
+  ...
+</h1>
+
+<Button ... className="w-full gap-2 font-medium text-white border-white/20 hover:bg-white/10">
+  Google
+</Button>
+
+// Without text-white, "Welcome back" and "Google" text can appear invisible
+// on the dark semi-transparent card (bg-background/90) due to shadcn variable
+// resolution order in the login page context.
 ```
 
 ### `src/journal/pages/NewTrade.tsx`
@@ -544,3 +569,4 @@ Open `GOOGLE_AI_STUDIO_RESET_PROMPT.md`, copy the full prompt inside, and paste 
 | 2026-05-06 | Bot journaling infrastructure & UI fixes | Synced from trading-journal commit `5b7dc24`. New files: `tradeUtils.ts`, `mt5Calculation.ts`, `TradeDetailDialog.tsx`, `NewTrade.tsx`. Updated: `trade.ts` (bot fields + LOSS union), `AuthContext.tsx` (resetPassword), `ListOverview.tsx` (BOT badges, onRowClick), `CalendarView.tsx` (onTradeClick), `ChartOverview.tsx` (screenshotUrl, BOT badges), `WinsVsLosses.tsx` (tradeUtils), `EquityCurve.tsx` (pnlAmt fix), `Dashboard.tsx` (TradeDetailDialog overlay, New Trade → /journal/new-trade), `Login.tsx` (password visibility toggle fix), `select.tsx` (w-full). Routing: added /journal/new-trade. Compat patches preserved: navigate("/journal"), ← Portfolio button, logout button, formatter type fix. |
 | 2026-05-07 | AppLayout sidebar + new pages (UI overhaul) | Synced from trading-journal commits `e1a1249`+`79a983c`. New files: `components/layout/AppLayout.tsx` (sidebar with nav, user profile, mobile header, Portfolio back link, logout), `pages/RiskCalculator.tsx`, `pages/StrategiesDashboard.tsx`, `pages/Settings.tsx`. Updated: `JournalApp.tsx` (ProtectedRoute now wraps with AppLayout; routes for /journal/strategies, /journal/risk-calculator, /journal/settings added), `Dashboard.tsx` (removed old min-h-screen wrapper and manual header buttons — AppLayout now owns layout, nav, logout). Compat patches: AppLayout nav paths use `/journal/*` prefix; navigate("/journal/new-trade") kept in Dashboard. Portfolio back link added to AppLayout sidebar bottom. |
 | 2026-05-07 | Routing restructure + UI polish (portfolio-side only, no source sync) | Dashboard moved from `/journal` to `/journal/dashboard`. `/journal` index route now redirects. Files changed: `JournalApp.tsx` (index redirect + dashboard route), `AppLayout.tsx` (Dashboard nav path → `/journal/dashboard`), `Login.tsx` (navigate → `/journal/dashboard`), `NewTrade.tsx` (navigate + back button → `/journal/dashboard`). Also: `TradeDetailDialog.tsx` redesigned with horizontal split layout (screenshot left 60%, stats right 40%, `max-w-6xl`); `ListOverview.tsx` BOT badge removed entirely from rows; `Dashboard.tsx` scroll spy initial state fixed to `"charts"`, filter dropdowns given labels. |
+| 2026-05-07 | Dialog width fix, login text, PNL centering (portfolio-side only) | `vercel.json`: SPA rewrite changed from `/(.*)`  → `/:path*` (Vercel glob syntax) to fix 404 on hard refresh at `/journal/dashboard`. `TradeDetailDialog.tsx`: override base `sm:max-w-sm` with `sm:max-w-[90vw] w-[90vw]` so dialog spans 90vw; swap to stats-left(35%)/chart-right(65%); Net PNL moved to center via 3-col flex; field labels bumped to `text-xs`, values to `text-base`. `Login.tsx`: added `text-white` to "Welcome back" h1 and Google button so text is visible on dark card. |

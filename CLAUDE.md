@@ -390,12 +390,12 @@ Current `vercel.json`:
   "installCommand": "npm install",
   "cleanUrls": true,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/:path*", "destination": "/index.html" }
   ]
 }
 ```
 
-The SPA rewrite is required so `/journal` and `/journal/login` don't 404 on hard refresh. Do not remove it.
+The SPA rewrite is required so all `/journal/*` paths don't 404 on hard refresh. Use `/:path*` (Vercel's glob syntax) — **not** `/(.*)`  (regex syntax). The regex form fails silently on nested paths like `/journal/dashboard` at Vercel's edge layer. Do not change this pattern.
 
 ---
 
@@ -450,12 +450,12 @@ Google AI Studio should maintain `AI_STUDIO_RULES.md` and `CHANGELOG.md` inside 
 | `src/journal/JournalApp.tsx` | Created here (not from source). Adds/removes `html.dark`. Index route redirects to `/journal/dashboard`. |
 | `src/journal/components/layout/AppLayout.tsx` | Created here. All nav paths use `/journal/*` prefix. Dashboard path is `/journal/dashboard`. |
 | `src/journal/lib/firebase.ts` | Import path: `../../` → `../firebase-applet-config.json` |
-| `src/journal/pages/Login.tsx` | `navigate("/")` → `navigate("/journal/dashboard")` |
+| `src/journal/pages/Login.tsx` | `navigate("/")` → `navigate("/journal/dashboard")`; `text-white` on h1 + Google button for dark-card visibility |
 | `src/journal/pages/NewTrade.tsx` | `navigate("/journal")` → `navigate("/journal/dashboard")` (save + back button) |
 | `src/journal/pages/Dashboard.tsx` | Removed old min-h-screen wrapper and manual header; `asChild` → `render` prop (Base UI) |
 | `src/journal/components/dashboard/EquityCurve.tsx` | Optional props interface; Recharts formatter type fix |
 | `src/journal/components/dashboard/WinsVsLosses.tsx` | `"LOSS"` → `"LOSE"`; `breakevenRate` added to useMemo return |
-| `src/journal/components/dashboard/TradeDetailDialog.tsx` | Horizontal layout: screenshot left 60%, scrollable stats right 40%; `max-w-6xl` |
+| `src/journal/components/dashboard/TradeDetailDialog.tsx` | `sm:max-w-[90vw] w-[90vw]` overrides base `sm:max-w-sm`; stats left (35%), chart right (65%); Net PNL centered via 3-col flex; labels text-xs, values text-base |
 | `src/journal/components/dashboard/ListOverview.tsx` | BOT badge removed; Symbol cell is plain text |
 | All `src/journal/**` imports | `@/` → `@journal/` |
 
