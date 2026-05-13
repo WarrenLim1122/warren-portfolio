@@ -30,8 +30,11 @@ export function EditTradeDialog({ trade, open, onOpenChange, onTradeEdited, trad
   const [entryPrice, setEntryPrice] = useState("");
   const [takeProfit, setTakeProfit] = useState("");
   const [stopLoss, setStopLoss] = useState("");
+  const [closePrice, setClosePrice] = useState("");
   const [pnlAmount, setPnlAmount] = useState("");
   const [volume, setVolume] = useState("");
+  const [ticket, setTicket] = useState("");
+  const [closeReason, setCloseReason] = useState<"TP" | "SL" | "NEWS" | "MANUAL" | "">("");
   const [loading, setLoading] = useState(false);
   const [imageBase64, setImageBase64] = useState<string>("");
 
@@ -53,8 +56,18 @@ export function EditTradeDialog({ trade, open, onOpenChange, onTradeEdited, trad
       setEntryPrice(trade.entryPrice !== undefined ? String(trade.entryPrice) : "");
       setTakeProfit(trade.takeProfit !== undefined ? String(trade.takeProfit) : "");
       setStopLoss(trade.stopLoss !== undefined ? String(trade.stopLoss) : "");
+      setClosePrice(
+        trade.closePrice !== undefined ? String(trade.closePrice) :
+        trade.exitPrice !== undefined ? String(trade.exitPrice) : ""
+      );
       setPnlAmount(trade.pnlAmount !== undefined ? String(trade.pnlAmount) : "");
       setVolume(trade.volume !== undefined ? String(trade.volume) : "");
+      setTicket(trade.ticket || "");
+      setCloseReason(
+        (trade.closeReason === "TP" || trade.closeReason === "SL" ||
+         trade.closeReason === "NEWS" || trade.closeReason === "MANUAL")
+          ? trade.closeReason : ""
+      );
       setImageBase64(trade.imageUrl || "");
     }
   }, [trade]);
@@ -145,6 +158,8 @@ export function EditTradeDialog({ trade, open, onOpenChange, onTradeEdited, trad
       dateObj = new Date();
     }
 
+    const cpPrice = closePrice !== "" ? parseFloat(closePrice) : undefined;
+
     try {
       await tradeService.updateTrade(user.uid, trade.id, {
         pair: pair.toUpperCase(),
@@ -155,10 +170,13 @@ export function EditTradeDialog({ trade, open, onOpenChange, onTradeEdited, trad
         entryPrice: ePrice,
         takeProfit: tpPrice,
         stopLoss: slPrice,
+        closePrice: cpPrice,
         volume: vol,
         pnlPercentage: calcPnlPercentage,
         pnlAmount: finalPnlAmount,
         imageUrl: imageBase64 || undefined,
+        ticket: ticket || undefined,
+        closeReason: closeReason || undefined,
       });
       onOpenChange(false);
       onTradeEdited();
@@ -280,6 +298,28 @@ export function EditTradeDialog({ trade, open, onOpenChange, onTradeEdited, trad
           <div className="grid grid-cols-4 items-center gap-4">
              <Label htmlFor="takeProfit-edit" className="text-right">TP Price</Label>
              <Input id="takeProfit-edit" type="number" step="any" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} className="col-span-3" placeholder="60000" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+             <Label htmlFor="closePrice-edit" className="text-right">Close Price</Label>
+             <Input id="closePrice-edit" type="number" step="any" value={closePrice} onChange={(e) => setClosePrice(e.target.value)} className="col-span-3" placeholder="Actual exit price" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label className="text-right">Exit Reason</Label>
+            <div className="col-span-3">
+              <Select value={closeReason} onValueChange={(v) => setCloseReason(v as any)}>
+                <SelectTrigger><SelectValue placeholder="How was this trade closed?" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="TP">🎯 TP — Take Profit hit</SelectItem>
+                  <SelectItem value="SL">🛑 SL — Stop Loss hit</SelectItem>
+                  <SelectItem value="NEWS">📰 News — Closed before news event</SelectItem>
+                  <SelectItem value="MANUAL">✋ Manual — Closed manually</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+             <Label htmlFor="ticket-edit" className="text-right">Ticket</Label>
+             <Input id="ticket-edit" type="text" value={ticket} onChange={(e) => setTicket(e.target.value)} className="col-span-3" placeholder="MT5 ticket number" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
              <Label htmlFor="pnlAmount-edit" className="text-right">PnL ($)</Label>

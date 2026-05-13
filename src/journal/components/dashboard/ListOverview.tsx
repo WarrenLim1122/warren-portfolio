@@ -42,28 +42,29 @@ export function ListOverview({ trades, onTradeDeleted, onRowClick }: Props) {
   return (
     <div className="rounded-xl border border-white/10 bg-card pb-2">
       <div className="w-full overflow-x-auto custom-scrollbar pb-2">
-        <Table className="text-xs w-full min-w-[1560px]">
+        <Table className="text-xs w-full min-w-[1640px]">
         <TableHeader className="bg-muted/50">
           <TableRow className="border-b border-white/10 hover:bg-transparent">
             <TableHead className="font-mono text-muted-foreground w-8 text-center border-r border-white/5 border-b-0 h-10 px-1">#</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-2 w-20">Symbol</TableHead>
+            <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-2 w-28">Ticket</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-2 w-24">Date</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-2 w-20">Time</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-2 w-20">Type</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-2 w-24">Outcome</TableHead>
+            <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-2 w-24">Exit</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-2 w-20">Volume</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-1 w-20">Price</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-1 w-20">SL</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-1 w-20">TP</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-2 w-24">PnL</TableHead>
-            <TableHead className="font-mono text-muted-foreground text-center border-r border-white/5 border-b-0 px-2 w-28">Ticket</TableHead>
             <TableHead className="font-mono text-muted-foreground text-center border-b-0 px-2 w-24">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {trades.length === 0 ? (
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={13} className="h-24 text-center text-muted-foreground font-mono">
+              <TableCell colSpan={14} className="h-24 text-center text-muted-foreground font-mono">
                 No trades match your filters.
               </TableCell>
             </TableRow>
@@ -85,6 +86,9 @@ export function ListOverview({ trades, onTradeDeleted, onRowClick }: Props) {
                 </TableCell>
                 <TableCell className="text-center border-r border-white/5 px-2 py-2">
                   <span className="font-bold text-foreground font-mono leading-tight">{symbol || "-"}</span>
+                </TableCell>
+                <TableCell className="text-muted-foreground text-center font-mono border-r border-white/5 px-2 py-2.5">
+                  {trade.ticket !== undefined ? trade.ticket : "-"}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-center border-r border-white/5 px-2 py-2.5 whitespace-nowrap">
                   {format(parsedDate, "MMM d, yyyy")}
@@ -108,6 +112,16 @@ export function ListOverview({ trades, onTradeDeleted, onRowClick }: Props) {
                     {outcomeDisplay === 'BREAKEVEN' ? 'B/E' : outcomeDisplay}
                   </span>
                 </TableCell>
+                <TableCell className="text-center border-r border-white/5 px-2 py-2.5">
+                  {(() => {
+                    const cr = trade.closeReason;
+                    if (cr === "TP")     return <span className="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-[#22c55e]">🎯 TP</span>;
+                    if (cr === "SL")     return <span className="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-[#ef4444]">🛑 SL</span>;
+                    if (cr === "NEWS")   return <span className="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-[#f59e0b]">📰 News</span>;
+                    if (cr === "MANUAL") return <span className="inline-flex items-center gap-1 font-mono text-[10px] font-bold text-muted-foreground">✋ Manual</span>;
+                    return <span className="font-mono text-muted-foreground">—</span>;
+                  })()}
+                </TableCell>
                 <TableCell className="text-muted-foreground text-center font-mono border-r border-white/5 px-2 py-2.5">
                   {trade.volume !== undefined ? trade.volume : "-"}
                 </TableCell>
@@ -122,9 +136,6 @@ export function ListOverview({ trades, onTradeDeleted, onRowClick }: Props) {
                 </TableCell>
                 <TableCell className={`text-center font-mono font-bold border-r border-white/5 px-2 py-2.5 ${pnlValue && pnlValue > 0 ? "text-[#22c55e]" : pnlValue && pnlValue < 0 ? "text-[#ef4444]" : "text-muted-foreground"}`}>
                   {pnlValue !== undefined ? `$${pnlValue.toFixed(2)}` : "-"}
-                </TableCell>
-                <TableCell className="text-muted-foreground text-center font-mono border-r border-white/5 px-2 py-2.5">
-                  {trade.ticket !== undefined ? trade.ticket : "-"}
                 </TableCell>
                 <TableCell className="p-0 border-white/5 px-1 py-1">
                   <div className="flex items-center justify-center gap-1 w-full h-full">
