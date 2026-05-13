@@ -1,0 +1,3 @@
+[submodule "src/journal"]
+	path = src/journal
+	url = https://github.com/WarrenLim1122/trading-journal.git

@@ -20,10 +20,16 @@
         "./*"
       ],
       "@journal/*": [
-        "./src/journal/*"
+        "./src/journal/src/*"
       ]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/journal/firestore.rules.test.ts",
+    "src/journal/eslint.config.js"
+  ]
 }

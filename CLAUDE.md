@@ -3,16 +3,8 @@
 ## Standing rules — read before doing anything
 
 1. Read this file before working on this repo.
-2. If the task touches `src/journal/`, the `/journal` route, Firebase, Auth, or anything related to the trading journal, **read `JOURNAL_INTEGRATION.md` first**.
-3. Do not redo the full journal integration from scratch unless explicitly asked. The integration is complete — only sync changed files.
-4. For trading journal update syncs, follow this order:
-   - Pull latest from `/Users/warrenlimzhanfeng/trading-journal`
-   - Read `AI_STUDIO_RULES.md` and `CHANGELOG.md` from the trading-journal repo if they exist
-   - Use `git diff` to identify changed files since the last sync
-   - Copy only changed files; run the `@/` → `@journal/` import rewrite on each
-   - Re-apply compatibility patches documented in `JOURNAL_INTEGRATION.md §15`
-   - Run `npm run lint` — must be zero errors before stopping
-5. Never blindly overwrite these portfolio-owned files from a trading-journal sync:
+2. **`src/journal/` is a git submodule** pointing to the [`trading-journal`](https://github.com/WarrenLim1122/trading-journal) repo. Do NOT edit journal source through this repo. To change journal code: clone trading-journal separately, edit + commit + push there, then in this repo run `git submodule update --remote src/journal && git add src/journal && git commit && git push` to bump the pointer. The integrated entry consumed by App.tsx is `src/journal/src/JournalApp.tsx`. The alias `@journal/*` resolves to `./src/journal/src/*`.
+3. Never blindly overwrite these portfolio-owned files:
    - `src/App.tsx`
    - `src/main.tsx`
    - `src/index.css`
@@ -20,19 +12,8 @@
    - `package.json`
    - `package-lock.json`
    - `vercel.json`
-6. If any portfolio-owned file must be changed, explain why before changing it.
-7. Run `npm install` only if new dependencies were added in the trading-journal's `package.json`.
-8. After a sync, test:
-   - `/` — portfolio entry gate and sections
-   - `/journal` — redirects to `/journal/dashboard` (then to login if unauthenticated)
-   - `/journal/login` — login page renders
-   - `/journal/dashboard` — dashboard loads when authenticated
-9. After every successful journal sync, provide a summary covering: files changed, dependencies changed, Firebase/Auth/Firestore impact, routing impact, styling impact, and whether a push is needed.
-10. After every successful journal sync, remind Warren:
-
-> "Please open `GOOGLE_AI_STUDIO_RESET_PROMPT.md`, copy the full prompt inside, and paste it into Google AI Studio before making the next journal update."
-
-11. Do not generate a reset prompt from scratch — always point to `GOOGLE_AI_STUDIO_RESET_PROMPT.md`.
+4. If any portfolio-owned file must be changed, explain why before changing it.
+5. Run `npm install` only if new dependencies are being added.
 
 ---
 
@@ -52,11 +33,13 @@ git remote -v
 
 Label every changed file as one of:
 - `portfolio-related` — anything in `src/` outside `src/journal/`
-- `trading-journal-related` — anything in `src/journal/`
+- `submodule-pointer-update` — when only `src/journal` (the submodule SHA) changes; commit message should be "Sync trading-journal submodule"
 - `dependency-related` — `package.json`, `package-lock.json`
-- `documentation-related` — `CLAUDE.md`, `JOURNAL_INTEGRATION.md`, `GOOGLE_AI_STUDIO_RESET_PROMPT.md`, `README.md`
+- `documentation-related` — `CLAUDE.md`, `README.md`
 - `deployment-related` — `vercel.json`, `vite.config.ts`, `tsconfig.json`
 - `other` — anything else
+
+If `src/journal/` contents show up as modified (not just the submodule pointer), **stop** — journal source must be edited in the trading-journal repo, not here.
 
 ### Step 3 — Security check (hard stop if any are detected)
 
@@ -170,7 +153,7 @@ Always remind Warren to test:
 
 Personal portfolio website for Warren Lim Zhan Feng, a penultimate Banking & Finance undergraduate at NTU Singapore. Deployed at **warrenlimzf.com** via Vercel. The site showcases his professional experience, credentials, case competition wins, and finance research projects.
 
-The trading journal is integrated at `warrenlimzf.com/journal`. Source repo: https://github.com/WarrenLim1122/trading-journal.git. Journal files live in `src/journal/`. See `JOURNAL_INTEGRATION.md` for the full integration record.
+The trading journal is integrated at `warrenlimzf.com/journal`. Journal files live in `src/journal/` and are developed in-place in this repo.
 
 ---
 
@@ -238,7 +221,7 @@ Do not remove the `AnimatePresence` wrapper around the gate — the exit animati
 
 ### Journal routing
 
-`JournalApp` (`src/journal/JournalApp.tsx`) uses `<Routes>` only — no nested `BrowserRouter`. Routes inside it are relative to `/journal`:
+`JournalApp` (`src/journal/src/JournalApp.tsx`, in the submodule) uses `<Routes>` only — no nested `BrowserRouter`. Routes inside it are relative to `/journal`:
 
 - `path="login"` → `<Login />` (matches `/journal/login`)
 - `index` → `<Navigate to="/journal/dashboard" replace />` (bare `/journal` redirects to dashboard)
@@ -287,20 +270,24 @@ my-portfolio/
     │       ├── animated-hero.tsx
     │       ├── cursor-particles.tsx
     │       └── connect-with-us.tsx
-    └── journal/                  ← trading journal (copied from source repo)
-        ├── JournalApp.tsx        ← created here, not from source
-        ├── firebase-applet-config.json
-        ├── contexts/AuthContext.tsx
-        ├── lib/firebase.ts / tradeService.ts / tradeUtils.ts / mt5Calculation.ts / utils.ts
-        ├── types/trade.ts
-        ├── pages/Login.tsx / Dashboard.tsx / NewTrade.tsx
-        │         RiskCalculator.tsx / StrategiesDashboard.tsx / Settings.tsx
-        └── components/
-            ├── layout/AppLayout.tsx  ← sidebar, mobile nav, user profile, logout
-            ├── dashboard/  (AddTradeDialog, CalendarView, ChartOverview,
-            │               EditTradeDialog, EquityCurve, ListOverview,
-            │               TradeDetailDialog, WinsVsLosses)
-            └── ui/         (14 shadcn/Base UI components)
+    └── journal/                  ← git submodule → trading-journal repo
+        ├── (submodule root has its own README, vite.config.ts, package.json
+        │    for standalone deployment — those are not used by personal-website)
+        └── src/                  ← journal source (what personal-website consumes)
+            ├── JournalApp.tsx    ← integration entry (Routes only, no BrowserRouter)
+            ├── App.tsx           ← standalone entry (BrowserRouter — used only when deployed independently)
+            ├── firebase-applet-config.json
+            ├── contexts/AuthContext.tsx
+            ├── lib/firebase.ts / tradeService.ts / cashflowService.ts / tradeUtils.ts / mt5Calculation.ts / utils.ts
+            ├── types/trade.ts / cashflow.ts
+            ├── pages/Login.tsx / Dashboard.tsx / NewTrade.tsx
+            │         Cashflows.tsx / RiskCalculator.tsx / StrategiesDashboard.tsx / Settings.tsx
+            └── components/
+                ├── layout/AppLayout.tsx  ← sidebar, mobile nav, user profile, logout
+                ├── dashboard/  (AddTradeDialog, CalendarView, ChartOverview,
+                │               EditTradeDialog, EquityCurve, ListOverview,
+                │               TradeDetailDialog, WinsVsLosses)
+                └── ui/         (shadcn/Base UI components)
 ```
 
 ---
@@ -366,13 +353,14 @@ Standard scroll trigger: `whileInView="visible" viewport={{ once: true, amount: 
 ```ts
 resolve: {
   alias: {
-    '@journal': path.resolve(__dirname, './src/journal'),  // journal imports
+    // Journal source lives inside the trading-journal git submodule at src/journal/src/
+    '@journal': path.resolve(__dirname, './src/journal/src'),
     '@': path.resolve(__dirname, '.'),                     // project root (NOT src/)
   },
 },
 ```
 
-**Important:** `@/` resolves to the project root, not `src/`. This is non-standard. No portfolio files currently use the `@` alias — all use relative paths. Journal files use `@journal/` for their internal imports.
+**Important:** `@/` resolves to the project root, not `src/`. This is non-standard. No portfolio files currently use the `@` alias — all use relative paths. Journal files use `@journal/` for their internal imports; that alias now points into the submodule.
 
 Both aliases must also be reflected in `tsconfig.json` under `compilerOptions.paths`.
 
@@ -431,29 +419,20 @@ Shared by `Certificates` (receives a `cert` object: `.image`, `.title`, `.issuer
 
 ---
 
-## Latest Session Summary — Journal UI polish and routing restructure
+## Latest Session Summary — Journal extracted to submodule
 
-*Recorded 2026-05-07. Read this section at the start of any new session before touching the journal or the sync workflow.*
+*Recorded 2026-05-13. Supersedes the earlier 2026-05-07 "single-repo" note.*
 
-### 1. Two-repo setup
+### 1. Submodule setup
 
-| Repo | Purpose | Tooling |
-|---|---|---|
-| `https://github.com/WarrenLim1122/trading-journal.git` | Source trading journal app | Edited in Google AI Studio |
-| `https://github.com/WarrenLim1122/warren-portfolio.git` | This repo — deployed at `warrenlimzf.com` | Edited in Claude Code |
+The trade journal source has been moved BACK out into [`trading-journal`](https://github.com/WarrenLim1122/trading-journal) so it can be deployed independently in the future (own domain). `personal-website/src/journal/` is now a **git submodule** mounting the full trading-journal repo. The submodule's `src/` is the actual code root; everything else at the submodule root (own `vite.config.ts`, `package.json`, `index.html`, `App.tsx`, `firestore.rules`) is for standalone deployment and is not used by personal-website's build.
 
-Google AI Studio should maintain `AI_STUDIO_RULES.md` and `CHANGELOG.md` inside the trading-journal repo and update `CHANGELOG.md` automatically after every code change. Claude Code reads those files at the start of every sync.
-
-### 2. Integration method and live routes
-
-- **Method:** manual file copy — not a submodule or subtree.
-- Journal source files → `src/journal/` in this repo.
 - `warrenlimzf.com/journal` → redirects to `/journal/dashboard`.
 - `warrenlimzf.com/journal/dashboard` → main dashboard (redirects to login if unauthenticated).
 - `warrenlimzf.com/journal/login` → login page; redirects to `/journal/dashboard` after sign-in.
 - This repo owns the `BrowserRouter`. `JournalApp` uses `<Routes>` only — never a nested `BrowserRouter`.
 
-### 3. Compatibility changes already in place — never overwrite these
+### 2. Compatibility changes already in place — never overwrite these
 
 | File | What was changed |
 |---|---|
@@ -468,8 +447,6 @@ Google AI Studio should maintain `AI_STUDIO_RULES.md` and `CHANGELOG.md` inside 
 | `src/journal/components/dashboard/TradeDetailDialog.tsx` | `sm:max-w-[90vw] w-[90vw]` overrides base `sm:max-w-sm`; stats left (35%), chart right (65%); Net PNL centered via 3-col flex; labels text-xs, values text-base |
 | `src/journal/components/dashboard/ListOverview.tsx` | BOT badge removed; Symbol cell is plain text |
 | All `src/journal/**` imports | `@/` → `@journal/` |
-
-Full patch details: `JOURNAL_INTEGRATION.md §15`.
 
 ### 4. Dark theme architecture — why it works this way
 
@@ -498,12 +475,6 @@ Do not change Firebase config or Firestore rules unless explicitly requested.
 
 Claude may commit, push, create PRs, and merge PRs automatically after every successful edit, **unless Warren says "do not push" or "do not merge"**. Hard stops: secrets detected, build/lint fails, merge conflict, auth failure, destructive change. Full rules: `CLAUDE.md §Automatic GitHub workflow`.
 
-### 7. After every journal sync — mandatory reminder
+### 7. Visual styling — current status
 
-After syncing the trading journal into this repo, always remind Warren:
-
-> "Please open `GOOGLE_AI_STUDIO_RESET_PROMPT.md`, copy the full prompt inside, and paste it into Google AI Studio before making the next trading journal update."
-
-### 8. Visual styling — current status
-
-The `/journal` dark theme is stable. `AppLayout` provides `min-h-screen bg-background` for all protected routes. If new regressions appear, check: (a) portals have dark CSS variables, (b) `html.dark` is applied by `JournalApp.tsx`, (c) `@journal/` import rewrite is intact after any sync.
+The `/journal` dark theme is stable. `AppLayout` provides `min-h-screen bg-background` for all protected routes. If new regressions appear, check: (a) portals have dark CSS variables, (b) `html.dark` is applied by `JournalApp.tsx`, (c) all `src/journal/**` imports use `@journal/` not `@/`.

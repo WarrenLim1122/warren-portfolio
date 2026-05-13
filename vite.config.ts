@@ -12,7 +12,8 @@ export default defineConfig(({mode}) => {
     },
     resolve: {
       alias: {
-        '@journal': path.resolve(__dirname, './src/journal'),
+        // Journal source lives inside the trading-journal git submodule at src/journal/src/
+        '@journal': path.resolve(__dirname, './src/journal/src'),
         '@': path.resolve(__dirname, '.'),
       },
     },

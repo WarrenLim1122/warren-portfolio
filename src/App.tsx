@@ -15,7 +15,7 @@ import ResumeViewer from "./components/ResumeViewer";
 import { PERSONAL_INFO } from "./constants";
 import { ParticleHero } from "./components/ui/animated-hero";
 import { CursorParticles } from "./components/ui/cursor-particles";
-import JournalApp from "./journal/JournalApp";
+import JournalApp from "./journal/src/JournalApp";
 
 // ─── Portfolio page — all existing layout logic lives here, untouched ───────
 function Portfolio() {
