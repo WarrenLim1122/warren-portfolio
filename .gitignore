@@ -42,3 +42,7 @@ next-env.d.ts
 dist
 *.png
 .playwright-mcp/
+
+# editor/system artifacts
+.Rhistory
+public.zip

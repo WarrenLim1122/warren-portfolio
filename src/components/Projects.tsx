@@ -7,7 +7,6 @@ import { motion } from "motion/react";
 import { PROJECTS } from "../constants";
 import { BarChart2, ChevronRight, Projector } from "lucide-react";
 import { slideUpVariants, staggerContainer, revealVariants } from "../lib/animations";
-import { AnimatedCard } from "./AnimatedCard";
 
 interface ProjectsProps {
   onSelectProject: (project: any) => void;
