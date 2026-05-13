@@ -7,6 +7,7 @@ import { NewTrade } from "./pages/NewTrade";
 import { RiskCalculator } from "./pages/RiskCalculator";
 import { StrategiesDashboard } from "./pages/StrategiesDashboard";
 import { Settings } from "./pages/Settings";
+import { Cashflows } from "./pages/Cashflows";
 import { AppLayout } from "./components/layout/AppLayout";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -70,6 +71,14 @@ export default function JournalApp() {
             element={
               <ProtectedRoute>
                 <RiskCalculator />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="cashflows"
+            element={
+              <ProtectedRoute>
+                <Cashflows />
               </ProtectedRoute>
             }
           />

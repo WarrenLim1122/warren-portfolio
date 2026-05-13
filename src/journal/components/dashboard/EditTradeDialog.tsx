@@ -41,7 +41,9 @@ export function EditTradeDialog({ trade, open, onOpenChange, onTradeEdited, trad
   useEffect(() => {
     if (trade) {
       setPair(trade.pair || "");
-      setOutcome(trade.outcome || "");
+      // Bot writes "LOSS"; UI canonical form is "LOSE" — normalize so the Select matches.
+      const normalizedOutcome = trade.outcome === "LOSS" ? "LOSE" : (trade.outcome || "");
+      setOutcome(normalizedOutcome as any);
       if (trade.date) {
         const d = new Date(trade.date);
         setDate(d.toLocaleDateString('en-CA')); // YYYY-MM-DD
@@ -132,7 +134,7 @@ export function EditTradeDialog({ trade, open, onOpenChange, onTradeEdited, trad
     if (ePrice !== undefined && vol !== undefined) {
       if (outcome === "WIN" && tpPrice !== undefined) {
         calcPnlAmount = position === "Long" ? (tpPrice - ePrice) * vol : (ePrice - tpPrice) * vol;
-      } else if (outcome === "LOSE" && slPrice !== undefined) {
+      } else if ((outcome === "LOSE" || outcome === "LOSS") && slPrice !== undefined) {
         calcPnlAmount = position === "Long" ? (slPrice - ePrice) * vol : (ePrice - slPrice) * vol;
       } else if (outcome === "BREAKEVEN") {
         calcPnlAmount = 0;
@@ -182,7 +184,15 @@ export function EditTradeDialog({ trade, open, onOpenChange, onTradeEdited, trad
       onTradeEdited();
     } catch (e) {
       console.error(e);
-      alert("Failed to update trade.");
+      // Surface the real Firestore error so we can debug permission/validation issues.
+      let detail = "";
+      try {
+        const parsed = JSON.parse(e instanceof Error ? e.message : String(e));
+        detail = parsed?.error || String(e);
+      } catch {
+        detail = e instanceof Error ? e.message : String(e);
+      }
+      alert(`Failed to update trade:\n\n${detail}\n\nOpen browser DevTools → Console for full details.`);
     } finally {
       setLoading(false);
     }

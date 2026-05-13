@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Calculator, LogOut, Activity, PlusCircle, FolderGit2, Settings as SettingsIcon, UserCircle } from "lucide-react";
+import { LayoutDashboard, Calculator, LogOut, Activity, PlusCircle, FolderGit2, Settings as SettingsIcon, UserCircle, Wallet } from "lucide-react";
 import { useAuth } from "@journal/contexts/AuthContext";
 import { Button } from "@journal/components/ui/button";
 
@@ -15,6 +15,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const navItems = [
     { name: "New Trade", path: "/journal/new-trade", icon: PlusCircle },
     { name: "Dashboard", path: "/journal/dashboard", icon: LayoutDashboard },
+    { name: "Cashflows", path: "/journal/cashflows", icon: Wallet },
     { name: "Strategies", path: "/journal/strategies", icon: FolderGit2 },
     { name: "Risk Calculator", path: "/journal/risk-calculator", icon: Calculator },
     { name: "Settings", path: "/journal/settings", icon: SettingsIcon },
