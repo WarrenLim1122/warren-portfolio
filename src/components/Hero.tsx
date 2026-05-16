@@ -1,93 +1,197 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * Hero — the dark anchored entrance. Text leads; the 3D data monolith is
+ * the signature visual; the strongest proof (trust strip) lands in the
+ * first 5 seconds. One orchestrated page-load cascade, then stillness.
  */
 
-import { useRef } from "react";
-import { motion } from "motion/react";
-import { Download, Sparkles } from "lucide-react";
-import { PERSONAL_INFO } from "../constants";
+import { motion, useReducedMotion, type Variants } from "motion/react";
+import { Download, ArrowDownRight } from "lucide-react";
+import {
+  PERSONAL_INFO,
+  TRUST_MARKERS,
+  ADJECTIVES,
+} from "../constants";
+import { EASE_OUT_EXPO } from "../lib/animations";
+import { MagneticButton } from "./ui/MagneticButton";
 import { ContactConnect } from "./ui/connect-with-us";
+import { Hero3DStage } from "./ui/Hero3DStage";
+
+const container: Variants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.09, delayChildren: 0.1 } },
+};
+const item: Variants = {
+  hidden: { opacity: 0, y: 22 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.7, ease: EASE_OUT_EXPO } },
+};
+
+function ClipLine({ children, delay }: { children: string; delay: number }) {
+  const reduced = useReducedMotion();
+  if (reduced) return <span className="block">{children}</span>;
+  return (
+    <motion.span
+      className="block"
+      initial={{ opacity: 0, y: 28 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.85, ease: EASE_OUT_EXPO, delay }}
+    >
+      {children}
+    </motion.span>
+  );
+}
 
 export default function Hero() {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const fade = (delay = 0) => ({
-    initial: { opacity: 0, y: 24 },
-    animate: { opacity: 1, y: 0 },
-    transition: { duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] as const },
-  });
+  const reduced = useReducedMotion();
 
   return (
     <section
-      ref={containerRef}
-      className="relative min-h-screen flex items-center justify-center px-6 pt-32 pb-20 max-w-7xl mx-auto w-full overflow-hidden"
+      id="top"
+      className="relative isolate min-h-screen overflow-hidden bg-surface px-6 pb-24 pt-32 text-paper md:px-12 md:pt-36 lg:px-20"
     >
-      <div className="flex flex-col lg:flex-row items-stretch gap-12 lg:gap-20 w-full">
+      {/* Atmosphere: research-canvas grid + gold bloom */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-[0.5]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
+          backgroundSize: "64px 64px",
+          maskImage:
+            "radial-gradient(ellipse 80% 70% at 50% 40%, #000 40%, transparent 100%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-40 top-1/4 h-[520px] w-[520px] rounded-full bg-gold/10 blur-[140px]"
+      />
 
-        {/* LEFT: name / subtitle / contact card */}
-        <div className="flex-1 flex flex-col justify-between gap-10 min-w-0">
-          {/* Text block */}
-          <motion.div {...fade(0.1)} className="space-y-6 text-center lg:text-left">
-            <div className="flex items-center justify-center lg:justify-start gap-2 text-gold font-bold text-[10px] md:text-xs tracking-[0.25em] uppercase">
-              <Sparkles size={14} />
-              <span>Finance Enthusiast</span>
-            </div>
-            <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold tracking-tighter text-navy leading-[0.9] lg:-ml-1">
-              Warren, <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-navy via-navy to-gold/60">
-                Lim Zhan Feng
+      <motion.div
+        variants={container}
+        initial={reduced ? false : "hidden"}
+        animate={reduced ? undefined : "visible"}
+        className="relative mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-12"
+      >
+        {/* LEFT — narrative */}
+        <div>
+          <motion.div
+            variants={item}
+            className="flex items-center gap-4"
+          >
+            <span className="h-12 w-12 overflow-hidden rounded-full border border-white/15 grayscale">
+              <img
+                src={PERSONAL_INFO.headshot}
+                alt={PERSONAL_INFO.fullName}
+                className="h-full w-full object-cover"
+              />
+            </span>
+            <span className="u-eyebrow flex items-center gap-2.5 text-[10px] text-white/55">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold/70" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-gold" />
               </span>
-            </h1>
-            <p className="text-lg md:text-2xl text-gray-500 font-light leading-relaxed max-w-xl mx-auto lg:mx-0">
-              Penultimate Banking and Finance Undergraduate
-              <span className="block mt-1 text-navy font-medium italic">Nanyang Technological University</span>
-            </p>
+              Banking &amp; Finance · NTU Singapore
+            </span>
           </motion.div>
 
-          {/* Contact card */}
-          <motion.div id="contacts" {...fade(0.3)}>
-            <ContactConnect />
+          <h1 className="mt-8 font-display text-[clamp(2.7rem,7.4vw,5.6rem)] font-semibold leading-[0.96] tracking-[-0.03em] text-balance">
+            <ClipLine delay={0.15}>Warren</ClipLine>
+            <span className="block bg-gradient-to-r from-gold-bright to-gold bg-clip-text text-transparent">
+              <ClipLine delay={0.27}>Lim Zhan Feng</ClipLine>
+            </span>
+          </h1>
+
+          <motion.p
+            variants={item}
+            className="mt-8 max-w-xl text-lg leading-relaxed text-white/75 md:text-xl"
+          >
+            {PERSONAL_INFO.valueProp}
+          </motion.p>
+
+          <motion.p
+            variants={item}
+            className="mt-4 max-w-xl text-sm leading-relaxed text-white/45"
+          >
+            {PERSONAL_INFO.ethos}
+          </motion.p>
+
+          <motion.div
+            variants={item}
+            className="mt-7 flex items-center gap-4 u-eyebrow text-[10px] text-gold-bright"
+          >
+            {ADJECTIVES.map((a, i) => (
+              <span key={a} className="flex items-center gap-4">
+                {i > 0 && <span className="h-1 w-1 rounded-full bg-white/20" />}
+                {a}
+              </span>
+            ))}
+          </motion.div>
+
+          <motion.div
+            variants={item}
+            className="mt-10 flex flex-wrap items-center gap-4"
+          >
+            <MagneticButton
+              href="/resume.pdf"
+              download="Warren_Lim_Resume.pdf"
+              variant="primary"
+              ariaLabel="Download Warren Lim's CV (PDF)"
+              className="bg-gold text-surface hover:bg-gold-bright"
+            >
+              <Download size={16} strokeWidth={2.4} />
+              Download CV
+            </MagneticButton>
+            <MagneticButton
+              href="#work"
+              variant="ghost-dark"
+              ariaLabel="Jump to selected work"
+            >
+              Selected Work
+              <ArrowDownRight size={16} strokeWidth={2.2} />
+            </MagneticButton>
+          </motion.div>
+
+          <motion.div
+            variants={item}
+            className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-7"
+          >
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+              {TRUST_MARKERS.map((m, i) => (
+                <span
+                  key={m}
+                  className="flex items-center gap-5 text-sm font-medium text-white/80"
+                >
+                  {i > 0 && (
+                    <span className="text-gold/50" aria-hidden>
+                      ◆
+                    </span>
+                  )}
+                  {m}
+                </span>
+              ))}
+            </div>
+            <p className="u-eyebrow text-[10px] text-white/35">
+              {PERSONAL_INFO.availability}
+            </p>
           </motion.div>
         </div>
 
-        {/* RIGHT: image + buttons stacked */}
+        {/* RIGHT — the signature 3D moment */}
         <motion.div
-          {...fade(0.2)}
-          className="flex-shrink-0 flex flex-col items-center lg:items-stretch gap-5 w-full lg:w-[300px] xl:w-[320px]"
+          variants={item}
+          className="order-first lg:order-none"
         >
-          {/* Headshot */}
-          <div className="w-full max-w-[300px] lg:max-w-none mx-auto lg:mx-0 aspect-[5/6] overflow-hidden rounded-[2rem] border border-gray-100 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.12)] bg-white flex-1">
-            <img
-              src={PERSONAL_INFO.headshot}
-              alt={PERSONAL_INFO.fullName}
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Buttons — stacked, full width of right column */}
-          <div className="flex flex-col gap-3 w-full max-w-[300px] lg:max-w-none mx-auto lg:mx-0">
-            <motion.a
-              href="#experience"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full py-5 bg-navy text-white rounded-2xl text-xs font-black tracking-[0.2em] uppercase shadow-[0_20px_40px_-10px_rgba(15,48,87,0.3)] flex items-center justify-center"
-            >
-              My Work Experience
-            </motion.a>
-            <motion.a
-              href="/resume.pdf"
-              download="Warren_Lim_Resume.pdf"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="w-full py-5 border-2 border-gray-100 rounded-2xl text-xs font-black tracking-[0.2em] uppercase flex items-center justify-center gap-2 hover:border-navy transition-all text-navy bg-white shadow-sm"
-            >
-              <Download size={16} strokeWidth={3} /> Download CV
-            </motion.a>
-          </div>
+          <Hero3DStage />
         </motion.div>
+      </motion.div>
 
-      </div>
+      <motion.div
+        variants={item}
+        initial={reduced ? false : "hidden"}
+        animate={reduced ? undefined : "visible"}
+        className="relative mx-auto mt-16 w-full max-w-6xl"
+      >
+        <ContactConnect tone="dark" />
+      </motion.div>
     </section>
   );
 }

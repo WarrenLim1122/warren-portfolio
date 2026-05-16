@@ -1,58 +1,130 @@
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,400..600&display=swap');
+@import "@fontsource-variable/geist";
 @import "tailwindcss";
 
+/* ============================================================
+   PORTFOLIO DESIGN SYSTEM  ·  "Institutional Research, Productized"
+   Editorial finance research note × precision product page.
+   The journal shadcn .dark block below is intentionally untouched.
+   ============================================================ */
+
 @theme {
+  /* Geist (variable, distinctive grotesk) drives display + numbers.
+     Inter remains the body workhorse. Cormorant is a single
+     editorial italic moment (pull-quote / eyebrow flourish only). */
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "Cormorant Garamond", serif;
-  
+  --font-display: "Geist Variable", "Inter", ui-sans-serif, sans-serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+
+  /* Evolved palette — ink-navy anchor, surgical gold, paper, deep hero. */
   --color-navy: #0F3057;
+  --color-navy-700: #0B2540;
   --color-gold: #C4964D;
-  --color-paper: #F9FAFB;
-  --color-ink: #1A1A1A;
+  --color-gold-bright: #D8AF6A;
+  --color-gold-soft: #F4ECDD;
+  --color-paper: #FBFBFD;
+  --color-paper-2: #F3F4F7;
+  --color-ink: #14171C;
+  /* NB: 'muted' would collide with the journal's shadcn @theme inline
+     (--color-muted: var(--muted), near-white in :root) and render
+     invisible on the light portfolio. Use a distinct token name. */
+  --color-graphite: #5B6470;
+  --color-line: #E4E6EB;
+  --color-surface: #0A1628;
+  --color-surface-2: #0E1E33;
+
+  /* Decisive, snappy easings — execution, not drift. */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-body {
-  @apply bg-paper text-ink font-sans antialiased;
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+
+  body {
+    @apply bg-paper text-ink font-sans antialiased;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in srgb, var(--color-gold) 28%, transparent);
+    color: var(--color-navy);
+  }
+
+  /* Display type + tabular numerals for finance-grade number scanning. */
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-feature-settings: "ss03";
+  }
+
+  /* Faint paper grain for atmosphere — sits above bg, below content,
+     never intercepts pointer events. Removed under reduced motion. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  }
 }
 
-@keyframes contact-shake {
-  0%, 100% { transform: translateX(0) rotate(0); }
-  20%       { transform: translateX(-4px) rotate(-5deg); }
-  40%       { transform: translateX(4px) rotate(5deg); }
-  60%       { transform: translateX(-4px) rotate(-5deg); }
-  80%       { transform: translateX(4px) rotate(5deg); }
+@layer components {
+  /* Section index marker — oversized tabular figure, research-note style. */
+  .u-index {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .u-eyebrow {
+    @apply text-[11px] uppercase font-semibold;
+    letter-spacing: 0.32em;
+  }
+
+  /* Big pulled-out metric — the recruiter-scannable number. */
+  .u-stat {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+  }
+
+  .u-tabular { font-variant-numeric: tabular-nums; }
+
+  .u-hairline { background: var(--color-line); }
+
+  /* Magnetic / primary CTA surface. */
+  .u-cta {
+    @apply inline-flex items-center justify-center gap-2.5 font-semibold;
+    @apply text-[12px] uppercase tracking-[0.18em];
+    transition: transform 0.5s var(--ease-out-expo),
+                background-color 0.4s var(--ease-out-expo),
+                color 0.4s var(--ease-out-expo);
+  }
 }
 
-h1, h2, h3, .serif {
-  @apply font-sans; /* Theme prompt shows bold sans for names */
+@utility grain-card {
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fdfdfe 100%);
+  border: 1px solid var(--color-line);
 }
 
-.section-padding {
-  @apply py-16 px-6 md:px-12 lg:px-24;
-}
-
-.label-caps {
-  @apply text-[10px] uppercase tracking-[0.2em] text-gray-400 font-bold;
-}
-
-.card-minimal {
-  @apply bg-white border border-gray-200 shadow-sm transition-all duration-300;
-}
-
-.experience-card {
-  @apply bg-white p-6 border-l-4 border-navy shadow-sm hover:translate-x-1 transition-transform cursor-default;
-}
-
-.experience-card-muted {
-  @apply bg-white p-6 border-l-4 border-navy/20 shadow-sm opacity-80 hover:opacity-100 transition-opacity;
-}
-
-.btn-primary {
-  @apply bg-navy text-white px-6 py-3 rounded-sm text-xs font-semibold uppercase tracking-wider hover:bg-[#1A4271] transition-colors;
-}
-
-.btn-secondary {
-  @apply border border-navy text-navy px-6 py-3 rounded-sm text-xs font-semibold uppercase tracking-wider hover:bg-navy/5 transition-colors;
+/* Global reduced-motion guard — every animation degrades to a
+   static, fully legible state. Belt-and-braces over per-component logic. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  body::before { display: none; }
 }
 
 /* ============================================================
