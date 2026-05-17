@@ -36,6 +36,12 @@ import { ContactConnect } from "./components/ui/connect-with-us";
 // it entirely off the "/" initial bundle. Submodule source is untouched.
 const JournalApp = lazy(() => import("./journal/src/JournalApp"));
 
+// /life — the personal "Beyond Work" area. Fully isolated in src/life/;
+// lazy so it never enters the recruiter site's initial bundle. To drop
+// the project cleanly: delete src/life/ and remove this import, the
+// /life route below, and the "Beyond Work" nav pill.
+const LifeApp = lazy(() => import("./life/LifeApp"));
+
 function JournalLoading() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
@@ -160,6 +166,21 @@ function Portfolio() {
             ))}
           </div>
 
+          {/* /life entry — hidden on the smallest screens so the nav
+              doesn't crowd; remove with the rest of the /life additions
+              to drop the project. */}
+          <Link
+            to="/life"
+            className={cn(
+              "hidden rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] transition-all duration-300 sm:inline-block",
+              scrolled
+                ? "border-line text-navy hover:border-navy"
+                : "border-white/20 text-paper hover:border-gold-bright hover:text-gold-bright",
+            )}
+          >
+            Beyond Work
+          </Link>
+
           <Link
             to="/journal"
             className={cn(
@@ -216,6 +237,14 @@ export default function App() {
           element={
             <Suspense fallback={<JournalLoading />}>
               <JournalApp />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/life/*"
+          element={
+            <Suspense fallback={<div className="min-h-screen bg-paper" />}>
+              <LifeApp />
             </Suspense>
           }
         />
