@@ -104,10 +104,24 @@ export function GlobeGallery() {
             {active.name}
           </h3>
           <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-graphite">
-            {active.photos.length} frames
+            {active.photos.length > 0
+              ? `${active.photos.length} frames`
+              : "Coming soon"}
           </span>
         </div>
-        <PhotoGrid photos={active.photos} onOpen={setLightboxIndex} />
+        {active.photos.length > 0 ? (
+          <PhotoGrid photos={active.photos} onOpen={setLightboxIndex} />
+        ) : (
+          <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-line bg-paper-2/60 px-6 py-20 text-center">
+            <p className="font-serif text-xl italic text-navy">
+              Photographs from {active.name} are on the way
+            </p>
+            <p className="max-w-sm text-sm leading-relaxed text-graphite">
+              This country is mapped; the frames are still being chosen.
+              Spin the globe or pick another place meanwhile.
+            </p>
+          </div>
+        )}
       </motion.section>
 
       <Lightbox
