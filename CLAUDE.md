@@ -35,7 +35,7 @@ Warren's confirmed design preferences. Apply these on every change unless he say
 
 ## Automatic GitHub workflow
 
-This workflow runs automatically after every successful code or documentation edit, unless Warren explicitly says **"do not push"** or **"do not merge"**.
+**Default: push to `origin main` automatically after every successful edit.** No permission needed. Never ask Warren whether to push — just do it. Only stop if a hard-stop condition from Step 9 fires.
 
 ### Step 1 — Diagnose
 
@@ -132,7 +132,7 @@ If GitHub CLI is not available or auth fails:
 - Output the PR URL
 - State clearly that manual browser merge is needed
 
-### Step 9 — Stop and ask Warren if any of these occur
+### Step 9 — Hard stops (the only reasons NOT to push)
 
 - Secrets detected in changed files
 - `npm run build` or `npm run lint` fails and cannot be safely fixed
@@ -140,7 +140,7 @@ If GitHub CLI is not available or auth fails:
 - GitHub authentication failure
 - Change is destructive (data deletion, Firebase rules change, DNS/deployment config change)
 - Files outside the expected project scope are modified
-- Warren said "do not push" or "do not merge"
+- Warren explicitly says "do not push" for this session
 
 ### Step 10 — Post-push summary (always provide)
 
@@ -519,7 +519,6 @@ When Warren says a prompt like "update my life folder", "update my gallery page"
 - [ ] **Aesthetic photos** — drop image files into `src/life/photos/<country>/` for each country: `singapore`, `japan`, `italy`, `switzerland`, `new-zealand`, `south-korea`. Add any new country to `COUNTRY_META` in `gallery.ts` (the `id` must equal the folder name), then create that folder. Filename becomes the on-photo location label. Until added, each country shows the "Coming soon" empty state.
 - [ ] **Golf clips** — upload each clip to YouTube as **Unlisted**, then either give the video IDs to wire into `GOLF_MILESTONES` or set each milestone's `media: { type: "youtube", id: "..." }` in `life-content.ts`.
 - **Layout is intentionally NOT finalised.** Once the real photos/clips are in, Claude decides the precise arrangement, gallery grid density (uniform vs masonry), per-country ordering, lightbox behaviour, and the golf media layout, scaled to the actual asset count. Do not lock a fixed layout before the real assets exist.
-- **PUSH HOLD (active, set 2026-05-18):** Warren is assembling photos/clips on his computer. **Commit locally only. Do NOT push anything to `origin` — not the preview branch, not `main`.** Nothing reaches GitHub or the Vercel preview until Warren explicitly says "push everything" (a single consolidated push at the end). This fully overrides Steps 7 and 8 of the "Automatic GitHub workflow" until Warren lifts the hold. Local `git commit` after each verified change is still fine (keeps work safe for the eventual one push).
 
 ### Behaviour notes
 
@@ -613,7 +612,7 @@ Do not change Firebase config or Firestore rules unless explicitly requested.
 
 ### 6. GitHub workflow — Claude has automatic permission
 
-Claude may commit, push, create PRs, and merge PRs automatically after every successful edit, **unless Warren says "do not push" or "do not merge"**. Hard stops: secrets detected, build/lint fails, merge conflict, auth failure, destructive change. Full rules: `CLAUDE.md §Automatic GitHub workflow`.
+Claude pushes to `origin main` automatically after every successful edit — no permission needed. Hard stops only: secrets detected, build/lint fails, merge conflict, auth failure, destructive change. Full rules: `CLAUDE.md §Automatic GitHub workflow`.
 
 ### 7. Visual styling — current status
 
