@@ -1,10 +1,13 @@
 /**
  * LifeNav — the minimal bar for /life: a way back to the portfolio and
- * the data-driven tab switcher (LIFE_TABS). Adding a future tab is a
- * content edit; this renders whatever tabs exist.
+ * the data-driven tab switcher (LIFE_TABS). The active state is a single
+ * pill that SLIDES between tabs (shared layout animation), so switching
+ * reads as motion, not an instant swap. Adding a future tab is a content
+ * edit; this renders whatever tabs exist.
  */
 
 import { Link } from "react-router-dom";
+import { motion } from "motion/react";
 import { ArrowLeft } from "lucide-react";
 import { LIFE_TABS, type LifeTabId } from "../life-content";
 
@@ -38,14 +41,27 @@ export function LifeNav({
               type="button"
               onClick={() => onChange(t.id)}
               aria-current={on ? "page" : undefined}
-              className={[
-                "rounded-full px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-gold",
-                on
-                  ? "bg-navy text-paper shadow-sm"
-                  : "text-graphite hover:text-navy",
-              ].join(" ")}
+              className="relative rounded-full px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-gold"
             >
-              {t.label}
+              {on && (
+                <motion.span
+                  layoutId="life-tab-pill"
+                  className="absolute inset-0 rounded-full bg-navy shadow-sm"
+                  transition={{
+                    type: "spring",
+                    stiffness: 380,
+                    damping: 32,
+                  }}
+                />
+              )}
+              <span
+                className={[
+                  "relative z-10 transition-colors duration-300",
+                  on ? "text-paper" : "text-graphite hover:text-navy",
+                ].join(" ")}
+              >
+                {t.label}
+              </span>
             </button>
           );
         })}

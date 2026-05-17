@@ -502,6 +502,13 @@ Single page, data-driven tabs (`LIFE_TABS`: Gallery, Golf) synced to the URL has
 5. In `src/life/life-content.ts`, find the milestone in `GOLF_MILESTONES` and set its media to `media: { type: "youtube", id: "ABC123xyz" },`.
 6. Done. The still is taken from the YouTube thumbnail automatically (no poster file needed) and the player only mounts when a visitor clicks play. Vimeo is the same with `{ type: "vimeo", id: "<numericId>" }` (add an optional `poster:` for Vimeo, its thumbnail is not auto-derived).
 
+### Pending content / TODO (Warren to provide; recorded 2026-05-18)
+
+- [ ] **Aesthetic photos** — drop image files into `src/life/photos/<country>/` for each country: `singapore`, `japan`, `italy`, `switzerland`, `new-zealand`, `south-korea`. Add any new country to `COUNTRY_META` in `gallery.ts` (the `id` must equal the folder name), then create that folder. Filename becomes the on-photo location label. Until added, each country shows the "Coming soon" empty state.
+- [ ] **Golf clips** — upload each clip to YouTube as **Unlisted**, then either give the video IDs to wire into `GOLF_MILESTONES` or set each milestone's `media: { type: "youtube", id: "..." }` in `life-content.ts`.
+- **Layout is intentionally NOT finalised.** Once the real photos/clips are in, Claude decides the precise arrangement, gallery grid density (uniform vs masonry), per-country ordering, lightbox behaviour, and the golf media layout, scaled to the actual asset count. Do not lock a fixed layout before the real assets exist.
+- **Deploy hold (2026-05-18):** Warren is assembling assets locally. Keep work on the `redesign/recruiter-conversion` preview branch for Vercel preview only; do NOT merge to `main`/production. He will request a single consolidated push/merge when everything is ready. This temporarily overrides the auto-merge in the "Automatic GitHub workflow".
+
 ### Behaviour notes
 
 - The Gallery globe (`react-globe.gl`) is guarded: skipped under `prefers-reduced-motion` or when WebGL is unavailable; the country chips perform the identical selection (and are the keyboard path).

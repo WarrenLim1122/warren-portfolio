@@ -48,6 +48,31 @@ export function GolfJourney() {
         <p className="mt-4 text-base leading-relaxed text-graphite">
           {GOLF_INTRO.subtitle}
         </p>
+
+        {/* Progress: newbie -> now (relocated out of the media card) */}
+        <div className="mt-9 flex items-center justify-center gap-4">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.32em] text-graphite/55">
+            Newbie
+          </span>
+          <span className="relative h-px w-40 bg-line sm:w-56">
+            <motion.span
+              className="absolute -top-[3px] h-[7px] w-[7px] rounded-full bg-gold shadow-[0_0_10px_rgba(199,168,120,0.85)]"
+              style={{ translateX: "-50%" }}
+              initial={false}
+              animate={{
+                left: `${
+                  GOLF_MILESTONES.length > 1
+                    ? (active / (GOLF_MILESTONES.length - 1)) * 100
+                    : 0
+                }%`,
+              }}
+              transition={{ type: "spring", stiffness: 260, damping: 30 }}
+            />
+          </span>
+          <span className="text-[10px] font-semibold uppercase tracking-[0.32em] text-gold">
+            Now
+          </span>
+        </div>
       </header>
 
       <div className="mt-16 lg:grid lg:grid-cols-[0.95fr_1.05fr] lg:gap-16">
@@ -70,9 +95,6 @@ export function GolfJourney() {
                 />
               </motion.div>
             </AnimatePresence>
-            <div className="pointer-events-none absolute left-5 top-5 rounded-full bg-surface/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/80 backdrop-blur">
-              Newbie to now
-            </div>
           </div>
         </div>
 

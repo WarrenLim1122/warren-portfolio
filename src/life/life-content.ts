@@ -50,7 +50,7 @@ export interface GolfMilestone {
 
 export const GOLF_INTRO = {
   eyebrow: "Beyond the desk",
-  title: "The golf journey",
+  title: "My golf journey",
   subtitle:
     "From a first lesson with no idea where the ball would go, to a swing I am genuinely proud of. Scroll the story.",
 };
