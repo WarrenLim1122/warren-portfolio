@@ -41,7 +41,7 @@ export default function SelectedWorks() {
               <div className="relative h-44 overflow-hidden bg-gradient-to-br from-paper-2 to-white md:h-52">
                 <span
                   aria-hidden
-                  className="u-index absolute left-7 top-5 text-4xl text-navy/10"
+                  className="u-index absolute left-7 top-5 text-5xl text-gold/55 md:text-6xl"
                 >
                   {String(i + 1).padStart(2, "0")}
                 </span>

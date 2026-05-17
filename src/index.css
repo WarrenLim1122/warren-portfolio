@@ -55,6 +55,20 @@
     color: var(--color-navy);
   }
 
+  /* Every interactive control shows the hand cursor (buttons default to
+     the arrow in modern UA stylesheets). Covers cards, carousel arrows,
+     and the overlay / dialog close (✕) buttons across the whole app. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+
   /* Display type + tabular numerals for finance-grade number scanning. */
   h1, h2, h3, h4 {
     font-family: var(--font-display);

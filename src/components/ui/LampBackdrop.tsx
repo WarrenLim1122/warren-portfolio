@@ -2,14 +2,20 @@
  * LampBackdrop — the Hero's signature entrance light.
  *
  * Adapted from a shadcn/Next "lamp" concept into this project's stack:
- * motion/react (never framer-motion), the portfolio palette tokens
- * (champagne on the midnight surface), and the shared expo easing.
- * Purely atmospheric: aria-hidden, pointer-events-none, and it degrades
- * to a static lit state under prefers-reduced-motion.
+ * motion/react (never framer-motion) and the shared expo easing. The
+ * light is a cool midnight-ice glow (not champagne) and is anchored
+ * lower than the navbar so it frames the headline instead of bleeding
+ * behind the nav. Purely atmospheric: aria-hidden, pointer-events-none,
+ * and it degrades to a static lit state under prefers-reduced-motion.
  */
 
 import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT_EXPO } from "../../lib/animations";
+
+// Cool ice/steel blue — reads as a clean spotlight on the midnight
+// surface and contrasts the gold name instead of washing into it.
+const ICE = "#4C7FB8";
+const ICE_HI = "#86AEDC";
 
 export function LampBackdrop() {
   const reduced = useReducedMotion();
@@ -31,7 +37,7 @@ export function LampBackdrop() {
       aria-hidden
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      {/* research-canvas grid, faded toward the lamp */}
+      {/* research-canvas grid, faded toward the (lowered) lamp */}
       <div
         className="absolute inset-0 opacity-50"
         style={{
@@ -39,18 +45,17 @@ export function LampBackdrop() {
             "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
           backgroundSize: "64px 64px",
           maskImage:
-            "radial-gradient(ellipse 80% 70% at 50% 28%, #000 40%, transparent 100%)",
+            "radial-gradient(ellipse 80% 70% at 50% 48%, #000 40%, transparent 100%)",
         }}
       />
 
-      {/* lamp light, anchored top-centre */}
-      <div className="absolute inset-x-0 top-0 flex h-[440px] items-start justify-center">
+      {/* lamp light, anchored well below the navbar (frames the headline) */}
+      <div className="absolute inset-x-0 top-[15%] flex h-[440px] items-start justify-center md:top-[13%]">
         {/* left cone */}
         <motion.div
           {...grow("15rem", "32rem")}
           style={{
-            backgroundImage:
-              "conic-gradient(from 70deg at center top, color-mix(in srgb, var(--color-gold-bright) 50%, transparent), transparent, transparent)",
+            backgroundImage: `conic-gradient(from 70deg at center top, color-mix(in srgb, ${ICE} 55%, transparent), transparent, transparent)`,
           }}
           className="absolute right-1/2 h-64 w-[32rem] overflow-visible"
         >
@@ -62,8 +67,7 @@ export function LampBackdrop() {
         <motion.div
           {...grow("15rem", "32rem")}
           style={{
-            backgroundImage:
-              "conic-gradient(from 290deg at center top, transparent, transparent, color-mix(in srgb, var(--color-gold-bright) 50%, transparent))",
+            backgroundImage: `conic-gradient(from 290deg at center top, transparent, transparent, color-mix(in srgb, ${ICE} 55%, transparent))`,
           }}
           className="absolute left-1/2 h-64 w-[32rem]"
         >
@@ -72,16 +76,21 @@ export function LampBackdrop() {
         </motion.div>
 
         {/* core bloom */}
-        <div className="absolute top-0 h-36 w-[28rem] -translate-y-[30%] rounded-full bg-gold-bright/20 blur-3xl" />
+        <div
+          className="absolute top-0 h-36 w-[28rem] -translate-y-[30%] rounded-full blur-3xl"
+          style={{ backgroundColor: `color-mix(in srgb, ${ICE} 22%, transparent)` }}
+        />
         <motion.div
           {...grow("8rem", "16rem")}
-          className="absolute top-0 h-36 -translate-y-[20%] rounded-full bg-gold/25 blur-2xl"
+          className="absolute top-0 h-36 -translate-y-[20%] rounded-full blur-2xl"
+          style={{ backgroundColor: `color-mix(in srgb, ${ICE} 28%, transparent)` }}
         />
 
         {/* hot filament line */}
         <motion.div
           {...grow("15rem", "30rem")}
-          className="absolute top-0 h-px translate-y-[2px] bg-gold-bright/60"
+          className="absolute top-0 h-px translate-y-[2px]"
+          style={{ backgroundColor: `color-mix(in srgb, ${ICE_HI} 60%, transparent)` }}
         />
       </div>
     </div>

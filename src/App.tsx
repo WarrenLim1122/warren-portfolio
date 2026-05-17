@@ -11,12 +11,16 @@
  *    The src/journal submodule contract is untouched.
  */
 
-import { useEffect, useRef, useState, lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { PERSONAL_INFO } from "./constants";
 import { cn } from "./lib/utils";
 import { LinkedinIcon, WhatsappIcon } from "./components/ui/icons";
+import {
+  LimelightContactRail,
+  type LimelightItem,
+} from "./components/ui/limelight-nav";
 import Hero from "./components/Hero";
 import Experience from "./components/Experience";
 import Certificates from "./components/Certificates";
@@ -55,16 +59,16 @@ const NAV_LINKS = [
   { href: "#resume", label: "Resume" },
 ];
 
-// Contact rail in the nav. Neutral at rest, each tints to its own brand
-// colour on hover (Email red, LinkedIn blue, WhatsApp green). The sliding
-// "limelight" beam under the hovered icon is layered on in NavContactRail.
-const NAV_CONTACTS = [
+// Contact rail in the nav. Neutral at rest; the sliding limelight beam
+// (and the icon itself) take on each contact's own brand colour on hover
+// — Email red, LinkedIn blue, WhatsApp green. See LimelightContactRail.
+const NAV_CONTACTS: LimelightItem[] = [
   {
     id: "email",
     Icon: Mail,
     label: "Email",
     href: `mailto:${PERSONAL_INFO.email}`,
-    hover: "hover:text-[#E5484D]",
+    tint: "#E5484D",
     external: false,
   },
   {
@@ -72,7 +76,7 @@ const NAV_CONTACTS = [
     Icon: LinkedinIcon,
     label: "LinkedIn",
     href: PERSONAL_INFO.linkedinUrl,
-    hover: "hover:text-[#0A66C2]",
+    tint: "#0A66C2",
     external: true,
   },
   {
@@ -80,72 +84,10 @@ const NAV_CONTACTS = [
     Icon: WhatsappIcon,
     label: "WhatsApp",
     href: `https://wa.me/${PERSONAL_INFO.phone.replace(/\D/g, "")}`,
-    hover: "hover:text-[#25D366]",
+    tint: "#25D366",
     external: true,
   },
-] as const;
-
-// Contact rail with a hover-driven "limelight": a champagne beam slides
-// under whichever icon the pointer (or keyboard focus) is on, with a soft
-// downward cone. Icons also tint to their own brand colour on hover.
-// Reduced motion is handled by the global CSS transition guard.
-function NavContactRail({ scrolled }: { scrolled: boolean }) {
-  const itemRefs = useRef<(HTMLAnchorElement | null)[]>([]);
-  const beamRef = useRef<HTMLDivElement | null>(null);
-  const [lit, setLit] = useState(false);
-
-  const moveTo = (i: number) => {
-    const el = itemRefs.current[i];
-    const beam = beamRef.current;
-    if (!el || !beam) return;
-    beam.style.left = `${
-      el.offsetLeft + el.offsetWidth / 2 - beam.offsetWidth / 2
-    }px`;
-    setLit(true);
-  };
-
-  return (
-    <div
-      className="relative flex items-center gap-1"
-      onMouseLeave={() => setLit(false)}
-    >
-      {NAV_CONTACTS.map(({ id, Icon, label, href, hover, external }, i) => (
-        <a
-          key={id}
-          ref={(el) => {
-            itemRefs.current[i] = el;
-          }}
-          href={href}
-          target={external ? "_blank" : undefined}
-          rel={external ? "noreferrer" : undefined}
-          aria-label={label}
-          onMouseEnter={() => moveTo(i)}
-          onFocus={() => moveTo(i)}
-          onBlur={() => setLit(false)}
-          className={cn(
-            "relative z-10 flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-0.5 hover:scale-110",
-            scrolled ? "text-graphite" : "text-white/55",
-            hover,
-          )}
-        >
-          <Icon size={17} strokeWidth={1.9} />
-        </a>
-      ))}
-
-      <div
-        ref={beamRef}
-        aria-hidden
-        className={cn(
-          "pointer-events-none absolute top-0 z-0 h-[3px] w-7 -translate-y-px rounded-full bg-gold transition-[left,opacity] duration-300 ease-out",
-          lit ? "opacity-100" : "opacity-0",
-        )}
-        style={{ left: "-999px" }}
-      >
-        <div className="absolute left-[-40%] top-[3px] h-9 w-[180%] bg-gradient-to-b from-gold/35 to-transparent [clip-path:polygon(8%_100%,28%_0,72%_0,92%_100%)]" />
-      </div>
-    </div>
-  );
-}
+];
 
 function Portfolio() {
   const [scrolled, setScrolled] = useState(false);
@@ -169,15 +111,28 @@ function Portfolio() {
             : "border-b border-transparent bg-transparent",
         )}
       >
-        <a
-          href="#top"
-          className={cn(
-            "font-display text-base font-semibold tracking-tight transition-colors duration-500",
-            scrolled ? "text-navy" : "text-paper",
-          )}
-        >
-          Warren Lim Zhan Feng
-        </a>
+        <div className="flex items-center gap-3 md:gap-4">
+          <a
+            href="#top"
+            className={cn(
+              "font-display text-base font-semibold tracking-tight transition-colors duration-500",
+              scrolled ? "text-navy" : "text-paper",
+            )}
+          >
+            Warren Lim Zhan Feng
+          </a>
+          <span
+            aria-hidden
+            className={cn(
+              "h-5 w-px transition-colors duration-500",
+              scrolled ? "bg-navy/20" : "bg-white/25",
+            )}
+          />
+          <LimelightContactRail
+            items={NAV_CONTACTS}
+            tone={scrolled ? "light" : "dark"}
+          />
+        </div>
 
         <div className="flex items-center gap-7">
           <div className="hidden items-center gap-7 md:flex">
@@ -196,8 +151,6 @@ function Portfolio() {
               </a>
             ))}
           </div>
-
-          <NavContactRail scrolled={scrolled} />
 
           <Link
             to="/journal"
