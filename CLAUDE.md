@@ -259,8 +259,8 @@ Unauthenticated access redirects to `/journal/login`. After sign-in, Login navig
 ```
 my-portfolio/
 ├── CLAUDE.md
-├── JOURNAL_INTEGRATION.md
-├── GOOGLE_AI_STUDIO_RESET_PROMPT.md
+├── README.md
+├── docs/                 ← journal API/schema notes + superpowers/specs
 ├── index.html
 ├── vite.config.ts
 ├── vercel.json
@@ -434,23 +434,23 @@ Why it broke: Vercel's routing pipeline runs in this order:
 
 ## Certificates component
 
-`Certificates.tsx` renders a stacked card carousel. Position offset: `idx - currentStep`. Cards at offset > 2 are hidden. Clicking a non-active card brings it to front. Active card has a fullscreen button opening `ImageOverlay`.
+`Certificates.tsx` leads with the featured **crown credential** (FMVA®) as a large clickable card that opens `ImageOverlay`. Below it, category tabs (`CFI Executive Suite` / `Bloomberg Specialist` / `Analytical Skills`) switch the active set; each set renders in the shared `CarouselShell` (drag + arrow + keyboard scroll). Any card opens `ImageOverlay` with the full image and source PDF.
 
-Per-category active index is tracked in a `steps` array — each category remembers its position independently.
+`CarouselShell` defers pointer-capture until a real drag begins — capturing on pointerdown previously swallowed the card click so certificates would not open. Do not reinstate capture-on-pointerdown.
 
 ---
 
 ## ImageOverlay component
 
-Shared by `Certificates` (receives a `cert` object: `.image`, `.title`, `.issuer`, `.file`, `.date`) and `CaseCompetition` (receives just `src` string). Handles both via the `cert?.image || src` pattern.
+Shared by `Certificates` (receives a `cert` object: `.image`, `.title`, `.issuer`, `.file`, `.date`) and `Recognition` (receives just `src` string). Handles both via the `cert?.image || src` pattern.
 
 ---
 
 ## Known issues
 
-- `TechnicalToolkit` is built but not rendered in `App.tsx`. Safe to add or leave out.
-- `AnimatedCard` is imported in `Projects.tsx` but not actually used in the render output. Can be integrated or removed.
-- Portfolio nav has unused lucide imports (`X`, `Mail`, `Linkedin`) — contact icons use image files from `public/`, not lucide.
+- `EXPERIENCE[].stat` is still in `constants.ts` but no longer rendered (the Experience left rail was removed). Harmless; data kept for possible reuse.
+- The journal bundle triggers a Vite "chunk > 500 kB" warning at build. Pre-existing and benign — the journal is lazy-loaded and route-split off the portfolio's initial bundle.
+- `lucide-react` has no WhatsApp glyph and its `Linkedin` export is deprecated; both live as local glyphs in `src/components/ui/icons.tsx`.
 
 ---
 

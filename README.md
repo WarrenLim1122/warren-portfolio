@@ -21,8 +21,8 @@ personal-website/
     ├── constants.ts         ← ALL portfolio content (text, images, links)
     ├── index.css            ← Tailwind theme + shadcn tokens (journal)
     ├── lib/                 ← animation variants + cn() helper
-    ├── components/          ← Hero, Experience, Certificates, Projects, Resume, etc.
-    │   └── ui/              ← animated-hero, cursor-particles, connect-with-us, ImageOverlay
+    ├── components/          ← Hero, Experience, Certificates, Skills, SelectedWorks, Recognition, ResumeViewer, ImageOverlay
+    │   └── ui/              ← Section, Reveal, ScrollProgress, StatBadge, MagneticButton, CarouselShell, Hero3DStage, LampBackdrop, icons, connect-with-us
     └── journal/             ← git submodule → trading-journal repo
 ```
 
@@ -49,30 +49,36 @@ Edit journal code directly in [`trading-journal`](https://github.com/WarrenLim11
 
 ## Site features
 
-- **Particle landing gate** — DOM-div grid particles translate toward the cursor with distance-based dampening; auto-mode sinusoidal animation when idle. Slides away on "Enter".
-- **Cursor overlay** — Low-opacity canvas particle field on the main portfolio reacts to mouse proximity.
-- **Hero layout** — Name + glass contact card on the left, headshot + CTAs on the right.
-- **Certificate carousel** — Stacked category cards (CFI / Bloomberg / Analytical Skills); arrow + swipe to cycle.
-- **Experience timeline** — Spring-physics scroll reveal with staggered bullets.
-- **Projects / Case portfolio** — Full-screen modal viewer for PDFs/images.
-- **Resume viewer** — Embedded PDF with download link.
+- **No landing gate** — opens straight into the Hero (the old particle gate and cursor overlay were removed as recruiter friction).
+- **Hero** — large full-colour headshot, name + value prop on the left, 3D stage on the right, animated lamp light backdrop, contact strip.
+- **Nav** — brand, section links, `NavContactRail` (Email/LinkedIn/WhatsApp; neutral at rest, hover-tints red/blue/green with a sliding limelight beam), Trading Journal pill.
+- **Experience timeline** — scroll-reveal; role is the heading, company + date the subheading.
+- **Certificates** — featured crown credential + category carousel (drag / arrows / keyboard), each card opens the shared image+PDF overlay.
+- **Selected Works** — project cards with thumbnail glance media and a full case dialog (Context / Methodology / Outcome + source deck).
+- **Recognition** — dark band, EAMC championship, stacked full-width team photos.
+- **Resume viewer** — full-height CV preview with sticky download rail.
 - **Trade journal** (`/journal/*`) — Login via Firebase Auth; dashboard with chart overview, sortable list, calendar, win-vs-lose stats, equity curve; deposit/withdrawal cashflows; strategies; risk calculator; settings.
 
 ## Component map
 
 | File | Responsibility |
 | :--- | :--- |
-| `App.tsx` | Route shell, landing gate, nav, `/journal/*` mount |
-| `Hero.tsx` | Identity, contact card, CTA buttons |
-| `Experience.tsx` | Animated career timeline |
-| `Certificates.tsx` | Unified certificate category carousel |
-| `CaseCompetition.tsx` | Team achievement gallery |
-| `Projects.tsx` | Deal / project portfolio |
-| `ResumeViewer.tsx` | CV preview & download |
-| `ui/animated-hero.tsx` | Particle landing screen |
-| `ui/cursor-particles.tsx` | Main-page cursor particle canvas |
-| `ui/connect-with-us.tsx` | Glass contact card |
-| `ui/ImageOverlay.tsx` | Full-screen PDF / image modal |
+| `App.tsx` | Route shell, nav (brand, `NavContactRail`, Trading Journal pill), `/journal/*` mount |
+| `Hero.tsx` | Identity, value prop, CTAs, contact strip, lamp backdrop |
+| `Experience.tsx` | Career timeline (role = heading, company + date = sub) |
+| `Certificates.tsx` | Featured crown credential + category carousel |
+| `Skills.tsx` | Three capability buckets |
+| `SelectedWorks.tsx` | Project cards (thumbnail glance) + case dialog |
+| `Recognition.tsx` | Dark band, EAMC win, stacked team photos |
+| `ResumeViewer.tsx` | Full-height CV preview & download |
+| `ImageOverlay.tsx` | Full-screen image / PDF modal (shared) |
+| `ui/Section.tsx` | Editorial section shell (index/eyebrow/title) |
+| `ui/LampBackdrop.tsx` | Hero lamp light (motion/react, palette tokens) |
+| `ui/CarouselShell.tsx` | Drag/arrow carousel engine |
+| `ui/StatBadge.tsx` | Big tabular metric (`count={false}` for static) |
+| `ui/icons.tsx` | `LinkedinIcon`, `WhatsappIcon` brand glyphs |
+| `ui/connect-with-us.tsx` | Theme-aware contact strip (Email/LinkedIn/WhatsApp) |
+| `ui/` (other) | `Reveal`, `ScrollProgress`, `MagneticButton`, `Hero3DStage` |
 | `journal/src/JournalApp.tsx` | (submodule) Trade journal integration entry |
 
 ## Content updates
