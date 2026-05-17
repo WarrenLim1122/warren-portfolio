@@ -1,8 +1,7 @@
 /**
  * Hero — the dark anchored entrance. Text leads; the framed portrait
- * (full, uncropped) is the signature visual, with the backtest chart
- * card layered over it as the proof-of-craft moment. The strongest
- * proof (trust strip) lands in the first 5 seconds. One orchestrated
+ * (full, uncropped) is the signature visual. The strongest proof
+ * (trust strip) lands in the first 5 seconds. One orchestrated
  * page-load cascade, then stillness.
  */
 
@@ -43,17 +42,10 @@ function ClipLine({ children, delay }: { children: string; delay: number }) {
 }
 
 /**
- * The framed portrait + a floating glass "backtest" card layered over
- * its lower-left corner. The full headshot reads at size (no circle
- * crop); the chart card keeps the data-craft signal.
+ * The framed portrait — full, uncropped, no circle crop, so the
+ * headshot reads at size as the hero's signature visual.
  */
 function HeroPortrait() {
-  const reduced = useReducedMotion();
-  const area =
-    "M0,150 L0,118 C30,110 52,86 86,92 C120,98 140,60 178,52 C212,45 236,24 264,30 L264,150 Z";
-  const line =
-    "M0,118 C30,110 52,86 86,92 C120,98 140,60 178,52 C212,45 236,24 264,30";
-
   return (
     <div className="relative mx-auto w-full max-w-[360px] lg:ml-auto lg:mr-0">
       {/* cool ambient halo, matched to the lowered lamp */}
@@ -78,57 +70,6 @@ function HeroPortrait() {
           className="absolute inset-0 ring-1 ring-inset ring-white/[0.06]"
         />
       </div>
-
-      {/* Floating proof-of-craft: the backtest card */}
-      <motion.div
-        initial={reduced ? false : { opacity: 0, y: 20 }}
-        animate={reduced ? undefined : { opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.8, ease: EASE_OUT_EXPO }}
-        className="absolute -bottom-6 -left-5 w-[58%] rounded-2xl border border-white/15 bg-surface-2/90 p-4 shadow-[0_30px_70px_-30px_rgba(0,0,0,0.85)] backdrop-blur-xl"
-      >
-        <div className="flex items-center justify-between">
-          <span className="u-eyebrow text-[9px] text-gold-bright">
-            Backtest
-          </span>
-          <span className="u-tabular text-[10px] font-medium text-white/40">
-            ▲ trend
-          </span>
-        </div>
-        <svg
-          viewBox="0 0 264 150"
-          className="mt-3 h-16 w-full overflow-visible"
-          preserveAspectRatio="none"
-          aria-hidden
-        >
-          {[40, 80, 120].map((y) => (
-            <line
-              key={y}
-              x1="0"
-              x2="264"
-              y1={y}
-              y2={y}
-              stroke="rgba(255,255,255,0.06)"
-            />
-          ))}
-          <defs>
-            <linearGradient id="hero-fill" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#C7A878" stopOpacity="0.45" />
-              <stop offset="100%" stopColor="#C7A878" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-          <path d={area} fill="url(#hero-fill)" />
-          <motion.path
-            d={line}
-            fill="none"
-            stroke="#D8C29A"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            initial={reduced ? false : { pathLength: 0 }}
-            animate={reduced ? undefined : { pathLength: 1 }}
-            transition={{ duration: 1.6, ease: EASE_OUT_EXPO, delay: 1 }}
-          />
-        </svg>
-      </motion.div>
     </div>
   );
 }

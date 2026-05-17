@@ -3,41 +3,42 @@
  *
  * Adapted from a shadcn/Next "lamp" concept into this project's stack:
  * motion/react (never framer-motion) and the shared expo easing. The
- * light is a cool midnight-ice glow (not champagne) and is anchored
- * lower than the navbar so it frames the headline instead of bleeding
- * behind the nav. Purely atmospheric: aria-hidden, pointer-events-none,
- * and it degrades to a static lit state under prefers-reduced-motion.
+ * earlier version rendered a hard conic "lamp cone" plus a 1px filament
+ * line, which read as a bright horizontal bar slicing across the eyebrow
+ * and name. This version is a single WIDE ambient wash: a cool ice-blue
+ * dome that spans the full section width and fades out well above the
+ * headline, so it lights the section without ever banding over the
+ * introduction copy. Purely atmospheric: aria-hidden, pointer-events
+ * -none, and it degrades to a static lit state under reduced motion.
  */
 
 import { motion, useReducedMotion } from "motion/react";
 import { EASE_OUT_EXPO } from "../../lib/animations";
 
-// Cool ice/steel blue — reads as a clean spotlight on the midnight
-// surface and contrasts the gold name instead of washing into it.
+// Cool ice/steel blue — a clean spotlight wash on the midnight surface
+// that contrasts the gold name instead of washing into it.
 const ICE = "#4C7FB8";
 const ICE_HI = "#86AEDC";
 
 export function LampBackdrop() {
   const reduced = useReducedMotion();
 
-  // One grow gesture (width + opacity) shared by every light element so
-  // the lamp "opens" as a single coherent motion. Reduced motion snaps
-  // straight to the lit final state.
-  const grow = (from: string, to: string) =>
-    reduced
-      ? { animate: { width: to, opacity: 1 }, transition: { duration: 0 } }
-      : {
-          initial: { width: from, opacity: 0.5 },
-          animate: { width: to, opacity: 1 },
-          transition: { delay: 0.2, duration: 1, ease: EASE_OUT_EXPO },
-        };
+  // One "open" gesture: the light widens (scaleX) + brightens once on
+  // load as a single coherent motion. Reduced motion snaps to lit.
+  const open = reduced
+    ? { animate: { opacity: 1, scaleX: 1 }, transition: { duration: 0 } }
+    : {
+        initial: { opacity: 0, scaleX: 0.55 },
+        animate: { opacity: 1, scaleX: 1 },
+        transition: { delay: 0.15, duration: 1.2, ease: EASE_OUT_EXPO },
+      };
 
   return (
     <div
       aria-hidden
       className="pointer-events-none absolute inset-0 overflow-hidden"
     >
-      {/* research-canvas grid, faded toward the (lowered) lamp */}
+      {/* research-canvas grid, faded toward the top light */}
       <div
         className="absolute inset-0 opacity-50"
         style={{
@@ -45,54 +46,38 @@ export function LampBackdrop() {
             "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
           backgroundSize: "64px 64px",
           maskImage:
-            "radial-gradient(ellipse 80% 70% at 50% 48%, #000 40%, transparent 100%)",
+            "radial-gradient(ellipse 95% 55% at 50% 0%, #000 30%, transparent 78%)",
         }}
       />
 
-      {/* lamp light, anchored well below the navbar (frames the headline) */}
-      <div className="absolute inset-x-0 top-[15%] flex h-[440px] items-start justify-center md:top-[13%]">
-        {/* left cone */}
-        <motion.div
-          {...grow("15rem", "32rem")}
-          style={{
-            backgroundImage: `conic-gradient(from 70deg at center top, color-mix(in srgb, ${ICE} 55%, transparent), transparent, transparent)`,
-          }}
-          className="absolute right-1/2 h-64 w-[32rem] overflow-visible"
-        >
-          <div className="absolute bottom-0 left-0 z-20 h-40 w-full bg-surface [mask-image:linear-gradient(to_top,white,transparent)]" />
-          <div className="absolute bottom-0 left-0 z-20 h-full w-40 bg-surface [mask-image:linear-gradient(to_right,white,transparent)]" />
-        </motion.div>
+      {/* Wide ambient ceiling wash — spans the full section width and
+          fades out high (centre sits above the top edge) so it never
+          forms a bright band across the introduction text. */}
+      <motion.div
+        {...open}
+        className="absolute inset-x-0 top-0 h-[62vh] origin-top"
+        style={{
+          background: `radial-gradient(ellipse 78% 52% at 50% -10%, color-mix(in srgb, ${ICE} 44%, transparent) 0%, color-mix(in srgb, ${ICE} 15%, transparent) 36%, transparent 66%)`,
+        }}
+      />
 
-        {/* right cone */}
-        <motion.div
-          {...grow("15rem", "32rem")}
-          style={{
-            backgroundImage: `conic-gradient(from 290deg at center top, transparent, transparent, color-mix(in srgb, ${ICE} 55%, transparent))`,
-          }}
-          className="absolute left-1/2 h-64 w-[32rem]"
-        >
-          <div className="absolute bottom-0 right-0 z-20 h-full w-40 bg-surface [mask-image:linear-gradient(to_left,white,transparent)]" />
-          <div className="absolute bottom-0 right-0 z-20 h-40 w-full bg-surface [mask-image:linear-gradient(to_top,white,transparent)]" />
-        </motion.div>
+      {/* Broad soft core just under the top edge — no hard edge */}
+      <motion.div
+        {...open}
+        className="absolute inset-x-0 top-0 mx-auto h-44 w-[68%] max-w-4xl -translate-y-1/3 rounded-[100%] blur-3xl"
+        style={{
+          backgroundColor: `color-mix(in srgb, ${ICE_HI} 26%, transparent)`,
+        }}
+      />
 
-        {/* core bloom */}
-        <div
-          className="absolute top-0 h-36 w-[28rem] -translate-y-[30%] rounded-full blur-3xl"
-          style={{ backgroundColor: `color-mix(in srgb, ${ICE} 22%, transparent)` }}
-        />
-        <motion.div
-          {...grow("8rem", "16rem")}
-          className="absolute top-0 h-36 -translate-y-[20%] rounded-full blur-2xl"
-          style={{ backgroundColor: `color-mix(in srgb, ${ICE} 28%, transparent)` }}
-        />
-
-        {/* hot filament line */}
-        <motion.div
-          {...grow("15rem", "30rem")}
-          className="absolute top-0 h-px translate-y-[2px]"
-          style={{ backgroundColor: `color-mix(in srgb, ${ICE_HI} 60%, transparent)` }}
-        />
-      </div>
+      {/* Faint crown highlight — very wide, very soft, no filament bar */}
+      <motion.div
+        {...open}
+        className="absolute inset-x-0 top-0 mx-auto h-px w-[88%] max-w-5xl blur-[2px]"
+        style={{
+          background: `linear-gradient(to right, transparent, color-mix(in srgb, ${ICE_HI} 42%, transparent), transparent)`,
+        }}
+      />
     </div>
   );
 }
