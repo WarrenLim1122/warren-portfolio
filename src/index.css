@@ -16,22 +16,25 @@
   --font-display: "Geist Variable", "Inter", ui-sans-serif, sans-serif;
   --font-serif: "Cormorant Garamond", Georgia, serif;
 
-  /* Evolved palette — ink-navy anchor, surgical gold, paper, deep hero. */
-  --color-navy: #0F3057;
-  --color-navy-700: #0B2540;
-  --color-gold: #C4964D;
-  --color-gold-bright: #D8AF6A;
-  --color-gold-soft: #F4ECDD;
-  --color-paper: #FBFBFD;
-  --color-paper-2: #F3F4F7;
-  --color-ink: #14171C;
+  /* Refined palette (2026-05-17 redesign): midnight canvas, warm ivory,
+     restrained champagne accent. Replaces the brassy navy/gold scheme.
+     The two dark bands (Hero, Recognition) share ONE surface so the
+     dark/light rhythm reads as a deliberate composition. */
+  --color-navy: #0F2C4A;        /* heading anchor on ivory */
+  --color-navy-700: #0A2138;
+  --color-gold: #C7A878;        /* muted champagne — the only accent */
+  --color-gold-bright: #D8C29A; /* champagne on the dark surface */
+  --color-gold-soft: #EFE6D6;
+  --color-paper: #F7F5F0;       /* warm ivory body */
+  --color-paper-2: #EFEDE6;     /* warmer card / inset */
+  --color-ink: #16202C;         /* body text on ivory */
   /* NB: 'muted' would collide with the journal's shadcn @theme inline
      (--color-muted: var(--muted), near-white in :root) and render
      invisible on the light portfolio. Use a distinct token name. */
-  --color-graphite: #5B6470;
-  --color-line: #E4E6EB;
-  --color-surface: #0A1628;
-  --color-surface-2: #0E1E33;
+  --color-graphite: #5C636E;
+  --color-line: #E3E1DA;        /* hairlines on ivory */
+  --color-surface: #0A1A2F;     /* the single dark canvas */
+  --color-surface-2: #0F2238;   /* inset cards on the dark canvas */
 
   /* Decisive, snappy easings — execution, not drift. */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -111,7 +114,7 @@
 
 @utility grain-card {
   background:
-    linear-gradient(180deg, #ffffff 0%, #fdfdfe 100%);
+    linear-gradient(180deg, #ffffff 0%, #fbfaf5 100%);
   border: 1px solid var(--color-line);
 }
 

@@ -34,7 +34,13 @@ export function CarouselShell({
   const trackRef = useRef<HTMLDivElement>(null);
   const [atStart, setAtStart] = useState(true);
   const [atEnd, setAtEnd] = useState(false);
-  const drag = useRef({ active: false, startX: 0, startLeft: 0, moved: false });
+  const drag = useRef({
+    active: false,
+    startX: 0,
+    startLeft: 0,
+    moved: false,
+    captured: false,
+  });
 
   const sync = useCallback(() => {
     const el = trackRef.current;
@@ -61,26 +67,39 @@ export function CarouselShell({
   const onPointerDown = (e: PointerEvent) => {
     const el = trackRef.current;
     if (!el) return;
+    // Capture is deliberately NOT taken here. Capturing the pointer on
+    // pointerdown reroutes the subsequent click to the track, so a plain
+    // click on a card never reaches its button and the certificate
+    // overlay never opens. Capture is deferred until a real drag begins.
     drag.current = {
       active: true,
       startX: e.clientX,
       startLeft: el.scrollLeft,
       moved: false,
+      captured: false,
     };
-    el.setPointerCapture(e.pointerId);
   };
 
   const onPointerMove = (e: PointerEvent) => {
     const el = trackRef.current;
     if (!el || !drag.current.active) return;
     const dx = e.clientX - drag.current.startX;
-    if (Math.abs(dx) > 4) drag.current.moved = true;
-    el.scrollLeft = drag.current.startLeft - dx;
+    if (Math.abs(dx) > 4) {
+      drag.current.moved = true;
+      if (!drag.current.captured) {
+        el.setPointerCapture(e.pointerId);
+        drag.current.captured = true;
+      }
+    }
+    if (drag.current.moved) el.scrollLeft = drag.current.startLeft - dx;
   };
 
   const endDrag = (e: PointerEvent) => {
+    if (drag.current.captured) {
+      trackRef.current?.releasePointerCapture?.(e.pointerId);
+    }
     drag.current.active = false;
-    trackRef.current?.releasePointerCapture?.(e.pointerId);
+    drag.current.captured = false;
   };
 
   return (

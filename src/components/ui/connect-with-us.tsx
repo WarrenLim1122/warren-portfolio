@@ -6,9 +6,12 @@
  * link with an accessible label.
  */
 
-import { Mail, Linkedin, Phone } from "lucide-react";
+import { Mail } from "lucide-react";
 import { PERSONAL_INFO } from "../../constants";
 import { cn } from "../../lib/utils";
+import { LinkedinIcon, WhatsappIcon } from "./icons";
+
+const WA_NUMBER = PERSONAL_INFO.phone.replace(/\D/g, "");
 
 type Tone = "light" | "dark";
 
@@ -23,19 +26,19 @@ const ITEMS = [
   },
   {
     id: "linkedin",
-    Icon: Linkedin,
+    Icon: LinkedinIcon,
     label: "LinkedIn",
     value: "in/warrenlimzf",
     href: PERSONAL_INFO.linkedinUrl,
     external: true,
   },
   {
-    id: "phone",
-    Icon: Phone,
-    label: "Phone",
+    id: "whatsapp",
+    Icon: WhatsappIcon,
+    label: "WhatsApp",
     value: PERSONAL_INFO.phone,
-    href: `tel:${PERSONAL_INFO.phone.replace(/\s+/g, "")}`,
-    external: false,
+    href: `https://wa.me/${WA_NUMBER}`,
+    external: true,
   },
 ] as const;
 

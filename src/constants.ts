@@ -36,9 +36,9 @@ export const PERSONAL_INFO: PersonalInfo = {
   valueProp:
     "I model markets, value companies, and automate the analysis behind the call.",
   availability:
-    "Open to 2027 graduate analyst programmes — asset management & investment banking.",
+    "Open to 2027 graduate analyst programmes in asset management and investment banking.",
   ethos:
-    "A finance undergraduate who came to the field with fresh eyes — versatile, open-minded, and driven to understand how capital actually shapes the world.",
+    "A finance undergraduate who came to the field with fresh eyes: versatile, open-minded, and driven to understand how capital actually shapes the world.",
   headshot: "/headshot.jpg",
 };
 
@@ -66,11 +66,11 @@ export const EXPERIENCE: ExperienceEntry[] = [
   {
     company: "Pinnacle Capital Asia",
     role: "Investment Intern",
-    duration: "MAY — AUG 2026",
+    duration: "MAY to AUG 2026",
     stat: { value: "Buy-side", label: "Investment Analysis" },
     tools: ["Financial Modelling", "Market Research", "Asset Allocation"],
     bullets: [
-      "Conduct market and company research — financial and industry analysis to identify investment opportunities.",
+      "Conduct market and company research, covering financial and industry analysis to identify investment opportunities.",
       "Support the development of investment strategies based on market trends and asset-class performance.",
       "Maintain and update financial models, databases, and analytical tools for investment decision-making.",
       "Prepare presentations, client reports, and internal memos on portfolio performance and market developments.",
@@ -79,7 +79,7 @@ export const EXPERIENCE: ExperienceEntry[] = [
   {
     company: "Whitman Independent Advisors",
     role: "Wealth Management Assistant",
-    duration: "MAY — AUG 2025",
+    duration: "MAY to AUG 2025",
     stat: { value: "89%", label: "Efficiency Gain" },
     tools: ["Power Automate", "AI Builder", "Excel VBA"],
     bullets: [
@@ -90,12 +90,12 @@ export const EXPERIENCE: ExperienceEntry[] = [
   {
     company: "PropNex Malaysia",
     role: "Real Estate Negotiator",
-    duration: "JAN — JUL 2024",
+    duration: "JAN to JUL 2024",
     stat: { value: "25+", label: "Transactions Closed" },
     tools: ["Market Benchmarking", "Pricing Strategy", "Yield Analysis"],
     bullets: [
       "Optimized pricing and negotiation strategies for 25+ high-value residential transactions through data-driven market benchmarking.",
-      "Identified and matched Airbnb operators with high-potential assets, delivering an 8–12% improvement in projected rental yields.",
+      "Identified and matched Airbnb operators with high-potential assets, delivering an 8 to 12% improvement in projected rental yields.",
     ],
   },
 ];
@@ -120,7 +120,7 @@ export const PROJECTS: Project[] = [
       "Architected a 50-stock globally diversified portfolio focused on 'Employee Welfare' (Social Pillar). Recorded 97.1% returns in back-testing, outperforming the MSCI World Social Leaders Index by 6.59% with a 0.94 Sharpe ratio.",
     file: "/acesis-deck.pdf",
     context:
-      "Built a fund thesis around the social pillar of ESG — employee welfare — a deliberately less-crowded, conviction-led angle for the Eurasia Asset Management Challenge.",
+      "Built a fund thesis around the social pillar of ESG (employee welfare), a deliberately less-crowded, conviction-led angle for the Eurasia Asset Management Challenge.",
     methodology:
       "Constructed a 50-stock globally diversified portfolio, back-tested against the MSCI World Social Leaders Index, and evaluated risk-adjusted performance.",
     impact:

@@ -17,6 +17,21 @@
 
 ---
 
+## Standing preferences (recorded 2026-05-17)
+
+Warren's confirmed design preferences. Apply these on every change unless he says otherwise.
+
+1. **No em/en dashes ("—" / "–") in rendered copy.** Restructure with commas, colons, parentheses, or "to" for ranges. Ordinary hyphens in compound words (`buy-side`, `First-Class`) are fine. This applies to `constants.ts` strings and component `description`/`alt`/title props, not code comments.
+2. **WhatsApp, not phone.** Contact points are Email / LinkedIn / WhatsApp. WhatsApp uses `https://wa.me/<digits>` and the `WhatsappIcon` from `components/ui/icons.tsx` (lucide has no WhatsApp glyph; `Linkedin` is deprecated in lucide so `LinkedinIcon` lives there too).
+3. **Headshot is large and full colour** (never grayscale).
+4. **Palette = "refined upgrade"** (chosen over all-dark / all-light / emerald): midnight surface, warm ivory, muted champagne accent. Dark/light section rhythm is intentional; the two dark bands (Hero, Recognition) must stay the identical `--color-surface`.
+5. **Aesthetic is the priority.** When integrating third-party component snippets (21st.dev / shadcn / Next.js), adapt the *visual* into this project's stack (`motion/react`, palette tokens, Vite + React Router) — never copy shadcn/Next/`framer-motion` deps in verbatim.
+6. **Nav contact icons:** neutral at rest; hover-tint Email = red, LinkedIn = blue, WhatsApp = green. A sliding "limelight" beam under the hovered icon (champagne) is the intended polish.
+7. Brand text is "Warren Lim Zhan Feng"; the journal pill reads "Trading Journal" (route `/journal` unchanged).
+8. **Never touch the `src/journal` submodule** for portfolio work.
+
+---
+
 ## Automatic GitHub workflow
 
 This workflow runs automatically after every successful code or documentation edit, unless Warren explicitly says **"do not push"** or **"do not merge"**.
@@ -188,36 +203,40 @@ npm run clean     # rm -rf dist
 
 `App.tsx` owns a `BrowserRouter`. Two top-level routes:
 
-- `path="/*"` → `<Portfolio />` — the main portfolio (entry gate + all sections)
-- `path="/journal/*"` → `<JournalApp />` — the trading journal
+- `path="/*"` → `<Portfolio />` — the main recruiter-facing portfolio
+- `path="/journal/*"` → `<JournalApp />` — the trading journal (lazy-loaded, code-split)
 
-### Entry gate pattern
+### No entry gate (removed in the recruiter-conversion rebuild)
 
-`Portfolio()` manages `isUnlocked` state. On load:
-1. `ParticleHero` (`src/components/ui/animated-hero.tsx`) fills the screen as a fixed overlay (`z-[9999]`).
-2. User clicks "Enter" → `isUnlocked = true`.
-3. The gate animates out (`exit: opacity 0, y: "-100vh"`, 1.2s).
-4. The main portfolio scrolls into view.
-5. `CursorParticles` canvas overlay activates after unlock.
+The old `ParticleHero` "Enter" gate and `CursorParticles` overlay were
+removed (they cost recruiters time and read gimmicky). The portfolio now
+renders straight into the Hero. There is no `isUnlocked` state.
 
-Do not remove the `AnimatePresence` wrapper around the gate — the exit animation depends on it.
+### Nav
 
-### Scroll-triggered nav icons
+`Portfolio()` tracks `scrolled` (window.scrollY > 40) to swap the fixed
+nav between transparent-on-hero and ivory-blur-on-scroll. The nav holds:
+the brand link ("Warren Lim Zhan Feng"), `NAV_LINKS`
+(Experience/Work/Resume anchors), `<NavContactRail>` (Email / LinkedIn /
+WhatsApp icons — neutral at rest, hover-tint red/blue/green), and the
+"Trading Journal" pill linking to `/journal`. `ScrollProgress` renders a
+hairline read-progress bar plus a desktop section rail.
 
-`useScroll` from `motion/react` tracks `scrollY`. After 600px, contact icons (email, LinkedIn, phone) animate into the navbar via `AnimatePresence`. These link to `#contacts` inside the Hero section.
-
-### Section order
+### Section order (in `<main>`)
 
 ```
-<Hero />            → id="contacts" anchor inside here
-<Experience />      → id="experience"
-<Certificates />    → id="credentials"
-<CaseCompetition /> → no id
-<Projects />        → id="work"
-<ResumeViewer />    → id="resume"
+<Hero />          → id="top"          (dark surface, lamp backdrop)
+<Experience />    → id="experience"   (light)
+<Certificates />  → id="credentials"  (light)
+<Skills />        → id="skills"       (light)
+<SelectedWorks /> → id="work"         (light)
+<Recognition />   → id="recognition"  (dark surface)
+<ResumeViewer />  → id="resume"       (light)
 ```
 
-`TechnicalToolkit` exists in `src/components/` but is not rendered in `App.tsx`.
+Dark/light rhythm is deliberate: Hero and Recognition share the **exact
+same** `--color-surface`; all other sections are ivory. Both dark bands
+read as one composed system, not an accident.
 
 ### Journal routing
 
@@ -257,19 +276,25 @@ my-portfolio/
     │   ├── animations.ts   ← shared motion variants
     │   └── utils.ts        ← cn() helper
     ├── components/
-    │   ├── Hero.tsx
-    │   ├── Experience.tsx
-    │   ├── Certificates.tsx
-    │   ├── CaseCompetition.tsx
-    │   ├── Projects.tsx
-    │   ├── ResumeViewer.tsx
-    │   ├── AnimatedCard.tsx
-    │   ├── ImageOverlay.tsx
-    │   ├── TechnicalToolkit.tsx  ← built but not rendered
+    │   ├── Hero.tsx              ← dark hero, lamp backdrop, 3D stage
+    │   ├── Experience.tsx        ← timeline; role = heading, company+date = sub
+    │   ├── Certificates.tsx      ← featured crown + category carousel
+    │   ├── Skills.tsx            ← three capability buckets (carousel)
+    │   ├── SelectedWorks.tsx     ← project cards + case dialog
+    │   ├── Recognition.tsx       ← dark band, EAMC win, stacked photos
+    │   ├── ResumeViewer.tsx      ← full CV, sticky left rail
+    │   ├── ImageOverlay.tsx      ← shared fullscreen image/PDF viewer
     │   └── ui/
-    │       ├── animated-hero.tsx
-    │       ├── cursor-particles.tsx
-    │       └── connect-with-us.tsx
+    │       ├── Section.tsx       ← editorial shell (index/eyebrow/title)
+    │       ├── Reveal.tsx        ← scroll-entrance primitive
+    │       ├── ScrollProgress.tsx
+    │       ├── StatBadge.tsx     ← big tabular metric (count opt-out via count={false})
+    │       ├── MagneticButton.tsx
+    │       ├── CarouselShell.tsx ← drag/arrow carousel (pointer-capture deferred)
+    │       ├── Hero3DStage.tsx
+    │       ├── LampBackdrop.tsx  ← hero lamp light (motion/react, palette tokens)
+    │       ├── icons.tsx         ← LinkedinIcon, WhatsappIcon (brand glyphs)
+    │       └── connect-with-us.tsx ← ContactConnect (Email/LinkedIn/WhatsApp)
     └── journal/                  ← git submodule → trading-journal repo
         ├── (submodule root has its own README, vite.config.ts, package.json
         │    for standalone deployment — those are not used by personal-website)
@@ -298,12 +323,13 @@ All displayed portfolio content is in `src/constants.ts`. Edit that file for tex
 
 | Export | Used by |
 |---|---|
-| `PERSONAL_INFO` | Hero, ContactConnect, nav |
-| `EXPERIENCE` | Experience |
-| `PROJECTS` | Projects |
-| `SKILLS` | TechnicalToolkit (unused) |
-| `CERTIFICATES` | Certificates |
-| `CASE_COMPETITION` | CaseCompetition |
+| `PERSONAL_INFO` | Hero, ContactConnect, nav (`NAV_CONTACTS`) |
+| `TRUST_MARKERS`, `ADJECTIVES` | Hero |
+| `EXPERIENCE` | Experience (`role` is the heading, `company`+`duration` the sub; `stat` no longer rendered) |
+| `PROJECTS` | SelectedWorks (`thumbnail` is shown as the glance image) |
+| `SKILLS` | Skills |
+| `CERTIFICATES`, `FEATURED_CERT_TITLE` | Certificates |
+| `CASE_COMPETITION` | Recognition |
 
 ---
 
@@ -311,12 +337,21 @@ All displayed portfolio content is in `src/constants.ts`. Edit that file for tex
 
 ### Colour tokens (defined in `src/index.css` `@theme`)
 
+Refined palette (2026-05-17 redesign — replaced the brassy navy/gold scheme):
+
 | Token | Hex | Usage |
 |---|---|---|
-| `navy` | `#0F3057` | Primary text, headings, buttons, borders |
-| `gold` | `#C4964D` | Accent — labels, highlights, hover states |
-| `paper` | `#F9FAFB` | Background |
-| `ink` | `#1A1A1A` | Body text |
+| `navy` | `#0F2C4A` | Headings / primary text on ivory |
+| `navy-700` | `#0A2138` | Hover-darker navy |
+| `gold` | `#C7A878` | Muted champagne — the only accent |
+| `gold-bright` | `#D8C29A` | Champagne on the dark surface (lamp) |
+| `paper` | `#F7F5F0` | Warm ivory background |
+| `paper-2` | `#EFEDE6` | Warmer card / inset |
+| `ink` | `#16202C` | Body text on ivory |
+| `graphite` | `#5C636E` | Secondary text |
+| `line` | `#E3E1DA` | Hairlines |
+| `surface` | `#0A1A2F` | The single dark canvas (Hero + Recognition) |
+| `surface-2` | `#0F2238` | Inset cards on the dark canvas |
 
 These are Tailwind classes: `text-navy`, `bg-gold`, `border-gold/10`, etc.
 

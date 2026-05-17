@@ -1,12 +1,13 @@
 /**
  * SelectedWorks — the conversion centerpiece.
  *
- * Two finance calls, each argued as Context → Methodology → Impact. The
- * card surfaces the headline impact in big tabular type; the detail
- * dialog gives the full argument and links the source deck (PDF).
+ * Two finance calls, each argued as Context, Methodology, Impact. The
+ * card leads with a glance image so a recruiter sees what it is, then
+ * the headline impact in big tabular type; the detail dialog gives the
+ * full argument and links the source deck (PDF).
  *
  * The dialog is a hand-rolled accessible modal (Esc / backdrop close,
- * scroll lock, focus move) — same pattern as ImageOverlay, no new deps.
+ * scroll lock, focus move), same pattern as ImageOverlay, no new deps.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -26,7 +27,7 @@ export default function SelectedWorks() {
       index="04"
       eyebrow="Selected Works"
       title="Two calls, fully argued."
-      description="Not a project dump. Each is a complete thesis — the context, the method, and the quantified outcome — with the source deck one click away."
+      description="Not a project dump. Each is a complete thesis: the context, the method, and the quantified outcome, with the source deck one click away."
     >
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {PROJECTS.map((p, i) => (
@@ -34,33 +35,59 @@ export default function SelectedWorks() {
             <button
               type="button"
               onClick={() => setActive(p)}
-              className="group flex h-full w-full flex-col rounded-3xl border border-line bg-white p-9 text-left transition-all duration-500 hover:-translate-y-1.5 hover:border-navy/20 hover:shadow-[0_44px_90px_-55px_rgba(15,48,87,0.45)] md:p-11"
+              className="group relative flex h-full w-full flex-col overflow-hidden rounded-3xl border border-line bg-white text-left transition-all duration-500 hover:-translate-y-1.5 hover:border-navy/20 hover:shadow-[0_44px_90px_-55px_rgba(15,48,87,0.45)]"
             >
-              <div className="flex items-center justify-between">
-                <span className="u-eyebrow text-[10px] text-gold">
-                  {p.category}
+              {/* Glance media */}
+              <div className="relative h-44 overflow-hidden bg-gradient-to-br from-paper-2 to-white md:h-52">
+                <span
+                  aria-hidden
+                  className="u-index absolute left-7 top-5 text-4xl text-navy/10"
+                >
+                  {String(i + 1).padStart(2, "0")}
                 </span>
-                <span className="flex h-10 w-10 items-center justify-center rounded-full border border-line text-navy transition-all duration-300 group-hover:border-navy group-hover:bg-navy group-hover:text-paper">
+                <img
+                  src={p.thumbnail}
+                  alt={p.title}
+                  loading="lazy"
+                  className="h-full w-full object-contain p-10 transition-transform duration-700 ease-out group-hover:scale-110"
+                />
+                <span className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full border border-line bg-white/70 text-navy backdrop-blur transition-all duration-300 group-hover:border-navy group-hover:bg-navy group-hover:text-paper">
                   <ArrowUpRight size={17} />
                 </span>
               </div>
 
-              <h3 className="mt-7 font-display text-2xl font-semibold leading-snug tracking-tight text-navy md:text-3xl">
-                {p.title}
-              </h3>
+              {/* Body */}
+              <div className="flex flex-1 flex-col p-9 md:p-11">
+                <span className="u-eyebrow text-[10px] text-gold">
+                  {p.category}
+                </span>
 
-              <p className="mt-6 border-l-2 border-gold pl-5 u-tabular text-lg font-semibold leading-snug text-navy md:text-xl">
-                {p.impact}
-              </p>
+                <h3 className="mt-5 font-display text-2xl font-semibold leading-snug tracking-tight text-navy md:text-3xl">
+                  {p.title}
+                </h3>
 
-              <p className="mt-7 text-[15px] leading-relaxed text-graphite">
-                {p.context}
-              </p>
+                <p className="mt-6 border-l-2 border-gold pl-5 u-tabular text-lg font-semibold leading-snug text-navy md:text-xl">
+                  {p.impact}
+                </p>
 
-              <span className="mt-9 inline-flex items-center gap-2 text-sm font-semibold text-navy transition-colors group-hover:text-gold">
-                Read the full case
-                <ArrowUpRight size={15} />
-              </span>
+                <p className="mt-7 text-[15px] leading-relaxed text-graphite">
+                  {p.context}
+                </p>
+
+                <span className="mt-auto inline-flex items-center gap-2 pt-9 text-sm font-semibold text-navy">
+                  <span className="relative">
+                    Read the full case
+                    <span
+                      aria-hidden
+                      className="absolute -bottom-1 left-0 h-px w-full origin-left scale-x-0 bg-gold transition-transform duration-500 ease-out group-hover:scale-x-100"
+                    />
+                  </span>
+                  <ArrowUpRight
+                    size={15}
+                    className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                  />
+                </span>
+              </div>
             </button>
           </Reveal>
         ))}

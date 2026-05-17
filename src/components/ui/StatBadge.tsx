@@ -17,6 +17,8 @@ type StatBadgeProps = {
   className?: string;
   dark?: boolean;
   size?: "md" | "lg";
+  /** When false the value renders statically (no count-up). */
+  count?: boolean;
 };
 
 const NUMERIC = /^([^\d-]*)(-?\d+(?:\.\d+)?)(.*)$/;
@@ -28,6 +30,7 @@ export function StatBadge({
   className,
   dark = false,
   size = "lg",
+  count = true,
 }: StatBadgeProps) {
   const reduced = useReducedMotion();
   const ref = useRef<HTMLDivElement>(null);
@@ -37,7 +40,7 @@ export function StatBadge({
   const match = value.match(NUMERIC);
 
   useEffect(() => {
-    if (!inView || !match) return;
+    if (!count || !inView || !match) return;
     if (reduced) {
       setDisplay(value);
       return;

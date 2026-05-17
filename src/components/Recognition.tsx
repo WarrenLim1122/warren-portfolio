@@ -22,7 +22,7 @@ export default function Recognition() {
       id="recognition"
       index="05"
       eyebrow="Recognition"
-      title="Champions — Eurasia Asset Management Challenge."
+      title="Champions of the Eurasia Asset Management Challenge."
       dark
     >
       <div className="grid grid-cols-1 gap-16 lg:grid-cols-[1fr_0.9fr] lg:items-center">
@@ -50,20 +50,18 @@ export default function Recognition() {
           </Reveal>
         </div>
 
-        <Reveal delay={0.1} className="grid grid-cols-2 gap-4">
+        <Reveal delay={0.1} className="flex flex-col gap-4">
           {c.images.map((src, i) => (
             <button
               key={src}
               type="button"
               onClick={() => setZoom(src)}
               aria-label={`Enlarge team photo ${i + 1}`}
-              className={`group relative overflow-hidden rounded-2xl border border-white/12 ${
-                i === 0 ? "col-span-2 aspect-[16/10]" : "aspect-square"
-              }`}
+              className="group relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-white/12"
             >
               <img
                 src={src}
-                alt={`${c.team} — ${c.event}`}
+                alt={`${c.team}, ${c.event}`}
                 loading="lazy"
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />

@@ -1,9 +1,10 @@
 /**
  * ResumeViewer — close on the full record.
  *
- * Academic standing stated plainly (strong signal), a slim framed
- * preview of the CV, and one prominent magnetic download. No download
- * friction: the primary action is unmissable.
+ * The complete CV is shown in full (no internal scroll clamp): the
+ * section grows to the document's natural height. The left rail leads
+ * with the academic standing, then the two download actions, and stays
+ * pinned alongside the long document on desktop.
  */
 
 import { Download, FileText } from "lucide-react";
@@ -19,15 +20,16 @@ export default function ResumeViewer() {
       index="06"
       eyebrow="Curriculum Vitae"
       title="The full record."
-      description="First-Class Honours track at NTU. The complete CV — experience, credentials, and academics — in one document."
+      description="First-Class Honours track at NTU. The complete CV covering experience, credentials, and academics in one document."
     >
-      <div className="grid grid-cols-1 gap-14 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
-        <div>
+      <div className="grid grid-cols-1 gap-14 lg:grid-cols-[0.8fr_1.2fr] lg:items-start">
+        <div className="lg:sticky lg:top-28 lg:self-start">
           <Reveal>
             <StatBadge
               value="4.61"
               label="GPA · 5.00 scale"
-              caption="First-Class Honours standing — Banking & Finance, NTU Singapore."
+              caption="First-Class Honours standing in Banking & Finance, NTU Singapore."
+              count={false}
             />
           </Reveal>
           <Reveal delay={0.1}>
@@ -63,10 +65,10 @@ export default function ResumeViewer() {
               </span>
               <span className="u-tabular text-[11px] text-graphite/70">PDF</span>
             </figcaption>
-            <div className="max-h-[560px] overflow-hidden p-4 sm:p-7">
+            <div className="p-4 sm:p-7">
               <img
                 src="/resume.jpg"
-                alt="Warren Lim — Curriculum Vitae preview"
+                alt="Warren Lim, Curriculum Vitae"
                 className="w-full rounded-lg border border-line"
               />
             </div>

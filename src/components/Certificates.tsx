@@ -47,7 +47,7 @@ export default function Certificates() {
       index="02"
       eyebrow="Validation of Expertise"
       title="Credentials that back the work."
-      description={`${totalCerts} verified certificates across Corporate Finance Institute, Bloomberg, and Google — anchored by the FMVA® designation.`}
+      description={`${totalCerts} verified certificates across Corporate Finance Institute, Bloomberg, and Google, anchored by the FMVA® designation.`}
     >
       {/* Featured crown credential */}
       {featured && (
@@ -68,7 +68,7 @@ export default function Certificates() {
                   <span className="text-gold"> (FMVA)®</span>
                 </h3>
                 <p className="mt-4 max-w-md text-base leading-relaxed text-graphite">
-                  Corporate Finance Institute · the full executive ladder —
+                  Corporate Finance Institute · the full executive ladder:
                   3-statement modelling, DCF, comparables, scenario &amp;
                   sensitivity analysis.
                 </p>

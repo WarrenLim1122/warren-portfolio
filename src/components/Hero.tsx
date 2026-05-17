@@ -15,6 +15,7 @@ import { EASE_OUT_EXPO } from "../lib/animations";
 import { MagneticButton } from "./ui/MagneticButton";
 import { ContactConnect } from "./ui/connect-with-us";
 import { Hero3DStage } from "./ui/Hero3DStage";
+import { LampBackdrop } from "./ui/LampBackdrop";
 
 const container: Variants = {
   hidden: {},
@@ -48,22 +49,8 @@ export default function Hero() {
       id="top"
       className="relative isolate min-h-screen overflow-hidden bg-surface px-6 pb-24 pt-32 text-paper md:px-12 md:pt-36 lg:px-20"
     >
-      {/* Atmosphere: research-canvas grid + gold bloom */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-[0.5]"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)",
-          backgroundSize: "64px 64px",
-          maskImage:
-            "radial-gradient(ellipse 80% 70% at 50% 40%, #000 40%, transparent 100%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -right-40 top-1/4 h-[520px] w-[520px] rounded-full bg-gold/10 blur-[140px]"
-      />
+      {/* Atmosphere: the signature lamp entrance light */}
+      <LampBackdrop />
 
       <motion.div
         variants={container}
@@ -77,14 +64,14 @@ export default function Hero() {
             variants={item}
             className="flex items-center gap-4"
           >
-            <span className="h-12 w-12 overflow-hidden rounded-full border border-white/15 grayscale">
+            <span className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-full border border-white/15 ring-1 ring-gold/25 md:h-[4.5rem] md:w-[4.5rem]">
               <img
                 src={PERSONAL_INFO.headshot}
                 alt={PERSONAL_INFO.fullName}
                 className="h-full w-full object-cover"
               />
             </span>
-            <span className="u-eyebrow flex items-center gap-2.5 text-[10px] text-white/55">
+            <span className="u-eyebrow flex items-center gap-3 text-xs text-white/70">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-gold/70" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-gold" />
