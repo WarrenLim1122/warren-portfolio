@@ -17,6 +17,9 @@
 export type { Country, CountryPhoto } from "./gallery";
 export { COUNTRIES } from "./gallery";
 
+export type { Place } from "./places-data";
+export { PLACES } from "./places-data";
+
 export const LIFE_TABS = [
   { id: "gallery", label: "Gallery" },
   { id: "golf", label: "Golf" },

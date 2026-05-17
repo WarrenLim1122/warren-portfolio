@@ -491,7 +491,19 @@ Single page, data-driven tabs (`LIFE_TABS`: Gallery, Golf) synced to the URL has
 2. The filename becomes the on-photo location label: `kyoto-fushimi-inari.jpg` shows as "Kyoto Fushimi Inari". A leading `01-` controls order; a trailing `-2` just keeps names unique. Files sort by name.
 3. Supported: `.jpg .jpeg .png .webp .avif`. Keep them web-sized (about 2000px on the long edge, 200 to 600 KB): they live in git and ship in the deploy.
 4. No code change. `import.meta.glob` in `gallery.ts` picks them up on the next dev reload / build.
-5. New country: add `{ id, name, lat, lng, order }` to `COUNTRY_META` in `gallery.ts` (the `id` must equal the folder name), then create that folder. A country with no photos yet still appears on the globe with a tasteful "Coming soon" state. Full notes: `src/life/photos/README.md`.
+5. New country: add `{ id, name, lat, lng, order, zoomAlt }` to `COUNTRY_META` in `gallery.ts` (the `id` must equal the folder name), then create that folder. A country with no photos yet still appears on the globe with a tasteful "Coming soon" state. Full notes: `src/life/photos/README.md`.
+
+### Gallery update workflow (triggered by "update my life folder", "update my gallery" etc.)
+
+When Warren says a prompt like "update my life folder", "update my gallery page", "update my gallery using local files", or "I added photos" — run this workflow:
+
+1. **Scan photo folders**: `ls src/life/photos/*/` to see which country folders exist and what files are in them.
+2. **Parse filenames**: for each file, apply the same `toLabel()` logic (`replace(/^\d+[-_]/, "")`, `replace(/[-_]\d+$/, "")`, `replace(/[-_]+/g, " ")`, Title Case). This is the place name the photo grid will show.
+3. **Geocode with your knowledge**: identify the real-world lat/lng for each place name. Use geographic knowledge to assign coordinates. For ambiguous names, use the most well-known location in that country context.
+4. **Update `src/life/places-data.ts`**: for each country that now has photos, add/update its `Place[]` array with `{ id, label, lat, lng }`. The `id` should be a kebab-case slug of the label. Do not remove existing entries unless the file was deleted.
+5. **New country folders**: if a folder exists that is not yet in `COUNTRY_META` in `gallery.ts`, add it with appropriate `{ id, name, lat, lng, order, zoomAlt }` and also add an empty entry in `PLACES` in `places-data.ts`.
+6. **Build check**: run `npm run build` to confirm no regressions.
+7. **Report**: list which countries were updated, which new places were added, and their coordinates.
 
 ### Adding golf clips (YouTube), step-by-step
 

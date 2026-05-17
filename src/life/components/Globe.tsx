@@ -1,29 +1,40 @@
 /**
  * Globe — the react-globe.gl primitive. Imported ONLY via lazy() from
- * GlobeGallery, so three.js stays out of the main site bundle and out
- * of /life until the Gallery actually needs it.
+ * GlobeGallery so three.js stays out of the main bundle.
  *
- * Full-colour Earth (NASA blue marble), gentle auto-rotate, and a
- * cartoon push-pin marker per country (red rounded head + grey stem,
- * billboarded so it reads as a 3D pin from any angle). The selected
- * country drives an animated camera move and a larger, glowing pin.
+ * Two marker modes driven by `viewMode`:
+ *   "world"   — red push-pin per country, auto-rotate on, altitude 1.7
+ *   "country" — blue push-pin per place, auto-rotate off, altitude = country.zoomAlt
+ *
+ * htmlAltitude is 0 so pins anchor exactly on the surface with no
+ * 3-D projection offset when the globe spins.
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Globe, { type GlobeMethods } from "react-globe.gl";
-import type { Country } from "../life-content";
+import type { Country, Place } from "../life-content";
 
-type Marker = Country & { active: boolean };
+type CountryMarker = Country & { _kind: "country"; active: boolean };
+type PlaceMarker   = Place   & { _kind: "place" };
+type AnyMarker     = CountryMarker | PlaceMarker;
 
-// Cartoon push-pin (matches the reference: red ball + soft highlight +
-// tapered grey stem). Tip is the bottom-centre, so the wrapper anchors
-// it exactly on the coordinate.
-function pinHtml(active: boolean): string {
-  const scale = active ? 1.22 : 1;
-  const glow = active
+function makeCountryEl(
+  m: CountryMarker,
+  onSelect: (id: string) => void,
+): HTMLElement {
+  const outer = document.createElement("div");
+  outer.style.cssText = "cursor:pointer;line-height:0;";
+  outer.title = m.name;
+  outer.setAttribute("role", "button");
+  outer.setAttribute("aria-label", m.name);
+  outer.onclick = () => onSelect(m.id);
+
+  const scale = m.active ? 1.22 : 1;
+  const glow  = m.active
     ? "filter:drop-shadow(0 0 7px rgba(215,194,154,0.95));"
     : "filter:drop-shadow(0 3px 4px rgba(0,0,0,0.45));";
-  return `
+
+  outer.innerHTML = `
     <div style="transform:translate(-50%,-100%) scale(${scale});
                 transform-origin:50% 100%;cursor:pointer;
                 transition:transform .25s ease;${glow}">
@@ -36,29 +47,96 @@ function pinHtml(active: boolean): string {
         <circle cx="12" cy="10" r="4.4" fill="#ff8d8d" fill-opacity="0.9"/>
       </svg>
     </div>`;
+
+  return outer;
+}
+
+function makePlaceEl(m: PlaceMarker): HTMLElement {
+  const outer = document.createElement("div");
+  outer.style.cssText = "cursor:pointer;line-height:0;";
+  outer.setAttribute("role", "button");
+  outer.setAttribute("aria-label", m.label);
+
+  const wrap = document.createElement("div");
+  wrap.style.cssText =
+    "display:inline-block;position:relative;" +
+    "transform:translate(-50%,-100%);" +
+    "transform-origin:50% 100%;" +
+    "transition:transform .2s ease;";
+
+  wrap.innerHTML = `
+    <svg width="22" height="30" viewBox="0 0 22 30" fill="none"
+         xmlns="http://www.w3.org/2000/svg">
+      <path d="M11 30 L8.8 17 H13.2 Z" fill="#4a85c8"/>
+      <circle cx="11" cy="9.5" r="8.5" fill="#4C7FB8"/>
+      <circle cx="11" cy="9.5" r="8.5" fill="none"
+              stroke="#2563eb" stroke-opacity="0.4" stroke-width="1"/>
+      <circle cx="7.5" cy="6.5" r="2.8" fill="#93c5fd" fill-opacity="0.8"/>
+    </svg>`;
+
+  const tip = document.createElement("div");
+  tip.style.cssText =
+    "position:absolute;bottom:calc(100% + 5px);left:50%;" +
+    "transform:translateX(-50%);white-space:nowrap;pointer-events:none;" +
+    "background:rgba(10,26,47,0.90);color:#F7F5F0;" +
+    "font-size:10px;font-weight:700;letter-spacing:0.06em;" +
+    "font-family:Inter,sans-serif;" +
+    "padding:3px 8px;border-radius:5px;" +
+    "border:1px solid rgba(199,168,120,0.35);" +
+    "opacity:0;transition:opacity .15s ease;";
+  tip.textContent = m.label;
+  wrap.appendChild(tip);
+
+  outer.appendChild(wrap);
+
+  outer.addEventListener("mouseenter", () => {
+    wrap.style.transform = "translate(-50%,-100%) scale(1.3)";
+    tip.style.opacity    = "1";
+  });
+  outer.addEventListener("mouseleave", () => {
+    wrap.style.transform = "translate(-50%,-100%) scale(1)";
+    tip.style.opacity    = "0";
+  });
+
+  return outer;
 }
 
 export default function GlobeView({
   countries,
   activeId,
   onSelect,
+  viewMode,
+  places,
 }: {
   countries: Country[];
-  activeId: string;
-  onSelect: (id: string) => void;
+  activeId:  string;
+  onSelect:  (id: string) => void;
+  viewMode:  "world" | "country";
+  places:    Place[];
 }) {
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
-  const wrapRef = useRef<HTMLDivElement>(null);
+  const wrapRef  = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
-  // New objects when activeId changes so react-globe.gl rebuilds the
-  // pin elements with the correct active styling.
-  const markers = useMemo<Marker[]>(
-    () => countries.map((c) => ({ ...c, active: c.id === activeId })),
+  const countryMarkers = useMemo<CountryMarker[]>(
+    () =>
+      countries.map((c) => ({
+        ...c,
+        _kind:  "country" as const,
+        active: c.id === activeId,
+      })),
     [countries, activeId],
   );
 
-  // Measure the container so the canvas fits the stage exactly.
+  const placeMarkers = useMemo<PlaceMarker[]>(
+    () => places.map((p) => ({ ...p, _kind: "place" as const })),
+    [places],
+  );
+
+  const displayData: AnyMarker[] =
+    viewMode === "world" ? countryMarkers : placeMarkers;
+
+  // Measure container so the canvas fits exactly.
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
@@ -70,31 +148,42 @@ export default function GlobeView({
     return () => ro.disconnect();
   }, []);
 
-  // Gentle idle spin; user drag still works, zoom disabled (keeps it calm).
+  // One-time globe setup: disable zoom, start idle spin, set initial POV.
   useEffect(() => {
     const g = globeRef.current;
     if (!g) return;
-    const controls = g.controls() as unknown as {
+    const ctrl = g.controls() as {
       autoRotate: boolean;
       autoRotateSpeed: number;
       enableZoom: boolean;
     };
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.45;
-    controls.enableZoom = false;
+    ctrl.enableZoom      = false;
+    ctrl.autoRotate      = true;
+    ctrl.autoRotateSpeed = 0.45;
     g.pointOfView({ lat: 12, lng: 90, altitude: 2.4 }, 0);
   }, []);
 
-  // Fly to the active country whenever it changes.
+  // Camera + rotation whenever view mode or active country changes.
   useEffect(() => {
     const g = globeRef.current;
     const c = countries.find((x) => x.id === activeId);
     if (!g || !c) return;
-    g.pointOfView({ lat: c.lat, lng: c.lng, altitude: 1.7 }, 1100);
-  }, [activeId, countries]);
+    const ctrl = g.controls() as {
+      autoRotate: boolean;
+      autoRotateSpeed: number;
+    };
+    if (viewMode === "country") {
+      ctrl.autoRotate = false;
+      g.pointOfView({ lat: c.lat, lng: c.lng, altitude: c.zoomAlt }, 1400);
+    } else {
+      ctrl.autoRotate      = true;
+      ctrl.autoRotateSpeed = 0.45;
+      g.pointOfView({ lat: c.lat, lng: c.lng, altitude: 1.7 }, 1100);
+    }
+  }, [activeId, countries, viewMode]);
 
   return (
-    <div ref={wrapRef} className="h-full w-full">
+    <div ref={wrapRef} className="h-full w-full" style={{ cursor: "grab" }}>
       {size.w > 0 && (
         <Globe
           ref={globeRef}
@@ -106,22 +195,17 @@ export default function GlobeView({
           showAtmosphere
           atmosphereColor="#9ec6f0"
           atmosphereAltitude={0.18}
-          htmlElementsData={markers}
-          htmlLat={(d: object) => (d as Marker).lat}
-          htmlLng={(d: object) => (d as Marker).lng}
-          htmlAltitude={0.012}
+          htmlElementsData={displayData}
+          htmlLat={(d: object) => (d as AnyMarker).lat}
+          htmlLng={(d: object) => (d as AnyMarker).lng}
+          htmlAltitude={0}
           htmlElement={(d: object) => {
-            const m = d as Marker;
-            const el = document.createElement("div");
-            el.innerHTML = pinHtml(m.active);
-            el.style.pointerEvents = "auto";
-            el.title = m.name;
-            el.setAttribute("role", "button");
-            el.setAttribute("aria-label", m.name);
-            el.onclick = () => onSelect(m.id);
-            return el;
+            const m = d as AnyMarker;
+            return m._kind === "country"
+              ? makeCountryEl(m, onSelect)
+              : makePlaceEl(m);
           }}
-          htmlTransitionDuration={300}
+          htmlTransitionDuration={200}
         />
       )}
     </div>

@@ -31,6 +31,8 @@ export interface Country {
   /** Real coordinates so the globe marker lands correctly. */
   lat: number;
   lng: number;
+  /** Globe camera altitude when zoomed into this country (globe-radius units). */
+  zoomAlt: number;
   photos: CountryPhoto[];
 }
 
@@ -42,15 +44,17 @@ interface CountryMeta {
   lng: number;
   /** Display order, low to high. */
   order: number;
+  /** Globe camera altitude when zoomed into this country (globe-radius units). */
+  zoomAlt: number;
 }
 
 const COUNTRY_META: CountryMeta[] = [
-  { id: "singapore", name: "Singapore", lat: 1.3521, lng: 103.8198, order: 1 },
-  { id: "japan", name: "Japan", lat: 36.2048, lng: 138.2529, order: 2 },
-  { id: "italy", name: "Italy", lat: 41.8719, lng: 12.5674, order: 3 },
-  { id: "switzerland", name: "Switzerland", lat: 46.8182, lng: 8.2275, order: 4 },
-  { id: "new-zealand", name: "New Zealand", lat: -40.9006, lng: 174.886, order: 5 },
-  { id: "south-korea", name: "South Korea", lat: 35.9078, lng: 127.7669, order: 6 },
+  { id: "singapore",   name: "Singapore",   lat:   1.3521, lng: 103.8198, order: 1, zoomAlt: 0.30 },
+  { id: "japan",       name: "Japan",       lat:  36.2048, lng: 138.2529, order: 2, zoomAlt: 1.00 },
+  { id: "italy",       name: "Italy",       lat:  41.8719, lng:  12.5674, order: 3, zoomAlt: 0.95 },
+  { id: "switzerland", name: "Switzerland", lat:  46.8182, lng:   8.2275, order: 4, zoomAlt: 0.45 },
+  { id: "new-zealand", name: "New Zealand", lat: -40.9006, lng: 174.8860, order: 5, zoomAlt: 1.20 },
+  { id: "south-korea", name: "South Korea", lat:  35.9078, lng: 127.7669, order: 6, zoomAlt: 0.60 },
 ];
 
 // Every image dropped into src/life/photos/<country>/ is picked up here.
@@ -86,10 +90,11 @@ for (const path of Object.keys(FILES).sort()) {
  */
 export const COUNTRIES: Country[] = COUNTRY_META.slice()
   .sort((a, b) => a.order - b.order)
-  .map(({ id, name, lat, lng }) => ({
+  .map(({ id, name, lat, lng, zoomAlt }) => ({
     id,
     name,
     lat,
     lng,
+    zoomAlt,
     photos: byCountry.get(id) ?? [],
   }));
