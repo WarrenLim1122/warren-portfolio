@@ -1,62 +1,122 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * ResumeViewer — close on the full record.
+ *
+ * The section header (index / eyebrow / title / description) lives in the
+ * left sticky column so it top-aligns with the resume document on the
+ * right — no tall stack of header above an empty gap, the two columns
+ * start on the same line. The left rail then carries the academic
+ * standing and the two download actions, and stays pinned alongside the
+ * long document on desktop.
  */
 
-import { motion } from "motion/react";
-import { Download } from "lucide-react";
-import { revealVariants, SPRING_UI } from "../lib/animations";
+import { motion, useReducedMotion } from "motion/react";
+import { Download, FileText } from "lucide-react";
+import { EASE_OUT_EXPO, VIEWPORT_ONCE } from "../lib/animations";
+import { Reveal } from "./ui/Reveal";
+import { StatBadge } from "./ui/StatBadge";
+import { MagneticButton } from "./ui/MagneticButton";
 
 export default function ResumeViewer() {
+  const reduced = useReducedMotion();
+
   return (
-    <section id="resume" className="py-48 bg-white px-6 text-center border-t border-gray-100">
-      <motion.div 
-        initial="hidden" 
-        whileInView="visible" 
-        viewport={{ once: true, amount: 0.2 }} 
-        variants={revealVariants} 
-        className="max-w-6xl mx-auto flex flex-col items-center"
-      >
-        <div className="mb-20 space-y-8">
-          <h2 className="text-5xl font-bold text-navy tracking-tight">Professional Profile.</h2>
-          <p className="text-xl font-light italic text-gray-900">NTU First-Class Honours | GPA 4.61/5.00</p>
-          <motion.a 
-            href="/resume.pdf" 
-            target="_blank"
-            download="Warren_Lim_Resume.pdf"
-            whileHover={{ scale: 1.05 }} 
-            transition={SPRING_UI}
-            className="inline-flex items-center gap-4 px-12 py-5 bg-navy text-white rounded-full font-bold shadow-2xl active:scale-95 transition-shadow hover:shadow-navy/40"
-          >
-            <Download size={20} /> Obtain Official CV
-          </motion.a>
-        </div>
+    <section
+      id="resume"
+      className="relative scroll-mt-24 px-6 py-28 text-ink md:px-12 md:py-36 lg:px-20"
+    >
+      <div className="mx-auto w-full max-w-6xl">
+        {/* The report rule — same rhythm as every other section */}
+        <motion.div
+          className="u-hairline h-px w-full origin-left"
+          initial={reduced ? false : { scaleX: 0 }}
+          whileInView={reduced ? undefined : { scaleX: 1 }}
+          viewport={VIEWPORT_ONCE}
+          transition={{ duration: 1.1, ease: EASE_OUT_EXPO }}
+        />
 
-        {/* Straightforward Image Display for the Resume */}
-        <div className="w-full max-w-4xl mx-auto rounded-[2rem] border border-gray-200 overflow-hidden shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] bg-white">
-          {/* Document Header Mockup */}
-          <div className="bg-gray-50 border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <div className="flex gap-2">
-              <div className="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
-              <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
-              <div className="w-3 h-3 rounded-full bg-[#27C93F]"></div>
-            </div>
-            <p className="text-xs font-bold text-gray-400 uppercase tracking-[0.1em]">Warren_Lim_Resume.pdf</p>
-            <div className="w-9 h-9"></div> {/* spacer for centering */}
-          </div>
-          
-          {/* Main Resume Image */}
-          <div className="w-full relative bg-gray-100 p-2 sm:p-8">
-            <img 
-              src="/resume.jpg" 
-              alt="Warren Lim Resume" 
-              className="w-full h-auto object-contain rounded-lg shadow-sm border border-gray-200 bg-white" 
-              
-            />
-          </div>
-        </div>
+        <div className="grid grid-cols-1 gap-14 pt-12 md:pt-16 lg:grid-cols-[0.85fr_1.15fr] lg:items-start lg:gap-16">
+          {/* LEFT — header (top-aligned with the PDF) + standing + actions */}
+          <div className="lg:sticky lg:top-28 lg:self-start">
+            <Reveal className="flex items-baseline gap-4 md:flex-col md:gap-3">
+              <span className="u-index text-5xl text-navy/12 md:text-7xl">
+                06
+              </span>
+              <span className="u-eyebrow text-gold">Curriculum Vitae</span>
+            </Reveal>
 
-      </motion.div>
+            <Reveal delay={0.06}>
+              <h2 className="mt-6 font-display text-4xl font-semibold leading-[1.05] tracking-tight text-navy md:text-5xl">
+                The full record.
+              </h2>
+            </Reveal>
+
+            <Reveal delay={0.12}>
+              <p className="mt-5 text-lg leading-relaxed text-graphite md:text-xl">
+                First-Class Honours track at NTU. The complete CV covering
+                experience, credentials, and academics in one document.
+              </p>
+            </Reveal>
+
+            <Reveal delay={0.18}>
+              <div className="mt-12 border-t border-line pt-10">
+                <StatBadge
+                  value="4.61"
+                  label="GPA · 5.00 scale"
+                  count={false}
+                />
+                <p className="mt-4 max-w-[28ch] text-base leading-relaxed text-graphite md:text-lg">
+                  First-Class Honours standing in Banking &amp; Finance, NTU
+                  Singapore.
+                </p>
+              </div>
+            </Reveal>
+
+            <Reveal delay={0.24}>
+              <div className="mt-10 flex flex-wrap gap-4">
+                <MagneticButton
+                  href="/resume.pdf"
+                  download="Warren_Lim_Resume.pdf"
+                  variant="primary"
+                  ariaLabel="Download Warren Lim's CV (PDF)"
+                >
+                  <Download size={16} strokeWidth={2.4} />
+                  Download CV
+                </MagneticButton>
+                <MagneticButton
+                  href="/resume.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  variant="ghost"
+                  ariaLabel="Open CV in a new tab"
+                >
+                  <FileText size={15} />
+                  Open in tab
+                </MagneticButton>
+              </div>
+            </Reveal>
+          </div>
+
+          <Reveal delay={0.08}>
+            <figure className="overflow-hidden rounded-3xl border border-line bg-white shadow-[0_40px_90px_-55px_rgba(15,48,87,0.4)]">
+              <figcaption className="flex items-center justify-between border-b border-line bg-paper-2/60 px-6 py-3.5">
+                <span className="u-eyebrow text-[10px] text-graphite">
+                  Warren_Lim_Resume.pdf
+                </span>
+                <span className="u-tabular text-[11px] text-graphite/70">
+                  PDF
+                </span>
+              </figcaption>
+              <div className="p-4 sm:p-7">
+                <img
+                  src="/resume.jpg"
+                  alt="Warren Lim, Curriculum Vitae"
+                  className="w-full rounded-lg border border-line"
+                />
+              </div>
+            </figure>
+          </Reveal>
+        </div>
+      </div>
     </section>
   );
 }

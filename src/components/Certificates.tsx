@@ -1,317 +1,177 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * Certificates — credentials, signal-first.
+ *
+ * The crown credential (FMVA®) is featured large; the full ladder lives
+ * in a category-switchable carousel (shared CarouselShell) so 27 certs
+ * never dilute the headline. Any card opens the existing ImageOverlay
+ * for a full view + the source PDF.
  */
 
-import React, { useState, useRef } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { CERTIFICATES } from "../constants";
-import { Award, LayoutGrid, ChevronLeft, ChevronRight } from "lucide-react";
+import { Award, FileText, Maximize2 } from "lucide-react";
+import {
+  CERTIFICATES,
+  FEATURED_CERT_TITLE,
+  type Certificate,
+} from "../constants";
+import { EASE_OUT_EXPO } from "../lib/animations";
+import { cn } from "../lib/utils";
+import { Section } from "./ui/Section";
+import { Reveal } from "./ui/Reveal";
+import { CarouselShell } from "./ui/CarouselShell";
 import { ImageOverlay } from "./ImageOverlay";
 
-interface CertItem {
-  title: string;
-  issuer: string;
-  date: string;
-  file: string;
-  image: string;
-}
-
-interface StackCardProps {
-  cert: CertItem;
-  position: number;
-  total: number;
-  onSelect: () => void;
-  onFullscreen: () => void;
-}
-
-function StackCard({ cert, position, onSelect, onFullscreen }: StackCardProps) {
-  const isActive = position === 0;
-
-  return (
-    <motion.div
-      initial={false}
-      animate={{
-        x: `${position * 28}%`,
-        scale: 1 - Math.abs(position) * 0.14,
-        zIndex: 100 - Math.ceil(Math.abs(position) * 10),
-        opacity: Math.abs(position) > 2 ? 0 : 1,
-        filter: isActive ? "blur(0px)" : "blur(0.5px)",
-      }}
-      transition={{ type: "spring", damping: 30, stiffness: 150 }}
-      onClick={(e) => {
-        if (!isActive) {
-          e.stopPropagation();
-          onSelect();
-        }
-      }}
-      className={`absolute inset-0 bg-white rounded-[2.5rem] border-4 border-navy/5 shadow-xl p-6 md:p-8 flex flex-col justify-between overflow-hidden cursor-pointer ${isActive ? "shadow-navy/10" : ""}`}
-    >
-      {!isActive && <div className="absolute inset-0 bg-white/50 z-[101]" />}
-
-      {/* Background frame */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none p-8">
-        <div className="w-full h-full border border-navy/20 relative rounded-2xl">
-          <div className="absolute top-4 left-4 w-12 h-1 bg-navy/20" />
-          <div className="absolute bottom-4 right-4 w-12 h-1 bg-navy/20" />
-        </div>
-      </div>
-
-      <div className="relative z-10 flex justify-between items-start mb-4">
-        <div className="space-y-1 pr-10">
-          <div className="flex items-center gap-3">
-            <Award size={18} className="text-gold" />
-            <h4 className="text-[9px] font-black uppercase tracking-[0.4em] text-navy/40">
-              {cert.issuer}
-            </h4>
-          </div>
-          <h3 className="text-lg md:text-xl font-bold text-navy leading-tight font-serif italic">
-            {cert.title}
-          </h3>
-        </div>
-        {isActive && (
-          <button
-            onClick={(e) => { e.stopPropagation(); onFullscreen(); }}
-            className="absolute top-0 right-0 w-10 h-10 bg-paper border border-navy/5 text-navy rounded-full flex items-center justify-center shadow-sm hover:bg-navy hover:text-white transition-all active:scale-90"
-          >
-            <LayoutGrid size={16} />
-          </button>
-        )}
-      </div>
-
-      <div className="relative flex-1 bg-white rounded-2xl border border-navy/10 overflow-hidden shadow-inner mb-2 bg-paper group/preview">
-        <img
-          src={cert.image}
-          alt={cert.title}
-          className="w-full h-full object-contain pointer-events-none"
-        />
-        {isActive && (
-          <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/60 to-transparent flex justify-end opacity-0 group-hover/preview:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => { e.stopPropagation(); onFullscreen(); }}
-              className="px-4 py-2 bg-navy text-white rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gold transition-colors shadow-lg"
-            >
-              <LayoutGrid size={14} />
-              Enlarge Preview
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="relative z-10 min-h-[0.5rem]" />
-    </motion.div>
-  );
-}
-
-const CATEGORY_META = [
-  {
-    description: "A rigorous pathway starting with FMVA®, followed by full specialization modules. Click adjacent cards or swipe to browse.",
-  },
-  {
-    description: "Verified terminal expertise including Market Concepts, Spreadsheet Analysis, and ESG.",
-  },
-  {
-    description: "Advanced technical proficiency in VBA, Python, and data visualization tools.",
-  },
-];
-
 export default function Certificates() {
-  const [selectedCert, setSelectedCert] = useState<CertItem | null>(null);
-  const [activeCategory, setActiveCategory] = useState(0);
-  // Per-category active card index
-  const [steps, setSteps] = useState([0, 0, 0]);
+  const [selected, setSelected] = useState<Certificate | null>(null);
+  const [activeCat, setActiveCat] = useState(0);
 
-  const dragStartX = useRef<number | null>(null);
+  const featured = useMemo(
+    () =>
+      CERTIFICATES.flatMap((c) => c.items).find(
+        (i) => i.title === FEATURED_CERT_TITLE,
+      ),
+    [],
+  );
 
-  const totalCategories = CERTIFICATES.length;
-  const currentItems = CERTIFICATES[activeCategory].items;
-  const currentStep = steps[activeCategory];
+  const totalCerts = useMemo(
+    () => CERTIFICATES.reduce((n, c) => n + c.items.length, 0),
+    [],
+  );
 
-  const setStep = (cat: number, step: number) => {
-    setSteps((prev) => {
-      const next = [...prev];
-      next[cat] = step;
-      return next;
-    });
-  };
-
-  const goNextCard = () => setStep(activeCategory, (currentStep + 1) % currentItems.length);
-  const goPrevCard = () => setStep(activeCategory, (currentStep - 1 + currentItems.length) % currentItems.length);
-
-  const goNextCategory = () => setActiveCategory((prev) => (prev + 1) % totalCategories);
-  const goPrevCategory = () => setActiveCategory((prev) => (prev - 1 + totalCategories) % totalCategories);
-
-  // Mouse swipe on stack
-  const onDragStart = (e: React.MouseEvent | React.TouchEvent) => {
-    const x = "touches" in e ? e.touches[0].clientX : e.clientX;
-    dragStartX.current = x;
-  };
-
-  const onDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
-    if (dragStartX.current === null) return;
-    const x = "changedTouches" in e ? e.changedTouches[0].clientX : e.clientX;
-    const delta = x - dragStartX.current;
-    if (Math.abs(delta) > 40) {
-      delta < 0 ? goNextCard() : goPrevCard();
-    }
-    dragStartX.current = null;
-  };
+  const current = CERTIFICATES[activeCat];
 
   return (
-    <section id="credentials" className="py-24 md:py-40 bg-white px-6 overflow-hidden">
-      <div className="max-w-7xl mx-auto">
-
-        {/* Section header */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: false, amount: 0.1 }}
-          variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0, transition: { duration: 0.7 } } }}
-          className="mb-20 text-center lg:text-left"
-        >
-          <div className="flex justify-center lg:justify-start items-center gap-3 text-gold mb-6">
-            <Award size={20} />
-            <span className="text-[10px] font-black uppercase tracking-[0.4em]">Validation of Expertise</span>
-          </div>
-          <h2 className="text-5xl md:text-8xl font-bold text-navy tracking-tight leading-[0.9]">
-            Professional <br /> <span className="text-gold italic font-serif">Credentials.</span>
-          </h2>
-        </motion.div>
-
-        {/* Unified carousel */}
-        <div className="relative flex items-start justify-center gap-4 md:gap-8">
-
-          {/* Left category arrow */}
+    <Section
+      id="credentials"
+      index="02"
+      eyebrow="Validation of Expertise"
+      title="Credentials that back the work."
+      description={`${totalCerts} verified certificates across Corporate Finance Institute, Bloomberg, and Google, anchored by the FMVA® designation.`}
+    >
+      {/* Featured crown credential */}
+      {featured && (
+        <Reveal className="mb-16">
           <button
-            onClick={goPrevCategory}
-            className="mt-[200px] flex-shrink-0 w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-navy hover:border-navy transition-all duration-200 active:scale-95"
+            type="button"
+            onClick={() => setSelected(featured)}
+            className="group grid w-full grid-cols-1 overflow-hidden rounded-3xl border border-line bg-white text-left transition-shadow duration-500 hover:shadow-[0_40px_90px_-50px_rgba(15,48,87,0.4)] md:grid-cols-[1.1fr_1fr]"
           >
-            <ChevronLeft size={20} />
-          </button>
-
-          {/* Center: animated heading + card stack */}
-          <div className="flex flex-col items-center gap-10 flex-1 min-w-0 max-w-2xl">
-
-            {/* Animated category heading */}
-            <div className="text-center space-y-4 w-full min-h-[120px] flex flex-col items-center justify-center">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeCategory}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -16 }}
-                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                  className="space-y-3"
-                >
-                  <h3 className="text-3xl md:text-4xl font-bold text-navy tracking-tight">
-                    {CERTIFICATES[activeCategory].category}
-                  </h3>
-                  <p className="text-gray-500 text-base leading-relaxed max-w-lg mx-auto">
-                    {CATEGORY_META[activeCategory].description}
-                  </p>
-                </motion.div>
-              </AnimatePresence>
-
-              {/* Card nav arrows */}
-              <div className="flex gap-3">
-                <button
-                  onClick={goPrevCard}
-                  className="w-10 h-10 rounded-full border border-navy/10 flex items-center justify-center hover:bg-navy hover:text-white transition-all text-navy active:scale-95"
-                >
-                  <ChevronLeft size={18} />
-                </button>
-                <button
-                  onClick={goNextCard}
-                  className="w-10 h-10 rounded-full bg-navy text-white flex items-center justify-center hover:bg-gold transition-all active:scale-95"
-                >
-                  <ChevronRight size={18} />
-                </button>
+            <div className="flex flex-col justify-between gap-10 p-9 md:p-12">
+              <div className="flex items-center gap-3 text-gold">
+                <Award size={18} />
+                <span className="u-eyebrow text-[10px]">Crown Credential</span>
+              </div>
+              <div>
+                <h3 className="font-display text-3xl font-semibold leading-tight tracking-tight text-navy md:text-4xl">
+                  Financial Modeling &amp; Valuation Analyst
+                  <span className="text-gold"> (FMVA)®</span>
+                </h3>
+                <p className="mt-4 max-w-md text-base leading-relaxed text-graphite">
+                  Corporate Finance Institute · the full executive ladder:
+                  3-statement modelling, DCF, comparables, scenario &amp;
+                  sensitivity analysis.
+                </p>
+                <span className="mt-7 inline-flex items-center gap-2 text-sm font-semibold text-navy transition-colors group-hover:text-gold">
+                  <FileText size={15} />
+                  View certificate
+                </span>
               </div>
             </div>
-
-            {/* Stack */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeCategory}
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.97 }}
-                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="w-full"
-              >
-                <div
-                  className="relative h-[460px] w-full flex items-center justify-center"
-                  onMouseDown={onDragStart}
-                  onMouseUp={onDragEnd}
-                  onTouchStart={onDragStart}
-                  onTouchEnd={onDragEnd}
-                >
-                  <div className="w-full max-w-[400px] h-full relative">
-                    {currentItems.map((cert, idx) => {
-                      let pos = idx - currentStep;
-                      const half = currentItems.length / 2;
-                      if (pos > half) pos -= currentItems.length;
-                      if (pos < -half) pos += currentItems.length;
-
-                      return (
-                        <StackCard
-                          key={`${cert.title}-${idx}`}
-                          cert={cert}
-                          position={pos}
-                          total={currentItems.length}
-                          onSelect={() => setStep(activeCategory, idx)}
-                          onFullscreen={() => setSelectedCert(cert)}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Category indicator dots */}
-            <div className="flex items-center gap-3 mt-2">
-              {CERTIFICATES.map((cat, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveCategory(i)}
-                  className="flex flex-col items-center gap-1.5 group"
-                >
-                  <div
-                    className={`h-1.5 rounded-full transition-all duration-300 ${
-                      i === activeCategory
-                        ? "w-8 bg-navy"
-                        : "w-4 bg-gray-300 group-hover:bg-gray-400"
-                    }`}
-                  />
-                  <span
-                    className={`text-[9px] font-bold uppercase tracking-[0.2em] transition-colors duration-200 ${
-                      i === activeCategory ? "text-navy" : "text-gray-400 group-hover:text-gray-500"
-                    }`}
-                  >
-                    {cat.category.split(" ")[0]}
-                  </span>
-                </button>
-              ))}
+            <div className="relative min-h-[260px] overflow-hidden border-t border-line bg-paper-2 md:border-l md:border-t-0">
+              <img
+                src={featured.image}
+                alt={featured.title}
+                className="h-full w-full object-cover object-top transition-transform duration-700 group-hover:scale-[1.03]"
+              />
+              <span className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-surface/70 text-paper backdrop-blur">
+                <Maximize2 size={15} />
+              </span>
             </div>
-
-            {/* Card counter */}
-            <p className="text-[10px] text-gray-400 font-medium uppercase tracking-[0.3em] -mt-2">
-              {currentStep + 1} / {currentItems.length}
-            </p>
-          </div>
-
-          {/* Right category arrow */}
-          <button
-            onClick={goNextCategory}
-            className="mt-[200px] flex-shrink-0 w-11 h-11 rounded-full border border-gray-200 flex items-center justify-center text-gray-400 hover:text-navy hover:border-navy transition-all duration-200 active:scale-95"
-          >
-            <ChevronRight size={20} />
           </button>
-        </div>
+        </Reveal>
+      )}
 
-        <ImageOverlay cert={selectedCert} onClose={() => setSelectedCert(null)} />
-      </div>
-    </section>
+      {/* Category switcher */}
+      <Reveal className="mb-9 flex flex-wrap gap-x-8 gap-y-3 border-b border-line">
+        {CERTIFICATES.map((cat, i) => {
+          const active = i === activeCat;
+          return (
+            <button
+              key={cat.category}
+              type="button"
+              onClick={() => setActiveCat(i)}
+              className={cn(
+                "relative pb-4 text-sm font-semibold transition-colors duration-300",
+                active ? "text-navy" : "text-graphite hover:text-navy",
+              )}
+            >
+              {cat.category}
+              <span className="ml-2 u-tabular text-xs text-graphite/60">
+                {cat.items.length}
+              </span>
+              {active && (
+                <motion.span
+                  layoutId="cert-tab"
+                  className="absolute -bottom-px left-0 h-0.5 w-full bg-gold"
+                  transition={{ duration: 0.4, ease: EASE_OUT_EXPO }}
+                />
+              )}
+            </button>
+          );
+        })}
+      </Reveal>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeCat}
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.35, ease: EASE_OUT_EXPO }}
+        >
+          <CarouselShell
+            ariaLabel={`${current.category} certificates`}
+            step={320}
+          >
+            {current.items.map((cert) => (
+              <button
+                key={cert.title}
+                type="button"
+                onClick={() => setSelected(cert)}
+                className="group flex w-[280px] flex-shrink-0 snap-start flex-col overflow-hidden rounded-2xl border border-line bg-white text-left transition-all duration-300 hover:-translate-y-1 hover:border-navy/20"
+              >
+                <div className="relative h-44 overflow-hidden bg-paper-2">
+                  <img
+                    src={cert.image}
+                    alt={cert.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center bg-surface/0 opacity-0 transition-all duration-300 group-hover:bg-surface/40 group-hover:opacity-100">
+                    <span className="flex items-center gap-2 rounded-full bg-paper px-4 py-2 text-xs font-semibold text-navy">
+                      <Maximize2 size={13} /> Open
+                    </span>
+                  </span>
+                </div>
+                <div className="flex flex-1 flex-col gap-2 p-5">
+                  <span className="u-eyebrow text-[9px] text-gold">
+                    {cert.issuer}
+                  </span>
+                  <span className="text-sm font-semibold leading-snug text-navy">
+                    {cert.title}
+                  </span>
+                  <span className="mt-auto u-tabular pt-3 text-xs text-graphite">
+                    {cert.date}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </CarouselShell>
+        </motion.div>
+      </AnimatePresence>
+
+      <ImageOverlay cert={selected} onClose={() => setSelected(null)} />
+    </Section>
   );
 }

@@ -14,6 +14,22 @@
    - `vercel.json`
 4. If any portfolio-owned file must be changed, explain why before changing it.
 5. Run `npm install` only if new dependencies are being added.
+6. **`src/life/` is the self-contained "Beyond Work" area** (route `/life`). Its photos are LOCAL files in `src/life/photos/<country>/` (no Vercel Blob). See the "/life — personal area" section.
+
+---
+
+## Standing preferences (recorded 2026-05-17)
+
+Warren's confirmed design preferences. Apply these on every change unless he says otherwise.
+
+1. **No em/en dashes ("—" / "–") in rendered copy.** Restructure with commas, colons, parentheses, or "to" for ranges. Ordinary hyphens in compound words (`buy-side`, `First-Class`) are fine. This applies to `constants.ts` strings and component `description`/`alt`/title props, not code comments.
+2. **WhatsApp, not phone.** Contact points are Email / LinkedIn / WhatsApp. WhatsApp uses `https://wa.me/<digits>` and the `WhatsappIcon` from `components/ui/icons.tsx` (lucide has no WhatsApp glyph; `Linkedin` is deprecated in lucide so `LinkedinIcon` lives there too).
+3. **Headshot is large and full colour** (never grayscale).
+4. **Palette = "refined upgrade"** (chosen over all-dark / all-light / emerald): midnight surface, warm ivory, muted champagne accent. Dark/light section rhythm is intentional; the two dark bands (Hero, Recognition) must stay the identical `--color-surface`.
+5. **Aesthetic is the priority.** When integrating third-party component snippets (21st.dev / shadcn / Next.js), adapt the *visual* into this project's stack (`motion/react`, palette tokens, Vite + React Router) — never copy shadcn/Next/`framer-motion` deps in verbatim.
+6. **Nav contact icons:** neutral at rest; hover-tint Email = red, LinkedIn = blue, WhatsApp = green. A sliding "limelight" beam under the hovered icon (champagne) is the intended polish.
+7. Brand text is "Warren Lim Zhan Feng"; the journal pill reads "Trading Journal" (route `/journal` unchanged).
+8. **Never touch the `src/journal` submodule** for portfolio work.
 
 ---
 
@@ -167,6 +183,7 @@ The trading journal is integrated at `warrenlimzf.com/journal`. Journal files li
 | Animations | `motion/react` (import as `motion/react`, NOT `framer-motion`) |
 | Routing | `react-router-dom ^7` — BrowserRouter owned by `App.tsx` |
 | Icons | `lucide-react` |
+| 3D globe | `react-globe.gl` + `three` (ONLY in the lazy `/life` Gallery chunk) |
 | Font | Inter (sans) + Cormorant Garamond (serif) via Google Fonts |
 | Deployment | Vercel — `vercel.json` at project root |
 
@@ -186,38 +203,45 @@ npm run clean     # rm -rf dist
 
 ## Architecture — how the app works
 
-`App.tsx` owns a `BrowserRouter`. Two top-level routes:
+`App.tsx` owns a `BrowserRouter`. Three top-level routes (order matters: specific routes before the `/*` catch-all):
 
-- `path="/*"` → `<Portfolio />` — the main portfolio (entry gate + all sections)
-- `path="/journal/*"` → `<JournalApp />` — the trading journal
+- `path="/journal/*"` → `<JournalApp />` — the trading journal (lazy-loaded, code-split)
+- `path="/life/*"` → `<LifeApp />` — the personal "Beyond Work" area (lazy-loaded, code-split; see the "/life — personal area" section)
+- `path="/*"` → `<Portfolio />` — the main recruiter-facing portfolio
 
-### Entry gate pattern
+### No entry gate (removed in the recruiter-conversion rebuild)
 
-`Portfolio()` manages `isUnlocked` state. On load:
-1. `ParticleHero` (`src/components/ui/animated-hero.tsx`) fills the screen as a fixed overlay (`z-[9999]`).
-2. User clicks "Enter" → `isUnlocked = true`.
-3. The gate animates out (`exit: opacity 0, y: "-100vh"`, 1.2s).
-4. The main portfolio scrolls into view.
-5. `CursorParticles` canvas overlay activates after unlock.
+The old `ParticleHero` "Enter" gate and `CursorParticles` overlay were
+removed (they cost recruiters time and read gimmicky). The portfolio now
+renders straight into the Hero. There is no `isUnlocked` state.
 
-Do not remove the `AnimatePresence` wrapper around the gate — the exit animation depends on it.
+### Nav
 
-### Scroll-triggered nav icons
+`Portfolio()` tracks `scrolled` (window.scrollY > 40) to swap the fixed
+nav between transparent-on-hero and ivory-blur-on-scroll. The nav holds:
+the brand link ("Warren Lim Zhan Feng"), the `LimelightContactRail`
+(`NAV_CONTACTS`: Email, LinkedIn, GitHub, WhatsApp icons; neutral at
+rest, a sliding champagne "limelight" beam plus per-brand hover tint),
+the `NAV_LINKS` (Experience/Work/Resume anchors), a "Beyond Work" pill
+linking to `/life` (hidden below the `sm` breakpoint), and the "Trading
+Journal" pill linking to `/journal`. `ScrollProgress` renders a hairline
+read-progress bar plus a desktop section rail.
 
-`useScroll` from `motion/react` tracks `scrollY`. After 600px, contact icons (email, LinkedIn, phone) animate into the navbar via `AnimatePresence`. These link to `#contacts` inside the Hero section.
-
-### Section order
+### Section order (in `<main>`)
 
 ```
-<Hero />            → id="contacts" anchor inside here
-<Experience />      → id="experience"
-<Certificates />    → id="credentials"
-<CaseCompetition /> → no id
-<Projects />        → id="work"
-<ResumeViewer />    → id="resume"
+<Hero />          → id="top"          (dark surface, lamp backdrop)
+<Experience />    → id="experience"   (light)
+<Certificates />  → id="credentials"  (light)
+<Skills />        → id="skills"       (light)
+<SelectedWorks /> → id="work"         (light)
+<Recognition />   → id="recognition"  (dark surface)
+<ResumeViewer />  → id="resume"       (light)
 ```
 
-`TechnicalToolkit` exists in `src/components/` but is not rendered in `App.tsx`.
+Dark/light rhythm is deliberate: Hero and Recognition share the **exact
+same** `--color-surface`; all other sections are ivory. Both dark bands
+read as one composed system, not an accident.
 
 ### Journal routing
 
@@ -233,6 +257,10 @@ Do not remove the `AnimatePresence` wrapper around the gate — the exit animati
 
 Unauthenticated access redirects to `/journal/login`. After sign-in, Login navigates to `/journal/dashboard`.
 
+### /life routing
+
+`LifeApp` (`src/life/LifeApp.tsx`) is mounted at `/life/*`. It is NOT a nested router: it is a single page with a data-driven tab switcher (`LIFE_TABS`) synced to the URL hash (`/life#gallery`, `/life#golf`). Full design in the "/life — personal area" section.
+
 ---
 
 ## File structure
@@ -240,8 +268,8 @@ Unauthenticated access redirects to `/journal/login`. After sign-in, Login navig
 ```
 my-portfolio/
 ├── CLAUDE.md
-├── JOURNAL_INTEGRATION.md
-├── GOOGLE_AI_STUDIO_RESET_PROMPT.md
+├── README.md
+├── docs/                 ← journal API/schema notes + superpowers/specs
 ├── index.html
 ├── vite.config.ts
 ├── vercel.json
@@ -257,19 +285,34 @@ my-portfolio/
     │   ├── animations.ts   ← shared motion variants
     │   └── utils.ts        ← cn() helper
     ├── components/
-    │   ├── Hero.tsx
-    │   ├── Experience.tsx
-    │   ├── Certificates.tsx
-    │   ├── CaseCompetition.tsx
-    │   ├── Projects.tsx
-    │   ├── ResumeViewer.tsx
-    │   ├── AnimatedCard.tsx
-    │   ├── ImageOverlay.tsx
-    │   ├── TechnicalToolkit.tsx  ← built but not rendered
+    │   ├── Hero.tsx              ← dark hero, lamp backdrop, framed portrait (no backtest card)
+    │   ├── Experience.tsx        ← timeline; role = heading, company+date = sub
+    │   ├── Certificates.tsx      ← featured crown + category carousel
+    │   ├── Skills.tsx            ← three capability buckets (carousel)
+    │   ├── SelectedWorks.tsx     ← project cards + case dialog
+    │   ├── Recognition.tsx       ← dark band, EAMC win, stacked photos
+    │   ├── ResumeViewer.tsx      ← full CV, sticky left rail
+    │   ├── ImageOverlay.tsx      ← shared fullscreen image/PDF viewer
     │   └── ui/
-    │       ├── animated-hero.tsx
-    │       ├── cursor-particles.tsx
-    │       └── connect-with-us.tsx
+    │       ├── Section.tsx       ← editorial shell (index/eyebrow/title)
+    │       ├── Reveal.tsx        ← scroll-entrance primitive
+    │       ├── ScrollProgress.tsx
+    │       ├── StatBadge.tsx     ← big tabular metric (count opt-out via count={false})
+    │       ├── MagneticButton.tsx
+    │       ├── CarouselShell.tsx ← drag/arrow carousel (pointer-capture deferred)
+    │       ├── Hero3DStage.tsx
+    │       ├── LampBackdrop.tsx  ← hero ambient ceiling wash (wide ice-blue glow)
+    │       ├── icons.tsx         ← LinkedinIcon, GithubIcon, WhatsappIcon (brand glyphs)
+    │       └── connect-with-us.tsx ← ContactConnect (glass-disc panel; Email/LinkedIn/GitHub/WhatsApp)
+    ├── life/                     ← self-contained "Beyond Work" area (route /life)
+    │   ├── LifeApp.tsx           ← entry: tab state + #hash sync + REGISTRY
+    │   ├── life-content.ts       ← golf milestones + LIFE_TABS; re-exports gallery
+    │   ├── gallery.ts            ← COUNTRY_META + local-folder photo loader (import.meta.glob)
+    │   ├── vite-env.d.ts         ← vite/client types for import.meta.glob
+    │   ├── life.css              ← styles scoped under .life-root only
+    │   ├── photos/<country>/     ← LOCAL aesthetic photos (drop files here; see photos/README.md)
+    │   └── components/  (LifeNav, GlobeGallery, Globe, CountryList,
+    │                     PhotoGrid, Lightbox, GolfJourney, GolfMilestone)
     └── journal/                  ← git submodule → trading-journal repo
         ├── (submodule root has its own README, vite.config.ts, package.json
         │    for standalone deployment — those are not used by personal-website)
@@ -298,12 +341,22 @@ All displayed portfolio content is in `src/constants.ts`. Edit that file for tex
 
 | Export | Used by |
 |---|---|
-| `PERSONAL_INFO` | Hero, ContactConnect, nav |
-| `EXPERIENCE` | Experience |
-| `PROJECTS` | Projects |
-| `SKILLS` | TechnicalToolkit (unused) |
-| `CERTIFICATES` | Certificates |
-| `CASE_COMPETITION` | CaseCompetition |
+| `PERSONAL_INFO` | Hero, ContactConnect, nav (`NAV_CONTACTS`) |
+| `TRUST_MARKERS`, `ADJECTIVES` | Hero |
+| `EXPERIENCE` | Experience (`role` is the heading, `company`+`duration` the sub; `stat` no longer rendered) |
+| `PROJECTS` | SelectedWorks (`thumbnail` is shown as the glance image) |
+| `SKILLS` | Skills |
+| `CERTIFICATES`, `FEATURED_CERT_TITLE` | Certificates |
+| `CASE_COMPETITION` | Recognition |
+
+**`/life` content is separate from `constants.ts`:**
+
+| What | Where |
+|---|---|
+| Aesthetic photos | drop files in `src/life/photos/<country>/` (filename becomes the location label) |
+| Countries / globe pins | `src/life/gallery.ts` → `COUNTRY_META` (`id` must match the folder name) |
+| Golf milestones / clips | `src/life/life-content.ts` → `GOLF_MILESTONES` (set `media` to `{ type: "youtube", id: "..." }`) |
+| Add a section/tab | `src/life/life-content.ts` → `LIFE_TABS` + a component + a line in `REGISTRY` in `LifeApp.tsx` |
 
 ---
 
@@ -311,16 +364,31 @@ All displayed portfolio content is in `src/constants.ts`. Edit that file for tex
 
 ### Colour tokens (defined in `src/index.css` `@theme`)
 
+Refined palette (2026-05-17 redesign — replaced the brassy navy/gold scheme):
+
 | Token | Hex | Usage |
 |---|---|---|
-| `navy` | `#0F3057` | Primary text, headings, buttons, borders |
-| `gold` | `#C4964D` | Accent — labels, highlights, hover states |
-| `paper` | `#F9FAFB` | Background |
-| `ink` | `#1A1A1A` | Body text |
+| `navy` | `#0F2C4A` | Headings / primary text on ivory |
+| `navy-700` | `#0A2138` | Hover-darker navy |
+| `gold` | `#C7A878` | Muted champagne — the only accent |
+| `gold-bright` | `#D8C29A` | Champagne on the dark surface (lamp) |
+| `paper` | `#F7F5F0` | Warm ivory background |
+| `paper-2` | `#EFEDE6` | Warmer card / inset |
+| `ink` | `#16202C` | Body text on ivory |
+| `graphite` | `#5C636E` | Secondary text |
+| `line` | `#E3E1DA` | Hairlines |
+| `surface` | `#0A1A2F` | The single dark canvas (Hero + Recognition) |
+| `surface-2` | `#0F2238` | Inset cards on the dark canvas |
 
 These are Tailwind classes: `text-navy`, `bg-gold`, `border-gold/10`, etc.
 
 The journal uses separate shadcn CSS variables (`--background`, `--foreground`, etc.) in a `.dark` scope. The two systems do not conflict.
+
+### Hero atmosphere & contact panel (2026-05-17 polish)
+
+- **`LampBackdrop`** is a **wide ambient ceiling wash** (cool ice-blue `#4C7FB8`), full section width, fading out above the headline. The old conic "lamp cone + 1px filament" was removed (it banded a bright bar across the intro text). Keep it soft and wide; do not reintroduce a hard horizontal edge.
+- **`ContactConnect`** (`connect-with-us.tsx`) is a faithful adaptation of a reference "SocialConnect": glass icon discs, hover lift + `scale`, per-brand background + glow, an icon shake, label reveal, radial `::before`. The container glow is **champagne gold** (never the reference purple). Tone-aware (`tone="dark"` hero, `tone="light"` footer). Its CSS is one `<style href precedence>` block, React 19 dedupes it across the hero + footer instances. Contacts: Email, LinkedIn, GitHub, WhatsApp.
+- The Hero portrait no longer carries the floating "Backtest" chart card (it rendered nothing; removed 2026-05-17).
 
 ### Typography
 
@@ -399,23 +467,83 @@ Why it broke: Vercel's routing pipeline runs in this order:
 
 ## Certificates component
 
-`Certificates.tsx` renders a stacked card carousel. Position offset: `idx - currentStep`. Cards at offset > 2 are hidden. Clicking a non-active card brings it to front. Active card has a fullscreen button opening `ImageOverlay`.
+`Certificates.tsx` leads with the featured **crown credential** (FMVA®) as a large clickable card that opens `ImageOverlay`. Below it, category tabs (`CFI Executive Suite` / `Bloomberg Specialist` / `Analytical Skills`) switch the active set; each set renders in the shared `CarouselShell` (drag + arrow + keyboard scroll). Any card opens `ImageOverlay` with the full image and source PDF.
 
-Per-category active index is tracked in a `steps` array — each category remembers its position independently.
+`CarouselShell` defers pointer-capture until a real drag begins — capturing on pointerdown previously swallowed the card click so certificates would not open. Do not reinstate capture-on-pointerdown.
 
 ---
 
 ## ImageOverlay component
 
-Shared by `Certificates` (receives a `cert` object: `.image`, `.title`, `.issuer`, `.file`, `.date`) and `CaseCompetition` (receives just `src` string). Handles both via the `cert?.image || src` pattern.
+Shared by `Certificates` (receives a `cert` object: `.image`, `.title`, `.issuer`, `.file`, `.date`) and `Recognition` (receives just `src` string). Handles both via the `cert?.image || src` pattern.
+
+---
+
+## /life — personal area ("Beyond Work")
+
+Route `/life` (lazy, code-split). Everything lives in `src/life/`. The only pre-existing-file edits are 3 additive lines in `App.tsx` (lazy import, the `/life/*` route, the "Beyond Work" pill) plus the `react-globe.gl` + `three` deps. To drop the area entirely: delete `src/life/`, remove those 3 `App.tsx` lines, then `npm remove react-globe.gl three`.
+
+Single page, data-driven tabs (`LIFE_TABS`: Gallery, Golf) synced to the URL hash. Adding a future section is a content addition: a `LIFE_TABS` entry, a component, and one line in `REGISTRY` in `LifeApp.tsx`.
+
+### Adding aesthetic photos (no Vercel Blob)
+
+1. Put image files in `src/life/photos/<country-id>/`, e.g. `src/life/photos/japan/kyoto-fushimi-inari.jpg`.
+2. The filename becomes the on-photo location label: `kyoto-fushimi-inari.jpg` shows as "Kyoto Fushimi Inari". A leading `01-` controls order; a trailing `-2` just keeps names unique. Files sort by name.
+3. Supported: `.jpg .jpeg .png .webp .avif`. Keep them web-sized (about 2000px on the long edge, 200 to 600 KB): they live in git and ship in the deploy.
+4. No code change. `import.meta.glob` in `gallery.ts` picks them up on the next dev reload / build.
+5. New country: add `{ id, name, lat, lng, order }` to `COUNTRY_META` in `gallery.ts` (the `id` must equal the folder name), then create that folder. A country with no photos yet still appears on the globe with a tasteful "Coming soon" state. Full notes: `src/life/photos/README.md`.
+
+### Adding golf clips (YouTube), step-by-step
+
+1. youtube.com → **Create** (top-right) → **Upload video**.
+2. Select the clip, give it a title.
+3. On the Visibility step choose **Unlisted** (NOT Private: Private videos cannot be embedded; Unlisted means only people with the link or the embed can see it). Save/Publish.
+4. Open the video and copy its ID from the URL: in `https://www.youtube.com/watch?v=ABC123xyz` the ID is `ABC123xyz` (for a `https://youtu.be/ABC123xyz` link it is the part after the slash).
+5. In `src/life/life-content.ts`, find the milestone in `GOLF_MILESTONES` and set its media to `media: { type: "youtube", id: "ABC123xyz" },`.
+6. Done. The still is taken from the YouTube thumbnail automatically (no poster file needed) and the player only mounts when a visitor clicks play. Vimeo is the same with `{ type: "vimeo", id: "<numericId>" }` (add an optional `poster:` for Vimeo, its thumbnail is not auto-derived).
+
+### Pending content / TODO (Warren to provide; recorded 2026-05-18)
+
+- [ ] **Aesthetic photos** — drop image files into `src/life/photos/<country>/` for each country: `singapore`, `japan`, `italy`, `switzerland`, `new-zealand`, `south-korea`. Add any new country to `COUNTRY_META` in `gallery.ts` (the `id` must equal the folder name), then create that folder. Filename becomes the on-photo location label. Until added, each country shows the "Coming soon" empty state.
+- [ ] **Golf clips** — upload each clip to YouTube as **Unlisted**, then either give the video IDs to wire into `GOLF_MILESTONES` or set each milestone's `media: { type: "youtube", id: "..." }` in `life-content.ts`.
+- **Layout is intentionally NOT finalised.** Once the real photos/clips are in, Claude decides the precise arrangement, gallery grid density (uniform vs masonry), per-country ordering, lightbox behaviour, and the golf media layout, scaled to the actual asset count. Do not lock a fixed layout before the real assets exist.
+- **PUSH HOLD (active, set 2026-05-18):** Warren is assembling photos/clips on his computer. **Commit locally only. Do NOT push anything to `origin` — not the preview branch, not `main`.** Nothing reaches GitHub or the Vercel preview until Warren explicitly says "push everything" (a single consolidated push at the end). This fully overrides Steps 7 and 8 of the "Automatic GitHub workflow" until Warren lifts the hold. Local `git commit` after each verified change is still fine (keeps work safe for the eventual one push).
+
+### Behaviour notes
+
+- The Gallery globe (`react-globe.gl`) is guarded: skipped under `prefers-reduced-motion` or when WebGL is unavailable; the country chips perform the identical selection (and are the keyboard path).
+- `src/life/vite-env.d.ts` pulls in `vite/client` types so `import.meta.glob` type-checks under `tsc --noEmit`.
+- `src/life/` imports nothing from `src/components`; `index.css` is untouched (styles are scoped in `src/life/life.css` under `.life-root`).
 
 ---
 
 ## Known issues
 
-- `TechnicalToolkit` is built but not rendered in `App.tsx`. Safe to add or leave out.
-- `AnimatedCard` is imported in `Projects.tsx` but not actually used in the render output. Can be integrated or removed.
-- Portfolio nav has unused lucide imports (`X`, `Mail`, `Linkedin`) — contact icons use image files from `public/`, not lucide.
+- `EXPERIENCE[].stat` is still in `constants.ts` but no longer rendered (the Experience left rail was removed). Harmless; data kept for possible reuse.
+- The journal bundle triggers a Vite "chunk > 500 kB" warning at build. Pre-existing and benign — the journal is lazy-loaded and route-split off the portfolio's initial bundle.
+- `lucide-react` has no WhatsApp glyph and its `Linkedin` export is deprecated; both live as local glyphs in `src/components/ui/icons.tsx` (alongside `GithubIcon`).
+- The `/life` Gallery globe (`react-globe.gl` + `three`) builds a ~1.8 MB chunk. **Benign**: it is lazy + code-split, loads only on the Gallery tab when WebGL is available and reduced-motion is off, and is absent from the main and journal bundles. The main `index` chunk is unchanged by `/life`.
+- `/life` ships with placeholder media: gallery countries show a "Coming soon" empty state until photos are added to `src/life/photos/`; golf milestones use picsum stills until clips are wired (`{ type: "youtube", id }`).
+- A `/favicon.ico` 404 in the console is pre-existing and unrelated to any feature.
+
+---
+
+## Latest Session Summary — Redesign polish + `/life` area
+
+*Recorded 2026-05-18. Newest summary; the journal note below remains valid.*
+
+### Hero / contact polish
+- `LampBackdrop` rebuilt as a wide ice-blue ambient ceiling wash (was a hard conic lamp that banded a bar over the intro text).
+- `ContactConnect` rebuilt to the reference "SocialConnect" design (glass discs, hover lift+scale, per-brand glow, icon shake, label reveal); champagne-gold container glow; tone-aware; GitHub contact added; `GithubIcon` added to `ui/icons.tsx`. The nav rail is `LimelightContactRail` with `NAV_CONTACTS` (Email, LinkedIn, GitHub, WhatsApp).
+- The Hero portrait "Backtest" card was removed.
+
+### `/life` — "Beyond Work" personal area
+- New route `/life/*` → lazy `src/life/LifeApp.tsx`; a "Beyond Work" nav pill was added in `App.tsx`. Those 3 `App.tsx` lines plus the `react-globe.gl` / `three` deps are the only pre-existing-file touchpoints.
+- Self-contained `src/life/` (no imports from `src/components`; `index.css` untouched; styles scoped in `src/life/life.css`).
+- Single page, data-driven tabs (`LIFE_TABS`: Gallery, Golf) synced to the URL hash; future sections are content additions.
+- **Gallery**: 3D globe (`react-globe.gl`, lazy, WebGL/reduced-motion guarded with a chips fallback) of countries; pick a country, its photos fill the stage, opening a self-contained `Lightbox`. Photos are **local files** in `src/life/photos/<country>/` loaded via `import.meta.glob` (no Vercel Blob, decided against). Filename becomes the location label. An empty country shows a "Coming soon" state.
+- **Golf**: scrollytelling milestones (newbie to now) with sticky media on desktop; YouTube/Vimeo facade (iframe mounts only on click; the YouTube still is auto-derived from the thumbnail, no poster file needed).
+- Workflows for adding photos and golf clips: see the "/life — personal area" section above.
 
 ---
 

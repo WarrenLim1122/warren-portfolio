@@ -1,114 +1,105 @@
 /**
- * @license
- * SPDX-License-Identifier: Apache-2.0
+ * Experience — the trajectory as a research-note timeline.
+ *
+ * Reverse-chronological (newest at top, all visible, zero clicks). The
+ * role title leads as the heading; the company sits beneath it with the
+ * dates as an engaging "calendar" chip. A single drawn spine threads the
+ * roles together, each pinned by a filled node and a short connector tick
+ * so the eye tracks role → content cleanly.
  */
 
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
+import { Calendar } from "lucide-react";
 import { EXPERIENCE } from "../constants";
-import { Briefcase, Calendar } from "lucide-react";
-import { slideUpVariants, staggerContainer, revealVariants } from "../lib/animations";
-
-const entryVariants = {
-  hidden: { opacity: 0, y: 40 },
-  visible: (i: number) => ({
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring" as const, stiffness: 80, damping: 20, delay: i * 0.15 }
-  })
-};
-
-const bulletVariants = {
-  hidden: { opacity: 0, x: -16 },
-  visible: (i: number) => ({
-    opacity: 1,
-    x: 0,
-    transition: { type: "spring" as const, stiffness: 100, damping: 18, delay: 0.2 + i * 0.08 }
-  })
-};
+import { EASE_OUT_EXPO, VIEWPORT_ONCE } from "../lib/animations";
+import { Section } from "./ui/Section";
+import { Reveal } from "./ui/Reveal";
 
 export default function Experience() {
+  const reduced = useReducedMotion();
+
   return (
-    <section id="experience" className="py-40 px-6 bg-white overflow-hidden">
-      <div className="max-w-4xl mx-auto">
+    <Section
+      id="experience"
+      index="01"
+      eyebrow="Professional History"
+      title="A buy-side trajectory, built deliberately."
+      description="From automating wealth-management workflows to incoming buy-side investment analysis, each role chosen to compound technical and analytical range."
+    >
+      <div className="relative md:pl-2">
+        {/* Spine */}
         <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.1 }}
-          variants={staggerContainer}
-          className="relative"
-        >
-          <motion.div variants={revealVariants} className="flex items-center gap-4 mb-24 justify-center md:justify-start">
-            <div className="w-14 h-14 rounded-2xl bg-gold/5 flex items-center justify-center text-gold border border-gold/10 shadow-sm">
-              <Briefcase size={28} />
-            </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-navy tracking-tight">Professional History.</h2>
-          </motion.div>
+          aria-hidden
+          className="absolute left-[5px] top-1 hidden w-px origin-top bg-gradient-to-b from-gold via-navy/25 to-transparent md:block"
+          style={{ height: "100%" }}
+          initial={reduced ? false : { scaleY: 0 }}
+          whileInView={reduced ? undefined : { scaleY: 1 }}
+          viewport={VIEWPORT_ONCE}
+          transition={{ duration: 1.3, ease: EASE_OUT_EXPO }}
+        />
 
-          <div className="relative">
-            {/* Timeline line — draws once on enter */}
-            <motion.div
-              initial={{ scaleY: 0 }}
-              whileInView={{ scaleY: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              style={{ originY: 0 }}
-              className="absolute left-6 md:left-6 top-4 w-[2px] h-full bg-gradient-to-b from-gold via-navy to-gray-100 hidden sm:block"
-            />
+        <div className="flex flex-col gap-16 md:gap-20">
+          {EXPERIENCE.map((exp, idx) => (
+            <Reveal key={exp.company} delay={idx * 0.05}>
+              <article className="relative md:pl-16">
+                {/* Node + connector tick */}
+                <span
+                  aria-hidden
+                  className="absolute left-0 top-2 hidden h-3 w-3 -translate-x-[5px] rounded-full bg-gold ring-4 ring-paper md:block"
+                />
+                <span
+                  aria-hidden
+                  className="absolute left-[6px] top-[15px] hidden h-px w-9 bg-line md:block"
+                />
 
-            <div className="space-y-40">
-              {EXPERIENCE.map((exp, idx) => (
-                <motion.div
-                  key={idx}
-                  custom={idx}
-                  variants={entryVariants}
-                  viewport={{ once: true }}
-                  className="relative pl-0 sm:pl-24"
-                >
-                  {/* Timeline dot */}
-                  <motion.div
-                    initial={{ scale: 0, opacity: 0 }}
-                    whileInView={{ scale: 1, opacity: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.3 + idx * 0.15 }}
-                    className="absolute left-4 md:left-[18px] top-3 w-5 h-5 rounded-full bg-white border-4 border-gold shadow-md z-10 hidden sm:block"
-                  />
+                <div className="max-w-3xl">
+                  <h3 className="font-display text-3xl font-semibold tracking-tight text-navy md:text-4xl">
+                    {exp.role}
+                  </h3>
 
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 w-full gap-4">
-                    <div className="space-y-2">
-                      <h4 className="text-4xl font-bold text-navy tracking-tight">{exp.company}</h4>
-                      <div className="flex items-center gap-3">
-                        <span className="text-gold font-black text-xs uppercase tracking-[0.2em] px-3 py-1 bg-gold/5 rounded-full border border-gold/10">
-                          {exp.role}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-gray-400 font-bold text-xs tracking-widest uppercase bg-gray-50 px-4 py-2 rounded-xl">
-                      <Calendar size={14} className="text-gray-300" />
+                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2.5">
+                    <span className="text-lg font-semibold text-navy/85 md:text-xl">
+                      {exp.company}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper-2/70 px-3 py-1 u-tabular text-[11px] font-medium text-graphite">
+                      <Calendar size={12} className="text-gold" />
                       {exp.duration}
-                    </div>
+                    </span>
                   </div>
 
-                  <ul className="grid grid-cols-1 gap-6">
-                    {exp.bullets.map((bullet, i) => (
-                      <motion.li
+                  <ul className="mt-7 flex flex-col gap-5">
+                    {exp.bullets.map((b, i) => (
+                      <li
                         key={i}
-                        custom={i}
-                        variants={bulletVariants}
-                        viewport={{ once: true }}
-                        className="text-gray-500 text-lg font-light leading-relaxed max-w-3xl flex items-start gap-5 group"
+                        className="flex gap-4 text-[15px] leading-relaxed text-graphite md:text-base"
                       >
-                        <div className="w-1.5 h-1.5 rounded-full bg-gold mt-3.5 flex-shrink-0 group-hover:scale-150 transition-transform duration-300 shadow-[0_0_10px_rgba(196,150,77,0.4)]" />
-                        <div className="group-hover:text-navy transition-colors duration-300">{bullet}</div>
-                      </motion.li>
+                        <span
+                          aria-hidden
+                          className="mt-2.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gold/60"
+                        />
+                        <span>{b}</span>
+                      </li>
                     ))}
                   </ul>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
+
+                  {exp.tools && (
+                    <div className="mt-7 flex flex-wrap gap-2.5">
+                      {exp.tools.map((t) => (
+                        <span
+                          key={t}
+                          className="rounded-full border border-line bg-paper-2/60 px-3.5 py-1.5 text-[11px] font-medium text-navy/70"
+                        >
+                          {t}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </article>
+            </Reveal>
+          ))}
+        </div>
       </div>
-    </section>
+    </Section>
   );
 }
-

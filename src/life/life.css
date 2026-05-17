@@ -1,0 +1,22 @@
+/*
+ * life.css — styles scoped ENTIRELY under .life-root. Imported only by
+ * LifeApp. This never edits or leaks into the portfolio's index.css; if
+ * /life is deleted, nothing here outlives it.
+ */
+
+.life-root {
+  scroll-behavior: smooth;
+  /* Warmer-than-portfolio selection accent */
+  --life-accent: #c7a878;
+}
+
+.life-root ::selection {
+  background: var(--life-accent);
+  color: #0a1a2f;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .life-root {
+    scroll-behavior: auto;
+  }
+}

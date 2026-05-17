@@ -1,63 +1,200 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
+ *
+ * Single source of truth for all portfolio content.
+ * Factual values are unchanged from the original; the data model is
+ * extended (optional fields) and recruiter-facing framing copy is added.
  */
 
-export const PERSONAL_INFO = {
+export interface PersonalInfo {
+  name: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  linkedin: string;
+  linkedinUrl: string;
+  /** Placeholder until Warren supplies the real profile link. */
+  github: string;
+  university: string;
+  tagline: string;
+  /** Recruiter-facing one-liner — Warren may edit freely. */
+  valueProp: string;
+  availability: string;
+  ethos: string;
+  headshot: string;
+}
+
+export const PERSONAL_INFO: PersonalInfo = {
   name: "Warren, Lim Zhan Feng",
   fullName: "Warren, Lim Zhan Feng",
   email: "warrenlimzf@gmail.com",
   phone: "+65 9454 0155",
   linkedin: "linkedin.com/in/warrenlimzf",
-  tagline: "Penultimate Banking and Finance Undergraduate at Nanyang Technological University",
+  linkedinUrl: "https://www.linkedin.com/in/warrenlimzf",
+  // PLACEHOLDER — Warren to confirm/replace with his real GitHub URL.
+  github: "https://github.com/WarrenLim1122",
+  university: "Nanyang Technological University",
+  tagline:
+    "Penultimate Banking and Finance Undergraduate at Nanyang Technological University",
+  valueProp:
+    "I model markets, value companies, and automate the analysis behind the call.",
+  availability:
+    "Open to 2027 graduate analyst programmes in asset management and investment banking.",
+  ethos:
+    "A finance undergraduate who came to the field with fresh eyes: versatile, open-minded, and driven to understand how capital actually shapes the world.",
   headshot: "/headshot.jpg",
 };
 
-export const EXPERIENCE = [
+/** Strongest proof, surfaced above the fold in the hero. */
+export const TRUST_MARKERS = [
+  "EAMC 2026 Champion",
+  "FMVA® Certified",
+  "Bloomberg Specialist",
+] as const;
+
+export const ADJECTIVES = ["Technical", "Analytical", "Versatile"] as const;
+
+export interface ExperienceEntry {
+  company: string;
+  role: string;
+  duration: string;
+  /** Pulled out as the big scannable figure (numeric counts up). */
+  stat?: { value: string; label: string };
+  tools?: string[];
+  bullets: string[];
+}
+
+// Reverse-chronological — newest first (timeline renders top-down).
+export const EXPERIENCE: ExperienceEntry[] = [
+  {
+    company: "Pinnacle Capital Asia",
+    role: "Investment Intern",
+    duration: "MAY to AUG 2026",
+    stat: { value: "Buy-side", label: "Investment Analysis" },
+    tools: ["Financial Modelling", "Market Research", "Asset Allocation"],
+    bullets: [
+      "Conduct market and company research, covering financial and industry analysis to identify investment opportunities.",
+      "Support the development of investment strategies based on market trends and asset-class performance.",
+      "Maintain and update financial models, databases, and analytical tools for investment decision-making.",
+      "Prepare presentations, client reports, and internal memos on portfolio performance and market developments.",
+    ],
+  },
   {
     company: "Whitman Independent Advisors",
     role: "Wealth Management Assistant",
-    duration: "MAY — AUG 2025",
+    duration: "MAY to AUG 2025",
+    stat: { value: "89%", label: "Efficiency Gain" },
+    tools: ["Power Automate", "AI Builder", "Excel VBA"],
     bullets: [
       "Automated fund factsheet data extraction using Power Automate and AI Builder, reducing manual processing time from 3 minutes to 20 seconds per sheet (89% efficiency gain).",
-      "Engineered an Excel VBA tool to automate cross-fund holdings analysis across 200+ unit trusts, slashing manual comparison time by 80% and enhancing visibility into institutional concentration risk."
-    ]
+      "Engineered an Excel VBA tool to automate cross-fund holdings analysis across 200+ unit trusts, slashing manual comparison time by 80% and enhancing visibility into institutional concentration risk.",
+    ],
   },
   {
     company: "PropNex Malaysia",
     role: "Real Estate Negotiator",
-    duration: "JAN — JUL 2024",
+    duration: "JAN to JUL 2024",
+    stat: { value: "25+", label: "Transactions Closed" },
+    tools: ["Market Benchmarking", "Pricing Strategy", "Yield Analysis"],
     bullets: [
       "Optimized pricing and negotiation strategies for 25+ high-value residential transactions through data-driven market benchmarking.",
-      "Identified and MATCHED Airbnb operators with high-potential assets, delivering an 8–12% improvement in projected rental yields."
-    ]
-  }
+      "Identified and matched Airbnb operators with high-potential assets, delivering an 8 to 12% improvement in projected rental yields.",
+    ],
+  },
 ];
 
-export const PROJECTS = [
+export interface Project {
+  title: string;
+  category: string;
+  thumbnail: string;
+  description: string;
+  file: string;
+  context: string;
+  methodology: string;
+  impact: string;
+}
+
+export const PROJECTS: Project[] = [
   {
     title: "Acesis Welfare And Reward Drivers (“AWARD”) ETF",
-    category: "Champion | Asset Management | EAMC 2026",
+    category: "Champion · Asset Management · EAMC 2026",
     thumbnail: "/acesis-icon.png",
-    description: "Architected a 50-stock globally diversified portfolio focused on 'Employee Welfare' (Social Pillar). Recorded 97.1% returns in back-testing, outperforming the MSCI World Social Leaders Index by 6.59% with a 0.94 Sharpe ratio.",
-    file: "/acesis-deck.pdf"
+    description:
+      "Architected a 50-stock globally diversified portfolio focused on 'Employee Welfare' (Social Pillar). Recorded 97.1% returns in back-testing, outperforming the MSCI World Social Leaders Index by 6.59% with a 0.94 Sharpe ratio.",
+    file: "/acesis-deck.pdf",
+    context:
+      "Built a fund thesis around the social pillar of ESG (employee welfare), a deliberately less-crowded, conviction-led angle for the Eurasia Asset Management Challenge.",
+    methodology:
+      "Constructed a 50-stock globally diversified portfolio, back-tested against the MSCI World Social Leaders Index, and evaluated risk-adjusted performance.",
+    impact:
+      "97.1% backtested return · +6.59% vs MSCI World Social Leaders · 0.94 Sharpe",
   },
   {
     title: "Sunway Healthcare Holdings Berhad (KLSE: SUNMED)",
-    category: "Equity Research | Case Study",
+    category: "Equity Research · SELL Initiation",
     thumbnail: "/sunway-icon.png",
-    description: "Initiated SELL recommendation on premium healthcare IPO (RM2.9bn valuation) with 37% downside target. Utilized DCF and scenario modelling to expose margin compression risks from rapid bed capacity expansion and rising staff costs.",
-    file: "/sunway-deck.pdf"
-  }
+    description:
+      "Initiated SELL recommendation on premium healthcare IPO (RM2.9bn valuation) with 37% downside target. Utilized DCF and scenario modelling to expose margin compression risks from rapid bed capacity expansion and rising staff costs.",
+    file: "/sunway-deck.pdf",
+    context:
+      "Independent equity research on a premium healthcare IPO carrying a RM2.9bn valuation.",
+    methodology:
+      "DCF and scenario modelling to stress margin compression from rapid bed-capacity expansion and rising staff costs.",
+    impact: "SELL initiation · 37% downside target · DCF + scenario modelling",
+  },
 ];
 
+export interface SkillGroup {
+  label: string;
+  items: string[];
+}
 
-export const SKILLS = [
-  { label: "Technical", items: ["S&P Capital IQ Pro", "Bloomberg Terminal", "Excel VBA", "Intermediate DCF & LBO Modelling"] },
-  { label: "Credentials", items: ["FMVA® Certification", "Bloomberg ESG Analysis", "Bloomberg Spreadsheet Specialist"] }
+// Regrouped into recruiter-legible buckets (same demonstrated capability).
+export const SKILLS: SkillGroup[] = [
+  {
+    label: "Valuation & Modelling",
+    items: [
+      "DCF & LBO Modelling",
+      "3-Statement Modelling",
+      "Comparable & Scenario Analysis",
+      "Equity Research & Initiation",
+    ],
+  },
+  {
+    label: "Data & Automation",
+    items: [
+      "Excel VBA Engineering",
+      "Power Automate",
+      "Microsoft AI Builder",
+      "Google Data Analytics",
+    ],
+  },
+  {
+    label: "Platforms & Tools",
+    items: [
+      "Bloomberg Terminal",
+      "S&P Capital IQ Pro",
+      "Bloomberg ESG Analysis",
+      "Advanced Excel",
+    ],
+  },
 ];
 
-export const CERTIFICATES = [
+export interface Certificate {
+  title: string;
+  issuer: string;
+  date: string;
+  file: string;
+  image: string;
+}
+
+export interface CertificateCategory {
+  category: string;
+  items: Certificate[];
+}
+
+export const CERTIFICATES: CertificateCategory[] = [
   {
     category: "CFI Executive Suite",
     items: [
@@ -99,13 +236,27 @@ export const CERTIFICATES = [
   },
 ];
 
-export const CASE_COMPETITION = {
+/** Title of the headline credential, featured large in the carousel. */
+export const FEATURED_CERT_TITLE =
+  "Financial Modeling & Valuation Analysis (FMVA)®";
+
+export interface CaseCompetition {
+  event: string;
+  placement: string;
+  teamCount: string;
+  team: string;
+  pullQuote: string;
+  quote: string;
+  images: string[];
+}
+
+export const CASE_COMPETITION: CaseCompetition = {
+  event: "Eurasia Asset Management Challenge 2026",
+  placement: "Champions",
+  teamCount: "1 of 101 teams",
   team: "Team Omicron",
-  quote: "Grateful for the opportunity to have worked with Team Omicron. Our collective effort resulted in being awarded the top place in the 2026 challenge.",
-  images: [
-    "/win-1.jpg",
-    "/win-2.jpg"
-  ]
+  pullQuote: "For it is in giving, that we receive.",
+  quote:
+    "Grateful for the opportunity to have worked with Team Omicron. Our collective effort resulted in being awarded the top place in the 2026 challenge.",
+  images: ["/win-1.jpg", "/win-2.jpg"],
 };
-
-

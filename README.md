@@ -1,6 +1,6 @@
 # Warren Lim | Personal Portfolio
 
-A personal portfolio site for a penultimate Banking & Finance undergraduate at Nanyang Technological University (NTU). Clean minimalism, Apple-standard UX. The site is the host shell for the trading-journal frontend at `/journal/*` while the journal still lives on this domain.
+A personal portfolio site for a penultimate Banking & Finance undergraduate at Nanyang Technological University (NTU). Clean minimalism, Apple-standard UX. The site is the host shell for the trading-journal frontend at `/journal/*` while the journal still lives on this domain. A separate self-contained personal area, "Beyond Work", lives at `/life` (a 3D globe photo gallery + a golf scrollytelling journey).
 
 **Live:** [warrenlimzf.com](https://warrenlimzf.com) — `/journal` route is the trade dashboard.
 **Stack:** React 19 · TypeScript · Tailwind CSS v4 · `motion/react` · Vite 6 · Vercel.
@@ -16,13 +16,17 @@ personal-website/
 ├── index.html · vite.config.ts · vercel.json · tsconfig.json · package.json
 ├── public/                  ← static assets (PDFs, headshot, icons, decks)
 └── src/
-    ├── App.tsx              ← BrowserRouter + portfolio shell + /journal route
+    ├── App.tsx              ← BrowserRouter; /journal, /life, /* (Portfolio) routes + nav
     ├── main.tsx
     ├── constants.ts         ← ALL portfolio content (text, images, links)
     ├── index.css            ← Tailwind theme + shadcn tokens (journal)
     ├── lib/                 ← animation variants + cn() helper
-    ├── components/          ← Hero, Experience, Certificates, Projects, Resume, etc.
-    │   └── ui/              ← animated-hero, cursor-particles, connect-with-us, ImageOverlay
+    ├── components/          ← Hero, Experience, Certificates, Skills, SelectedWorks, Recognition, ResumeViewer, ImageOverlay
+    │   └── ui/              ← Section, Reveal, ScrollProgress, StatBadge, MagneticButton, CarouselShell, LampBackdrop, limelight-nav, icons, connect-with-us
+    ├── life/                ← self-contained "Beyond Work" area (route /life)
+    │   ├── LifeApp.tsx · life-content.ts · gallery.ts · life.css
+    │   ├── photos/<country>/   ← LOCAL aesthetic photos (drop files here)
+    │   └── components/      ← LifeNav, GlobeGallery, Globe, CountryList, PhotoGrid, Lightbox, GolfJourney, GolfMilestone
     └── journal/             ← git submodule → trading-journal repo
 ```
 
@@ -49,46 +53,76 @@ Edit journal code directly in [`trading-journal`](https://github.com/WarrenLim11
 
 ## Site features
 
-- **Particle landing gate** — DOM-div grid particles translate toward the cursor with distance-based dampening; auto-mode sinusoidal animation when idle. Slides away on "Enter".
-- **Cursor overlay** — Low-opacity canvas particle field on the main portfolio reacts to mouse proximity.
-- **Hero layout** — Name + glass contact card on the left, headshot + CTAs on the right.
-- **Certificate carousel** — Stacked category cards (CFI / Bloomberg / Analytical Skills); arrow + swipe to cycle.
-- **Experience timeline** — Spring-physics scroll reveal with staggered bullets.
-- **Projects / Case portfolio** — Full-screen modal viewer for PDFs/images.
-- **Resume viewer** — Embedded PDF with download link.
+- **No landing gate** — opens straight into the Hero (the old particle gate and cursor overlay were removed as recruiter friction).
+- **Hero** — large full-colour headshot in a framed portrait, name + value prop on the left, a wide ice-blue ambient ceiling-wash backdrop, glass-disc contact panel.
+- **Nav** — brand, `LimelightContactRail` (Email/LinkedIn/GitHub/WhatsApp; neutral at rest, sliding champagne limelight beam + per-brand hover tint), section links, "Beyond Work" pill (`/life`), "Trading Journal" pill (`/journal`).
+- **Experience timeline** — scroll-reveal; role is the heading, company + date the subheading.
+- **Certificates** — featured crown credential + category carousel (drag / arrows / keyboard), each card opens the shared image+PDF overlay.
+- **Selected Works** — project cards with thumbnail glance media and a full case dialog (Context / Methodology / Outcome + source deck).
+- **Recognition** — dark band, EAMC championship, stacked full-width team photos.
+- **Resume viewer** — full-height CV preview with sticky download rail.
+- **Beyond Work** (`/life`) — self-contained personal area: a 3D globe gallery of countries visited (photos served from a local folder) and a scrollytelling golf journey (unlisted YouTube clips). Lazy + code-split, so it never weighs down the recruiter site.
 - **Trade journal** (`/journal/*`) — Login via Firebase Auth; dashboard with chart overview, sortable list, calendar, win-vs-lose stats, equity curve; deposit/withdrawal cashflows; strategies; risk calculator; settings.
 
 ## Component map
 
 | File | Responsibility |
 | :--- | :--- |
-| `App.tsx` | Route shell, landing gate, nav, `/journal/*` mount |
-| `Hero.tsx` | Identity, contact card, CTA buttons |
-| `Experience.tsx` | Animated career timeline |
-| `Certificates.tsx` | Unified certificate category carousel |
-| `CaseCompetition.tsx` | Team achievement gallery |
-| `Projects.tsx` | Deal / project portfolio |
-| `ResumeViewer.tsx` | CV preview & download |
-| `ui/animated-hero.tsx` | Particle landing screen |
-| `ui/cursor-particles.tsx` | Main-page cursor particle canvas |
-| `ui/connect-with-us.tsx` | Glass contact card |
-| `ui/ImageOverlay.tsx` | Full-screen PDF / image modal |
+| `App.tsx` | Route shell (`/journal/*`, `/life/*`, `/*`), nav (brand, `LimelightContactRail`, Beyond Work + Trading Journal pills) |
+| `Hero.tsx` | Identity, value prop, CTAs, contact panel, framed portrait, ambient lamp wash |
+| `Experience.tsx` | Career timeline (role = heading, company + date = sub) |
+| `Certificates.tsx` | Featured crown credential + category carousel |
+| `Skills.tsx` | Three capability buckets |
+| `SelectedWorks.tsx` | Project cards (thumbnail glance) + case dialog |
+| `Recognition.tsx` | Dark band, EAMC win, stacked team photos |
+| `ResumeViewer.tsx` | Full-height CV preview & download |
+| `ImageOverlay.tsx` | Full-screen image / PDF modal (shared) |
+| `ui/Section.tsx` | Editorial section shell (index/eyebrow/title) |
+| `ui/LampBackdrop.tsx` | Hero lamp light (motion/react, palette tokens) |
+| `ui/CarouselShell.tsx` | Drag/arrow carousel engine |
+| `ui/StatBadge.tsx` | Big tabular metric (`count={false}` for static) |
+| `ui/icons.tsx` | `LinkedinIcon`, `GithubIcon`, `WhatsappIcon` brand glyphs |
+| `ui/connect-with-us.tsx` | `ContactConnect` glass-disc panel, tone-aware (Email/LinkedIn/GitHub/WhatsApp) |
+| `ui/limelight-nav.tsx` | `LimelightContactRail` nav contact rail (sliding beam) |
+| `ui/` (other) | `Reveal`, `ScrollProgress`, `MagneticButton` |
+| `life/LifeApp.tsx` | `/life` entry: tabbed Gallery + Golf, hash-synced |
+| `life/gallery.ts` | Local-folder photo loader + `COUNTRY_META` |
+| `life/life-content.ts` | Golf milestones, `LIFE_TABS`; re-exports gallery |
 | `journal/src/JournalApp.tsx` | (submodule) Trade journal integration entry |
 
 ## Content updates
 
-All portfolio text lives in **`src/constants.ts`**. Edit strings there — no component changes for copy/contact/certificate/experience updates.
+All portfolio text lives in **`src/constants.ts`**. Edit strings there; no component changes for copy/contact/certificate/experience updates.
+
+`/life` content is separate from `constants.ts`: aesthetic photos are local files under `src/life/photos/<country>/` (the filename becomes the location label); countries and globe pins live in `src/life/gallery.ts` (`COUNTRY_META`); golf milestones and clip IDs live in `src/life/life-content.ts`. See "Beyond Work (`/life`) workflows" below.
 
 ## Theme
 
-| Token | Value |
-| :--- | :--- |
-| Background | `#FBFBFD` |
-| Primary (Navy) | `#0F3057` |
-| Accent (Gold) | `#C4964D` |
-| Landing bg | `#0a1628` |
+Refined palette (2026-05-17 redesign). Full token list + rationale: `CLAUDE.md` → Design system.
+
+| Token | Hex | Use |
+| :--- | :--- | :--- |
+| `navy` | `#0F2C4A` | Headings / primary text on ivory |
+| `gold` | `#C7A878` | Muted champagne (the only accent) |
+| `gold-bright` | `#D8C29A` | Champagne on the dark surface |
+| `paper` | `#F7F5F0` | Warm ivory background |
+| `ink` | `#16202C` | Body text |
+| `graphite` | `#5C636E` | Secondary text |
+| `surface` | `#0A1A2F` | The single dark canvas (Hero + Recognition) |
 
 The journal uses separate shadcn CSS variables in a `.dark` scope; the two systems do not conflict.
+
+## Beyond Work (`/life`) workflows
+
+**Add aesthetic photos** — drop image files into `src/life/photos/<country>/` (e.g. `src/life/photos/japan/kyoto-temple.jpg`). The filename becomes the location label shown on the photo (a leading `01-` controls order; a trailing `-2` just keeps names unique). Supported: `.jpg .jpeg .png .webp .avif`. Keep them web-sized (~2000px long edge, 200 to 600 KB) since they live in git. No code change is needed. For a new country, add `{ id, name, lat, lng, order }` to `COUNTRY_META` in `src/life/gallery.ts` and create the matching folder. Details: `src/life/photos/README.md`.
+
+**Add a golf clip (YouTube):**
+
+1. youtube.com → **Create** → **Upload video**; select the clip; give it a title.
+2. Visibility: choose **Unlisted** (not Private; Private videos cannot be embedded).
+3. Copy the video ID from the URL: `youtube.com/watch?v=ABC123` gives `ABC123` (or the part after `youtu.be/`).
+4. In `src/life/life-content.ts`, set that milestone's `media: { type: "youtube", id: "ABC123" }`.
+5. Done. The still is taken from the YouTube thumbnail automatically and the player only loads when a visitor clicks play.
 
 ## Local dev
 
