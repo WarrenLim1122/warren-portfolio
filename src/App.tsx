@@ -16,7 +16,7 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { PERSONAL_INFO } from "./constants";
 import { cn } from "./lib/utils";
-import { LinkedinIcon, WhatsappIcon } from "./components/ui/icons";
+import { LinkedinIcon, WhatsappIcon, GithubIcon } from "./components/ui/icons";
 import {
   LimelightContactRail,
   type LimelightItem,
@@ -77,6 +77,14 @@ const NAV_CONTACTS: LimelightItem[] = [
     label: "LinkedIn",
     href: PERSONAL_INFO.linkedinUrl,
     tint: "#0A66C2",
+    external: true,
+  },
+  {
+    id: "github",
+    Icon: GithubIcon,
+    label: "GitHub",
+    href: PERSONAL_INFO.github,
+    tint: "#6E7681",
     external: true,
   },
   {

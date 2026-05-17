@@ -1,17 +1,22 @@
 /**
- * ContactConnect — the slim, theme-aware contact row (email · LinkedIn ·
- * WhatsApp). The card layout is unchanged (Warren confirmed it reads
- * well); each card now carries the same "limelight" treatment as the
- * navbar rail: on hover/focus a beam in the contact's own brand colour
- * lights the top of the card with a soft downward cone, and the icon +
- * value tint to match (Email red, LinkedIn blue, WhatsApp green).
+ * ContactConnect — the contact "placeholder" panel (hero + footer).
+ *
+ * Adapted from a reference SocialConnect snippet into this project's
+ * stack (no styled-jsx / Next): a glowing 3D container holding circular
+ * icon buttons, each showing only the icon + the contact's name (no raw
+ * address / handle). The glow is white (tone-aware so it still reads on
+ * the light footer). The hover treatment is the project's own limelight
+ * (a brand-tinted beam + downward cone), NOT the reference's shake — and
+ * the icons are the existing glyphs (Mail / LinkedIn / WhatsApp) plus a
+ * new GitHub contact. Same component is rendered in the dark hero
+ * (tone="dark") and the light footer (tone="light").
  */
 
 import { type CSSProperties } from "react";
 import { Mail } from "lucide-react";
 import { PERSONAL_INFO } from "../../constants";
 import { cn } from "../../lib/utils";
-import { LinkedinIcon, WhatsappIcon } from "./icons";
+import { LinkedinIcon, WhatsappIcon, GithubIcon } from "./icons";
 
 const WA_NUMBER = PERSONAL_INFO.phone.replace(/\D/g, "");
 
@@ -22,7 +27,6 @@ const ITEMS = [
     id: "email",
     Icon: Mail,
     label: "Email",
-    value: PERSONAL_INFO.email,
     href: `mailto:${PERSONAL_INFO.email}`,
     external: false,
     tint: "#E5484D",
@@ -31,16 +35,25 @@ const ITEMS = [
     id: "linkedin",
     Icon: LinkedinIcon,
     label: "LinkedIn",
-    value: "in/warrenlimzf",
     href: PERSONAL_INFO.linkedinUrl,
     external: true,
     tint: "#0A66C2",
   },
   {
+    id: "github",
+    Icon: GithubIcon,
+    label: "GitHub",
+    href: PERSONAL_INFO.github,
+    external: true,
+    // GitHub's mark is monochrome — tone-aware so the limelight reads on
+    // both the dark hero and the light footer.
+    tint: "#FFFFFF",
+    tintLight: "#0F2C4A",
+  },
+  {
     id: "whatsapp",
     Icon: WhatsappIcon,
     label: "WhatsApp",
-    value: PERSONAL_INFO.phone,
     href: `https://wa.me/${WA_NUMBER}`,
     external: true,
     tint: "#25D366",
@@ -55,75 +68,78 @@ export function ContactConnect({
   className?: string;
 }) {
   const dark = tone === "dark";
+
   return (
     <div
       className={cn(
-        "flex flex-col gap-px overflow-hidden rounded-2xl border sm:flex-row",
-        dark ? "border-white/12 bg-white/[0.03]" : "border-line bg-white",
+        "relative overflow-hidden rounded-3xl border p-8 backdrop-blur-2xl transition-all duration-500 sm:p-10",
+        dark
+          ? "border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.015]"
+          : "border-line bg-gradient-to-br from-white to-paper-2",
         className,
       )}
+      style={{
+        boxShadow: dark
+          ? "0 0 46px rgba(255,255,255,0.10), 0 0 96px rgba(255,255,255,0.05)"
+          : "0 30px 70px -36px rgba(15,48,87,0.30)",
+      }}
     >
-      {ITEMS.map(({ id, Icon, label, value, href, external, tint }) => (
-        <a
-          key={id}
-          href={href}
-          target={external ? "_blank" : undefined}
-          rel={external ? "noreferrer" : undefined}
-          aria-label={`${label}: ${value}`}
-          style={{ "--tint": tint } as CSSProperties}
-          className={cn(
-            "group relative flex flex-1 items-center gap-3.5 overflow-hidden px-5 py-4 transition-colors duration-300",
-            dark ? "hover:bg-white/[0.06]" : "hover:bg-paper-2",
-          )}
-        >
-          {/* Limelight: beam + downward cone in the contact's brand colour */}
-          <span
-            aria-hidden
-            className="pointer-events-none absolute left-1/2 top-0 h-[3px] w-16 -translate-x-1/2 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
-            style={{
-              background: tint,
-              boxShadow: `0 6px 26px 1px ${tint}`,
-            }}
-          >
-            <span
-              className="absolute left-[-45%] top-[3px] h-16 w-[190%] [clip-path:polygon(10%_100%,30%_0,70%_0,90%_100%)]"
-              style={{
-                background: `linear-gradient(to bottom, color-mix(in srgb, ${tint} 32%, transparent), transparent)`,
-              }}
-            />
-          </span>
+      <div className="flex flex-wrap items-start justify-center gap-x-10 gap-y-8 sm:gap-x-14">
+        {ITEMS.map((it) => {
+          const tint =
+            !dark && "tintLight" in it ? it.tintLight : it.tint;
+          const { id, Icon, label, href, external } = it;
+          return (
+            <a
+              key={id}
+              href={href}
+              target={external ? "_blank" : undefined}
+              rel={external ? "noreferrer" : undefined}
+              aria-label={label}
+              style={{ "--tint": tint } as CSSProperties}
+              className="group relative flex flex-col items-center outline-none"
+            >
+              {/* Limelight: brand-tinted beam + downward cone (the
+                  project's lamp effect), on hover / keyboard focus */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -top-1 left-1/2 h-[3px] w-14 -translate-x-1/2 rounded-full bg-[var(--tint)] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+                style={{ boxShadow: "0 6px 26px 1px var(--tint)" }}
+              >
+                <span
+                  className="absolute left-[-45%] top-[3px] h-[72px] w-[190%] [clip-path:polygon(12%_100%,30%_0,70%_0,88%_100%)]"
+                  style={{
+                    background:
+                      "linear-gradient(to bottom, color-mix(in srgb, var(--tint) 34%, transparent), transparent)",
+                  }}
+                />
+              </span>
 
-          <span
-            className={cn(
-              "relative flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full transition-colors duration-300",
-              dark
-                ? "bg-white/[0.06] text-white/70"
-                : "bg-navy/[0.04] text-navy",
-              "group-hover:bg-[var(--tint)] group-hover:text-white",
-            )}
-          >
-            <Icon size={16} strokeWidth={1.9} />
-          </span>
-          <span className="relative flex min-w-0 flex-col">
-            <span
-              className={cn(
-                "u-eyebrow text-[9px]",
-                dark ? "text-white/40" : "text-graphite",
-              )}
-            >
-              {label}
-            </span>
-            <span
-              className={cn(
-                "truncate text-sm font-medium transition-colors duration-300 group-hover:text-[var(--tint)]",
-                dark ? "text-white/85" : "text-navy",
-              )}
-            >
-              {value}
-            </span>
-          </span>
-        </a>
-      ))}
+              {/* Icon disc */}
+              <span
+                className={cn(
+                  "relative flex h-[72px] w-[72px] items-center justify-center rounded-full border backdrop-blur-sm transition-all duration-300 group-hover:-translate-y-2.5 group-hover:text-[var(--tint)]",
+                  dark
+                    ? "border-white/10 bg-white/[0.05] text-white/75 shadow-[0_8px_32px_rgba(0,0,0,0.35)]"
+                    : "border-line bg-navy/[0.03] text-navy shadow-[0_8px_28px_rgba(15,48,87,0.10)]",
+                )}
+              >
+                <Icon size={26} strokeWidth={1.9} />
+              </span>
+
+              {/* Name only — no raw address / handle */}
+              <span
+                className={cn(
+                  "mt-3.5 text-sm font-medium opacity-70 transition-all duration-300 group-hover:translate-y-1 group-hover:opacity-100 group-hover:text-[var(--tint)]",
+                  dark ? "text-white" : "text-navy",
+                )}
+              >
+                {label}
+              </span>
+            </a>
+          );
+        })}
+      </div>
     </div>
   );
 }
