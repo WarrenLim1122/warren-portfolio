@@ -144,17 +144,23 @@ const STYLES = `
 }
 .cc-light .cc-disc svg { color: #0F2C4A; }
 .cc-light .cc-label { color: #0F2C4A; }
-/* Instagram only: keep the gradient disc a clean, crisp circle —
-   clip any bleed, drop the 1px ring over the gradient on hover, and
-   calm the white centre sheen so the edge/interior read smooth. */
+/* Instagram only: keep the gradient disc a clean, crisp circle.
+   The faint ring was the 1px border sitting over the gradient. Fix:
+   on hover the gradient is painted to the FULL border-box and the
+   border is made transparent, so the "border" is the exact same
+   gradient as the fill — there is no edge to see. overflow:hidden
+   clips the radial sheen to the circle; the sheen is also calmed. */
 .cc-ig .cc-disc {
   overflow: hidden;
-  background-clip: padding-box;
+  background-clip: border-box;
 }
 .cc-ig:hover .cc-disc,
-.cc-ig:focus-visible .cc-disc { border-color: transparent; }
+.cc-ig:focus-visible .cc-disc {
+  border-color: transparent;
+  background-origin: border-box;
+}
 .cc-ig:hover .cc-disc::before,
-.cc-ig:focus-visible .cc-disc::before { opacity: 0.3; }
+.cc-ig:focus-visible .cc-disc::before { opacity: 0.28; }
 @keyframes cc-shake {
   0%, 100% { transform: translateX(0) rotate(0); }
   20% { transform: translateX(-5px) rotate(-5deg); }

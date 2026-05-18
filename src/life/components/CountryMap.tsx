@@ -63,6 +63,12 @@ export function CountryMap({
   // both focuses and clicks doesn't toggle the tooltip back off.
   const [hoverPlace, setHoverPlace] = useState<string | null>(null);
   const [pinnedPlace, setPinnedPlace] = useState<string | null>(null);
+  // How many screen px one viewBox unit currently renders as. Labels
+  // are sized in px / renderScale so they read at a constant on-screen
+  // size on every country, regardless of how tall/narrow its viewBox
+  // is (a tall country like Thailand otherwise scales the SVG down so
+  // far that fixed viewBox-unit labels look tiny).
+  const [renderScale, setRenderScale] = useState(1);
 
   // View transform: screen = world * k + (tx, ty). State drives the
   // render; refs give the native listeners a non-stale view.
@@ -78,6 +84,25 @@ export function CountryMap({
     setView({ k: 1, tx: 0, ty: 0 });
     setPinnedPlace(null);
     setHoverPlace(null);
+  }, [country.id]);
+
+  // Track the SVG's rendered scale (viewBox unit -> screen px) so
+  // labels can be sized for a constant on-screen size.
+  useEffect(() => {
+    const el = svgRef.current;
+    if (!el) return;
+    const measure = () => {
+      const g = geoRef.current;
+      if (!g) return;
+      const r = el.getBoundingClientRect();
+      if (r.width < 1 || r.height < 1) return;
+      const s = Math.min(r.width / g.width, r.height / g.height);
+      if (s > 0 && Number.isFinite(s)) setRenderScale(s);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
   }, [country.id]);
 
   // Clamp the pan so the scaled map always covers the viewBox.
@@ -266,6 +291,8 @@ export function CountryMap({
             const ly = TY(r.cy);
             if (lx < -40 || lx > width + 40 || ly < -20 || ly > height + 20)
               return null;
+            // Constant ON-SCREEN size: px target / current render scale.
+            const fs = (hot ? 19 : 15) / renderScale;
             return (
               <text
                 key={r.id}
@@ -275,14 +302,14 @@ export function CountryMap({
                 dominantBaseline="middle"
                 style={{
                   fontFamily: "Inter, sans-serif",
-                  fontSize: hot ? 22 : 17,
+                  fontSize: fs,
                   fontWeight: 700,
                   letterSpacing: "0.02em",
-                  // Dark halo behind the glyphs so the (now larger)
-                  // labels stay readable over the busy region lines.
+                  // Dark halo behind the glyphs so the labels stay
+                  // readable over the busy region lines.
                   paintOrder: "stroke",
                   stroke: "rgba(8,20,36,0.55)",
-                  strokeWidth: 2.6,
+                  strokeWidth: Math.max(1.5, fs * 0.16),
                   strokeLinejoin: "round",
                   fill: hot
                     ? "rgba(247,245,240,0.98)"
