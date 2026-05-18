@@ -70,8 +70,10 @@ const ITEMS = [
     label: "Instagram",
     href: PERSONAL_INFO.instagramUrl,
     external: true,
-    bg: "#E1306C",
-    glow: "rgba(225, 48, 108, 0.6)",
+    // Real Instagram brand gradient (used as the disc background on
+    // hover/focus via --cc-bg; the glyph stays white for contrast).
+    bg: "linear-gradient(45deg,#feda75 0%,#fa7e1e 22%,#d62976 50%,#962fbf 74%,#4f5bd5 100%)",
+    glow: "rgba(214, 41, 118, 0.6)",
   },
 ] as const;
 

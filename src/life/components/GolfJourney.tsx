@@ -63,7 +63,7 @@ export function GolfJourney() {
         </p>
       </header>
 
-      <div className="mt-16 lg:grid lg:grid-cols-[4.75rem_0.92fr_1.04fr] lg:gap-x-10">
+      <div className="mt-16 lg:grid lg:grid-cols-[7.5rem_0.92fr_1.04fr] lg:gap-x-10">
         {/* Vertical scroll timeline — desktop only */}
         <div className="relative hidden lg:block">
           <div className="sticky top-24 flex h-[64vh] flex-col items-center">
@@ -115,17 +115,17 @@ export function GolfJourney() {
                       {on && (
                         <motion.span
                           key={m.id}
-                          className="pointer-events-none absolute left-full top-1/2 ml-3 flex -translate-y-1/2 items-center gap-2 whitespace-nowrap"
+                          className="pointer-events-none absolute right-full top-1/2 mr-3 flex -translate-y-1/2 items-center justify-end gap-2 whitespace-nowrap"
                           initial={
                             reduced
                               ? false
-                              : { opacity: 0, x: -10, scale: 0.85 }
+                              : { opacity: 0, x: 12, scale: 0.85 }
                           }
                           animate={{ opacity: 1, x: 0, scale: 1 }}
                           exit={
                             reduced
                               ? undefined
-                              : { opacity: 0, x: -10, scale: 0.85 }
+                              : { opacity: 0, x: 12, scale: 0.85 }
                           }
                           transition={{
                             type: "spring" as const,
@@ -133,10 +133,10 @@ export function GolfJourney() {
                             damping: 26,
                           }}
                         >
-                          <span className="h-px w-4 bg-gold/60" />
                           <span className="rounded-full bg-navy px-3 py-1 font-sans text-[11px] font-bold uppercase tracking-[0.16em] text-paper shadow-[0_8px_22px_-10px_rgba(15,44,74,0.65)]">
                             {m.date}
                           </span>
+                          <span className="h-px w-4 bg-gold/60" />
                         </motion.span>
                       )}
                     </AnimatePresence>

@@ -47,14 +47,19 @@ function webglAvailable() {
 
 export function GlobeGallery() {
   const reduced = useReducedMotion();
-  const [activeId, setActiveId] = useState(COUNTRIES[0].id);
+  // No country is active on first load — the globe just spins until the
+  // visitor actually picks one (pin or chip). Selection then drives the
+  // zoom / prompt / map flow.
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [stage, setStage] = useState<Stage>("globe");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const useGlobe = useMemo(() => !reduced && webglAvailable(), [reduced]);
-  const active = COUNTRIES.find((c) => c.id === activeId) ?? COUNTRIES[0];
-  const places = PLACES[activeId] ?? [];
-  const mapReady = hasCountryMap(activeId);
+  const active = activeId
+    ? COUNTRIES.find((c) => c.id === activeId) ?? null
+    : null;
+  const places = activeId ? PLACES[activeId] ?? [] : [];
+  const mapReady = activeId ? hasCountryMap(activeId) : false;
 
   function handleCountrySelect(id: string) {
     setActiveId(id);
@@ -115,13 +120,13 @@ export function GlobeGallery() {
                 {stage === "map" && useGlobe ? "Back to globe view" : "Back to globe"}
               </button>
               <span className="rounded-full border border-white/10 bg-surface/60 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-gold/80 backdrop-blur-sm">
-                {active.name}
+                {active?.name}
               </span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {stage === "map" ? (
+        {stage === "map" && active ? (
           <motion.div
             key={`map-${active.id}`}
             className={`w-full ${STAGE_H}`}
@@ -164,7 +169,7 @@ export function GlobeGallery() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.18, duration: 0.45 }}
                   >
-                    {active.name}
+                    {active?.name}
                   </motion.h3>
                   <motion.p
                     className="max-w-sm text-base leading-relaxed text-white/65"
@@ -220,7 +225,7 @@ export function GlobeGallery() {
                 >
                   <GlobeView
                     countries={COUNTRIES}
-                    activeId={activeId}
+                    activeId={activeId ?? ""}
                     onSelect={handleCountrySelect}
                     viewMode={stage === "zoomed" ? "focus" : "world"}
                     places={[]}
@@ -229,7 +234,7 @@ export function GlobeGallery() {
               ) : (
                 <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
                   <p className="font-serif text-2xl italic text-white/90">
-                    {active.name}
+                    {active?.name ?? "Around the world"}
                   </p>
                   <p className="text-xs uppercase tracking-[0.3em] text-white/40">
                     Choose a country below
@@ -243,7 +248,7 @@ export function GlobeGallery() {
         <div className="border-t border-white/10 bg-surface/70 px-5 py-5 backdrop-blur-sm">
           <CountryList
             countries={COUNTRIES}
-            activeId={activeId}
+            activeId={activeId ?? ""}
             onSelect={handleCountrySelect}
           />
         </div>
@@ -251,39 +256,53 @@ export function GlobeGallery() {
 
       {/* Selected country's photographs */}
       <motion.section
-        key={active.id}
+        key={activeId ?? "none"}
         className="mt-14"
         initial={reduced ? false : { opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="mb-7 flex items-baseline justify-between border-b border-line pb-4">
-          <h3 className="font-sans text-2xl font-bold tracking-tight text-navy">
-            {active.name}
-          </h3>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-graphite">
-            {active.photos.length > 0
-              ? `${active.photos.length} frames`
-              : "Coming soon"}
-          </span>
-        </div>
-        {active.photos.length > 0 ? (
-          <PhotoGrid photos={active.photos} onOpen={setLightboxIndex} />
+        {active ? (
+          <>
+            <div className="mb-7 flex items-baseline justify-between border-b border-line pb-4">
+              <h3 className="font-sans text-2xl font-bold tracking-tight text-navy">
+                {active.name}
+              </h3>
+              <span className="text-[11px] font-semibold uppercase tracking-[0.28em] text-graphite">
+                {active.photos.length > 0
+                  ? `${active.photos.length} frames`
+                  : "Coming soon"}
+              </span>
+            </div>
+            {active.photos.length > 0 ? (
+              <PhotoGrid photos={active.photos} onOpen={setLightboxIndex} />
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-line bg-paper-2/60 px-6 py-20 text-center">
+                <p className="font-serif text-xl italic text-navy">
+                  Photographs from {active.name} are on the way
+                </p>
+                <p className="max-w-sm text-sm leading-relaxed text-graphite">
+                  This country is mapped; the frames are still being
+                  chosen. Spin the globe or pick another place meanwhile.
+                </p>
+              </div>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-line bg-paper-2/60 px-6 py-20 text-center">
             <p className="font-serif text-xl italic text-navy">
-              Photographs from {active.name} are on the way
+              Pick a country to wander its frames
             </p>
             <p className="max-w-sm text-sm leading-relaxed text-graphite">
-              This country is mapped; the frames are still being chosen.
-              Spin the globe or pick another place meanwhile.
+              Spin the globe and tap a pin, or choose a country above. It
+              flies you in, then you can open the 2D map.
             </p>
           </div>
         )}
       </motion.section>
 
       <Lightbox
-        photos={active.photos}
+        photos={active?.photos ?? []}
         index={lightboxIndex}
         onClose={() => setLightboxIndex(null)}
         onIndex={setLightboxIndex}

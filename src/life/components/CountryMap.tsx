@@ -135,7 +135,11 @@ export function CountryMap({
       e.preventDefault();
       const p = toViewBox(e.clientX, e.clientY);
       if (!p) return;
-      const factor = e.deltaY < 0 ? 1.16 : 1 / 1.16;
+      // Gentle, magnitude-aware zoom: clamp the (mouse vs trackpad)
+      // delta and map it through a soft exponential so one notch is a
+      // small, predictable step instead of a jump.
+      const d = Math.max(-50, Math.min(50, e.deltaY));
+      const factor = Math.exp(-d * 0.0012);
       zoomAround(viewRef.current.k * factor, p.x, p.y);
     };
 
@@ -201,6 +205,7 @@ export function CountryMap({
 
   const zoomBy = (factor: number) =>
     zoomAround(view.k * factor, width / 2, height / 2);
+  const ZOOM_STEP = 1.4;
   const resetView = () => applyView(1, 0, 0);
   const atRest = k === 1 && tx === 0 && ty === 0;
 
@@ -391,7 +396,7 @@ export function CountryMap({
       <div className="absolute bottom-4 right-4 flex flex-col gap-2">
         <button
           type="button"
-          onClick={() => zoomBy(1.5)}
+          onClick={() => zoomBy(ZOOM_STEP)}
           disabled={k >= MAX_K}
           aria-label="Zoom in"
           className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-surface/80 text-white/75 backdrop-blur-sm transition-all hover:border-gold/50 hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"
@@ -400,7 +405,7 @@ export function CountryMap({
         </button>
         <button
           type="button"
-          onClick={() => zoomBy(1 / 1.5)}
+          onClick={() => zoomBy(1 / ZOOM_STEP)}
           disabled={k <= MIN_K}
           aria-label="Zoom out"
           className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-surface/80 text-white/75 backdrop-blur-sm transition-all hover:border-gold/50 hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"

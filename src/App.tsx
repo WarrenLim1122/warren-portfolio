@@ -113,6 +113,7 @@ const NAV_CONTACTS: LimelightItem[] = [
     href: PERSONAL_INFO.instagramUrl,
     tint: "#E1306C",
     external: true,
+    gradientIcon: true,
   },
 ];
 

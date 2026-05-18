@@ -17,12 +17,20 @@ import { cn } from "../../lib/utils";
 
 export type LimelightItem = {
   id: string;
-  Icon: ComponentType<{ size?: number; strokeWidth?: number; className?: string }>;
+  Icon: ComponentType<{
+    size?: number;
+    strokeWidth?: number;
+    className?: string;
+    gradient?: boolean;
+  }>;
   label: string;
   href: string;
   external?: boolean;
   /** Brand colour the beam + icon take on while active. */
   tint: string;
+  /** Paint the glyph with its own brand gradient (Instagram); the
+   *  hover-tint colour override is then skipped so the gradient holds. */
+  gradientIcon?: boolean;
 };
 
 export function LimelightContactRail({
@@ -55,7 +63,7 @@ export function LimelightContactRail({
       className={cn("relative flex items-center gap-1", className)}
       onMouseLeave={() => setActive(null)}
     >
-      {items.map(({ id, Icon, label, href, external, tint }, i) => (
+      {items.map(({ id, Icon, label, href, external, tint, gradientIcon }, i) => (
         <a
           key={id}
           ref={(el) => {
@@ -68,13 +76,15 @@ export function LimelightContactRail({
           onMouseEnter={() => moveTo(i)}
           onFocus={() => moveTo(i)}
           onBlur={() => setActive(null)}
-          style={active === i ? { color: tint } : undefined}
+          style={
+            active === i && !gradientIcon ? { color: tint } : undefined
+          }
           className={cn(
             "relative z-10 flex h-9 w-9 items-center justify-center rounded-full transition-all duration-300 hover:-translate-y-0.5 hover:scale-110",
             tone === "light" ? "text-graphite" : "text-white/55",
           )}
         >
-          <Icon size={17} strokeWidth={1.9} />
+          <Icon size={17} strokeWidth={1.9} gradient={gradientIcon} />
         </a>
       ))}
 
