@@ -205,24 +205,35 @@ export function ContactConnect({
         {STYLES}
       </style>
 
-      <div className="flex flex-wrap items-start justify-center gap-x-10 gap-y-8 sm:gap-x-14">
-        {ITEMS.map(({ id, Icon, label, href, external, bg, glow }) => (
-          <a
-            key={id}
-            href={href}
-            target={external ? "_blank" : undefined}
-            rel={external ? "noreferrer" : undefined}
-            aria-label={label}
-            className={cn("cc-icon", id === "instagram" && "cc-ig")}
-            style={
-              { "--cc-bg": bg, "--cc-glow": glow } as CSSProperties
-            }
+      {/* 3 over 2: two centred rows with the SAME gap, so the bottom
+          pair naturally nestles between the top three (the 2-item row
+          centred at ±half-pitch lands exactly on the gaps of the
+          3-item row). */}
+      <div className="flex flex-col items-center gap-y-8">
+        {[ITEMS.slice(0, 3), ITEMS.slice(3)].map((row, ri) => (
+          <div
+            key={ri}
+            className="flex justify-center gap-x-10 sm:gap-x-14"
           >
-            <span className="cc-disc">
-              <Icon size={32} strokeWidth={1.9} className="h-8 w-8" />
-            </span>
-            <span className="cc-label text-sm">{label}</span>
-          </a>
+            {row.map(({ id, Icon, label, href, external, bg, glow }) => (
+              <a
+                key={id}
+                href={href}
+                target={external ? "_blank" : undefined}
+                rel={external ? "noreferrer" : undefined}
+                aria-label={label}
+                className={cn("cc-icon", id === "instagram" && "cc-ig")}
+                style={
+                  { "--cc-bg": bg, "--cc-glow": glow } as CSSProperties
+                }
+              >
+                <span className="cc-disc">
+                  <Icon size={32} strokeWidth={1.9} className="h-8 w-8" />
+                </span>
+                <span className="cc-label text-sm">{label}</span>
+              </a>
+            ))}
+          </div>
         ))}
       </div>
     </div>
