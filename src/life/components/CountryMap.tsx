@@ -45,7 +45,7 @@ export function hasCountryMap(id: string): boolean {
 }
 
 const MIN_K = 1;
-const MAX_K = 4.5;
+const MAX_K = 9;
 
 export function CountryMap({
   country,
@@ -275,12 +275,18 @@ export function CountryMap({
                 dominantBaseline="middle"
                 style={{
                   fontFamily: "Inter, sans-serif",
-                  fontSize: hot ? 15 : 12.5,
+                  fontSize: hot ? 22 : 17,
                   fontWeight: 700,
-                  letterSpacing: "0.04em",
+                  letterSpacing: "0.02em",
+                  // Dark halo behind the glyphs so the (now larger)
+                  // labels stay readable over the busy region lines.
+                  paintOrder: "stroke",
+                  stroke: "rgba(8,20,36,0.55)",
+                  strokeWidth: 2.6,
+                  strokeLinejoin: "round",
                   fill: hot
-                    ? "rgba(247,245,240,0.95)"
-                    : "rgba(247,245,240,0.42)",
+                    ? "rgba(247,245,240,0.98)"
+                    : "rgba(247,245,240,0.6)",
                   transition: "fill .18s, font-size .18s",
                 }}
               >

@@ -84,7 +84,11 @@ export function LimelightContactRail({
             tone === "light" ? "text-graphite" : "text-white/55",
           )}
         >
-          <Icon size={17} strokeWidth={1.9} gradient={gradientIcon} />
+          <Icon
+            size={17}
+            strokeWidth={1.9}
+            gradient={gradientIcon ? active === i : undefined}
+          />
         </a>
       ))}
 

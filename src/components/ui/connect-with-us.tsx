@@ -144,6 +144,17 @@ const STYLES = `
 }
 .cc-light .cc-disc svg { color: #0F2C4A; }
 .cc-light .cc-label { color: #0F2C4A; }
+/* Instagram only: keep the gradient disc a clean, crisp circle —
+   clip any bleed, drop the 1px ring over the gradient on hover, and
+   calm the white centre sheen so the edge/interior read smooth. */
+.cc-ig .cc-disc {
+  overflow: hidden;
+  background-clip: padding-box;
+}
+.cc-ig:hover .cc-disc,
+.cc-ig:focus-visible .cc-disc { border-color: transparent; }
+.cc-ig:hover .cc-disc::before,
+.cc-ig:focus-visible .cc-disc::before { opacity: 0.3; }
 @keyframes cc-shake {
   0%, 100% { transform: translateX(0) rotate(0); }
   20% { transform: translateX(-5px) rotate(-5deg); }
@@ -196,7 +207,7 @@ export function ContactConnect({
             target={external ? "_blank" : undefined}
             rel={external ? "noreferrer" : undefined}
             aria-label={label}
-            className="cc-icon"
+            className={cn("cc-icon", id === "instagram" && "cc-ig")}
             style={
               { "--cc-bg": bg, "--cc-glow": glow } as CSSProperties
             }
