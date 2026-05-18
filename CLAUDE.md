@@ -304,7 +304,7 @@ my-portfolio/
     │       ├── Hero3DStage.tsx
     │       ├── LampBackdrop.tsx  ← hero ambient ceiling wash (wide ice-blue glow)
     │       ├── icons.tsx         ← LinkedinIcon, GithubIcon, WhatsappIcon, InstagramIcon (brand glyphs)
-    │       └── connect-with-us.tsx ← ContactConnect (glass-disc panel; Email/LinkedIn/GitHub/WhatsApp/Instagram, 3-over-2 staggered)
+    │       └── connect-with-us.tsx ← ContactConnect (glass-disc panel; Email/LinkedIn/GitHub/WhatsApp)
     ├── life/                     ← self-contained "Beyond Work" area (route /life)
     │   ├── LifeApp.tsx           ← entry: tab state + #hash sync + REGISTRY
     │   ├── life-content.ts       ← golf milestones + LIFE_TABS; re-exports gallery
@@ -388,7 +388,7 @@ The journal uses separate shadcn CSS variables (`--background`, `--foreground`, 
 ### Hero atmosphere & contact panel (2026-05-17 polish)
 
 - **`LampBackdrop`** is a **wide ambient ceiling wash** (cool ice-blue `#4C7FB8`), full section width, fading out above the headline. The old conic "lamp cone + 1px filament" was removed (it banded a bright bar across the intro text). Keep it soft and wide; do not reintroduce a hard horizontal edge.
-- **`ContactConnect`** (`connect-with-us.tsx`) is a faithful adaptation of a reference "SocialConnect": glass icon discs, hover lift + `scale`, per-brand background + glow, an icon shake, label reveal, radial `::before`. The container glow is **champagne gold** (never the reference purple). Tone-aware (`tone="dark"` hero, `tone="light"` footer). Its CSS is one `<style href precedence>` block, React 19 dedupes it across the hero + footer instances. Contacts: Email, LinkedIn, GitHub, WhatsApp, Instagram, laid out **3 over 2** as two centred flex rows with the same `gap-x`, so the bottom pair nestles in the gaps of the top three (centred 2-item row lands at ±half-pitch).
+- **`ContactConnect`** (`connect-with-us.tsx`) is a faithful adaptation of a reference "SocialConnect": glass icon discs, hover lift + `scale`, per-brand background + glow, an icon shake, label reveal, radial `::before`. The container glow is **champagne gold** (never the reference purple). Tone-aware (`tone="dark"` hero, `tone="light"` footer). Its CSS is one `<style href precedence>` block, React 19 dedupes it across the hero + footer instances. Contacts: Email, LinkedIn, GitHub, WhatsApp.
 - The Hero portrait no longer carries the floating "Backtest" chart card (it rendered nothing; removed 2026-05-17).
 
 ### Typography
