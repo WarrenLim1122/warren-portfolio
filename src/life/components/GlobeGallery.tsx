@@ -1,11 +1,13 @@
 /**
- * GlobeGallery — the Gallery tab. A 3D globe of the places visited; pick
- * a country (pin or chip) and the globe zooms in, showing city-level pins.
- * A Back button returns to the world view.
+ * GlobeGallery — the Gallery tab. A sharp 3D globe of the places
+ * visited; pick a country (pin or chip) and the stage swaps to an
+ * accurate 2D map of that country with curated place pins. A Back
+ * button returns to the globe.
  *
- * The globe is lazy + guarded: skipped entirely under reduced motion or
- * when WebGL is unavailable, falling back to the country chips, which
- * perform the identical selection.
+ * The globe is lazy + guarded: skipped under reduced motion or when
+ * WebGL is unavailable, falling back to the country chips. The 2D
+ * country map is pure SVG, so the drill-down works everywhere, even
+ * with no WebGL.
  */
 
 import { lazy, Suspense, useMemo, useState } from "react";
@@ -15,6 +17,7 @@ import { COUNTRIES, PLACES } from "../life-content";
 import { CountryList } from "./CountryList";
 import { PhotoGrid } from "./PhotoGrid";
 import { Lightbox } from "./Lightbox";
+import { CountryMap, hasCountryMap } from "./CountryMap";
 
 const GlobeView = lazy(() => import("./Globe"));
 
@@ -33,8 +36,8 @@ function webglAvailable() {
 
 export function GlobeGallery() {
   const reduced  = useReducedMotion();
-  const [activeId,  setActiveId]  = useState(COUNTRIES[0].id);
-  const [viewMode,  setViewMode]  = useState<"world" | "country">("world");
+  const [activeId, setActiveId] = useState(COUNTRIES[0].id);
+  const [view, setView] = useState<"globe" | "map">("globe");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const useGlobe = useMemo(() => !reduced && webglAvailable(), [reduced]);
@@ -43,11 +46,11 @@ export function GlobeGallery() {
 
   function handleCountrySelect(id: string) {
     setActiveId(id);
-    if (useGlobe) setViewMode("country");
+    setView(hasCountryMap(id) ? "map" : "globe");
   }
 
   function handleBack() {
-    setViewMode("world");
+    setView("globe");
   }
 
   return (
@@ -65,14 +68,14 @@ export function GlobeGallery() {
         </p>
       </header>
 
-      {/* Globe stage (or graceful fallback) */}
+      {/* Globe / country-map stage */}
       <div className="relative mt-10 overflow-hidden rounded-3xl border border-line bg-gradient-to-b from-surface to-surface-2">
 
-        {/* Back button + country label — visible only in country zoom mode */}
+        {/* Back button + country label — visible only in map view */}
         <AnimatePresence>
-          {useGlobe && viewMode === "country" && (
+          {view === "map" && (
             <motion.div
-              key="globe-ui-overlay"
+              key="map-ui-overlay"
               className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start justify-between px-5 pt-4"
               initial={{ opacity: 0, y: -8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -85,7 +88,7 @@ export function GlobeGallery() {
                 className="pointer-events-auto flex cursor-pointer items-center gap-1.5 rounded-full border border-white/20 bg-surface/80 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/75 backdrop-blur-sm transition-all hover:border-gold/50 hover:text-gold"
               >
                 <ArrowLeft className="h-3 w-3" />
-                Back
+                Back to globe
               </button>
               <span className="rounded-full border border-white/10 bg-surface/60 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-gold/80 backdrop-blur-sm">
                 {active.name}
@@ -95,32 +98,56 @@ export function GlobeGallery() {
         </AnimatePresence>
 
         <div className="h-[44vh] min-h-[320px] w-full sm:h-[56vh]">
-          {useGlobe ? (
-            <Suspense
-              fallback={
-                <div className="flex h-full items-center justify-center">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-gold" />
-                </div>
-              }
-            >
-              <GlobeView
-                countries={COUNTRIES}
-                activeId={activeId}
-                onSelect={handleCountrySelect}
-                viewMode={viewMode}
-                places={places}
-              />
-            </Suspense>
-          ) : (
-            <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
-              <p className="font-serif text-2xl italic text-white/90">
-                {active.name}
-              </p>
-              <p className="text-xs uppercase tracking-[0.3em] text-white/40">
-                Choose a country below
-              </p>
-            </div>
-          )}
+          <AnimatePresence mode="wait">
+            {view === "map" ? (
+              <motion.div
+                key={`map-${active.id}`}
+                className="h-full w-full"
+                initial={reduced ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={reduced ? undefined : { opacity: 0 }}
+                transition={{ duration: 0.35 }}
+              >
+                <CountryMap country={active} places={places} />
+              </motion.div>
+            ) : (
+              <motion.div
+                key="globe"
+                className="h-full w-full"
+                initial={reduced ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={reduced ? undefined : { opacity: 0 }}
+                transition={{ duration: 0.35 }}
+              >
+                {useGlobe ? (
+                  <Suspense
+                    fallback={
+                      <div className="flex h-full items-center justify-center">
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/15 border-t-gold" />
+                      </div>
+                    }
+                  >
+                    <GlobeView
+                      countries={COUNTRIES}
+                      activeId={activeId}
+                      onSelect={handleCountrySelect}
+                      viewMode="world"
+                      places={[]}
+                    />
+                  </Suspense>
+                ) : (
+                  <div className="flex h-full flex-col items-center justify-center gap-2 px-6 text-center">
+                    <p className="font-serif text-2xl italic text-white/90">
+                      {active.name}
+                    </p>
+                    <p className="text-xs uppercase tracking-[0.3em] text-white/40">
+                      Choose a country below
+                    </p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         <div className="border-t border-white/10 bg-surface/70 px-5 py-5 backdrop-blur-sm">

@@ -14,6 +14,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Globe, { type GlobeMethods } from "react-globe.gl";
 import type { Country, Place } from "../life-content";
 
+// Instant low-res globe, then swap to the sharper local 4K Blue Marble
+// (public domain, NASA Visible Earth) once it has preloaded.
+const LOW_RES_EARTH =
+  "//unpkg.com/three-globe/example/img/earth-blue-marble.jpg";
+const HI_RES_EARTH = "/life/earth-4k.jpg";
+
 type CountryMarker = Country & { _kind: "country"; active: boolean };
 type PlaceMarker   = Place   & { _kind: "place" };
 type AnyMarker     = CountryMarker | PlaceMarker;
@@ -117,6 +123,7 @@ export default function GlobeView({
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
   const wrapRef  = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
+  const [earthUrl, setEarthUrl] = useState(LOW_RES_EARTH);
 
   const countryMarkers = useMemo<CountryMarker[]>(
     () =>
@@ -148,7 +155,14 @@ export default function GlobeView({
     return () => ro.disconnect();
   }, []);
 
-  // One-time globe setup: disable zoom, start idle spin, set initial POV.
+  // Preload the sharper texture, then swap it in (no blank-globe flash).
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setEarthUrl(HI_RES_EARTH);
+    img.src = HI_RES_EARTH;
+  }, []);
+
+  // One-time globe setup: enable scroll-zoom (clamped), idle spin, POV.
   useEffect(() => {
     const g = globeRef.current;
     if (!g) return;
@@ -156,8 +170,14 @@ export default function GlobeView({
       autoRotate: boolean;
       autoRotateSpeed: number;
       enableZoom: boolean;
+      minDistance: number;
+      maxDistance: number;
+      zoomSpeed: number;
     };
-    ctrl.enableZoom      = false;
+    ctrl.enableZoom      = true;
+    ctrl.zoomSpeed       = 0.8;
+    ctrl.minDistance     = 125; // ~0.25 globe-radii above the surface
+    ctrl.maxDistance     = 520; // can't fly off into empty space
     ctrl.autoRotate      = true;
     ctrl.autoRotateSpeed = 0.45;
     g.pointOfView({ lat: 12, lng: 90, altitude: 2.4 }, 0);
@@ -190,7 +210,7 @@ export default function GlobeView({
           width={size.w}
           height={size.h}
           backgroundColor="rgba(0,0,0,0)"
-          globeImageUrl="//unpkg.com/three-globe/example/img/earth-blue-marble.jpg"
+          globeImageUrl={earthUrl}
           bumpImageUrl="//unpkg.com/three-globe/example/img/earth-topology.png"
           showAtmosphere
           atmosphereColor="#9ec6f0"

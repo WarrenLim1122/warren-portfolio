@@ -43,6 +43,9 @@ dist
 *.png
 .playwright-mcp/
 
+# /life dev-only raw geo source (large; generated output is committed instead)
+src/life/data-raw/
+
 # editor/system artifacts
 .Rhistory
 public.zip

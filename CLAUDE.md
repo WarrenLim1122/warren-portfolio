@@ -505,6 +505,27 @@ When Warren says a prompt like "update my life folder", "update my gallery page"
 6. **Build check**: run `npm run build` to confirm no regressions.
 7. **Report**: list which countries were updated, which new places were added, and their coordinates.
 
+### Adding a country's 2D region map + globe pin (triggered by "add this country", "I added a <country> folder", "do the same for <country>")
+
+The `/life` Gallery is: a sharp 3D globe (world view) → click a country (pin or chip) → the stage swaps to an **accurate 2D region map** of that country (`CountryMap.tsx`, pure inline SVG, no WebGL/API) with curated place pins that reveal a short blurb. Each country needs four things wired. Folder names in `src/life/photos/` are the source of truth for the country id; everything keys off that exact id.
+
+When Warren adds a folder to `src/life/photos/<id>/` and asks to "add this country", do ALL of the following, exactly as was done for Singapore (do not skip the geometry — a country without it has no 2D map):
+
+1. **Scan** `ls src/life/photos/*/` for the country ids that exist. The id is the literal folder name (kebab-case, e.g. `south-korea`).
+2. **Source boundary geometry (free, public, no API key):**
+   - Generic countries: **Natural Earth 10m Admin 1** (states/provinces), public domain. One-time dev download to the gitignored `src/life/data-raw/ne10m-admin1.geojson`:
+     `curl -s -o src/life/data-raw/ne10m-admin1.geojson https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson` (≈39 MB; Node may need `NODE_OPTIONS=--max-old-space-size=3072`). Filter features by `properties.admin === "<Country Name>"`.
+   - Singapore is special-cased to its ~55 planning areas (data.gov.sg URA Master Plan 2019, "No Sea", Singapore Open Data Licence) because Admin-1 does not subdivide a city-state. `src/life/data-raw/sg-planning-areas.geojson`.
+   - `src/life/data-raw/` is **dev-only and gitignored** (large). Only the small generated output is committed.
+3. **Add a job** to `JOBS` in `scripts/build-life-geometry.ts`: `{ src, out: "src/life/regions/<id>.ts", exportName: "<ID>_GEOMETRY", nameProp: "name_en", nameAltProp: "name", filter: { prop: "admin", value: "<Country>" }, stripRe?: / Prefecture$/, source: NE_SRC, width: 1000, pad: 24, simplifyTol, minAreaPx }`. Tune `simplifyTol` (≈0.9–1.5; higher = smaller file, less detail) and `minAreaPx` to keep the generated `.ts` roughly ≤ ~50 KB. Then run `NODE_OPTIONS=--max-old-space-size=3072 npx tsx scripts/build-life-geometry.ts`. This is **dev-only**, NOT part of `npm run build`. It writes `src/life/regions/<id>.ts` (committed).
+4. **Register** the geometry in `src/life/components/CountryMap.tsx`: import `<ID>_GEOMETRY` and add `"<id>": <ID>_GEOMETRY` to the `GEOMETRY` map.
+5. **`COUNTRY_META`** in `src/life/gallery.ts`: add `{ id, name, lat, lng, order, zoomAlt }` (id MUST equal the photo folder name). Remove entries whose photo folder Warren deleted.
+6. **Curated places** in `src/life/places-data.ts`: add `<id>: Place[]` with 5–6 notable places, each `{ id, label, lat, lng, blurb }`. Draft the blurbs from general knowledge (one short line, **no em/en dashes** per the standing copy rule); Warren personalises later. `lat/lng` must be real so the pin projects onto the SVG. Empty `[]` is acceptable until curated. Remove keys for deleted folders.
+7. **Verify**: `npm run lint` (zero errors) and `npm run build` (passes), then load `localhost:3000/life`, select the country, confirm the shape is recognisable, labels read, pins land, and the blurb tooltip opens. Watch for far-flung territories stretching the bounding box (tall countries render small with side margins — a known, accepted layout trade-off; note it, don't block).
+8. **Report**: countries added/removed, region counts, generated file sizes, and the resulting lazy `LifeApp` chunk size (it is code-split off the main bundle, so growth there does not affect the recruiter-facing initial load — but keep it reasonable).
+
+Notes: the globe texture is the vendored public-domain NASA Blue Marble at `public/life/earth-4k.jpg` (4096×2048, the device-safe ceiling — do NOT ship >4096-wide, many mobile GPUs cap there). Globe scroll-zoom is enabled with clamped min/max distance. `CountryMap` works without WebGL, so the country drill-down is the robust path even when the globe is skipped.
+
 ### Adding golf clips (YouTube), step-by-step
 
 1. youtube.com → **Create** (top-right) → **Upload video**.
@@ -516,7 +537,7 @@ When Warren says a prompt like "update my life folder", "update my gallery page"
 
 ### Pending content / TODO (Warren to provide; recorded 2026-05-18)
 
-- [ ] **Aesthetic photos** — drop image files into `src/life/photos/<country>/` for each country: `singapore`, `japan`, `italy`, `switzerland`, `new-zealand`, `south-korea`. Add any new country to `COUNTRY_META` in `gallery.ts` (the `id` must equal the folder name), then create that folder. Filename becomes the on-photo location label. Until added, each country shows the "Coming soon" empty state.
+- [ ] **Aesthetic photos** — drop image files into `src/life/photos/<country>/` for the current countries: `singapore`, `malaysia`, `thailand`, `china`, `japan` (each already has an accurate 2D region map + curated pins; only photos are pending). Filename becomes the on-photo location label. Until added, each country shows the "Coming soon" empty state. To add a NEW country, follow "Adding a country's 2D region map + globe pin" above.
 - [ ] **Golf clips** — upload each clip to YouTube as **Unlisted**, then either give the video IDs to wire into `GOLF_MILESTONES` or set each milestone's `media: { type: "youtube", id: "..." }` in `life-content.ts`.
 - **Layout is intentionally NOT finalised.** Once the real photos/clips are in, Claude decides the precise arrangement, gallery grid density (uniform vs masonry), per-country ordering, lightbox behaviour, and the golf media layout, scaled to the actual asset count. Do not lock a fixed layout before the real assets exist.
 
