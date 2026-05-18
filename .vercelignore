@@ -1,8 +1,0 @@
-node_modules
-dist
-.git
-.superpowers
-.playwright-mcp
-src/life/data-raw
-*.log
-.DS_Store
