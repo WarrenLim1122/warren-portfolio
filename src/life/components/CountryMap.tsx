@@ -5,12 +5,23 @@
  * palette, with curated place pins that reveal a short blurb on
  * hover / focus / tap.
  *
+ * Enlargeable: zoom in / out (buttons, scroll wheel toward the cursor)
+ * and drag to pan. Only the country GEOMETRY scales; region labels,
+ * place pins and tooltips are re-projected through the same transform
+ * but drawn at a CONSTANT size, so zooming in never squeezes the words,
+ * it just makes the map bigger underneath them.
+ *
+ * Wheel / drag use native non-passive listeners (a React onWheel is
+ * passive at the root, so preventDefault would not hold and the page
+ * would scroll while zooming).
+ *
  * Geometry is registered per country in GEOMETRY below. Countries with
  * no geometry yet return null so GlobeGallery can fall back gracefully.
  */
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
+import { Plus, Minus, Maximize2 } from "lucide-react";
 import type { Country, Place } from "../life-content";
 import {
   SINGAPORE_GEOMETRY,
@@ -33,6 +44,9 @@ export function hasCountryMap(id: string): boolean {
   return id in GEOMETRY;
 }
 
+const MIN_K = 1;
+const MAX_K = 4.5;
+
 export function CountryMap({
   country,
   places,
@@ -42,30 +56,164 @@ export function CountryMap({
 }) {
   const reduced = useReducedMotion();
   const geo = GEOMETRY[country.id];
+  const svgRef = useRef<SVGSVGElement | null>(null);
+
   const [hoverRegion, setHoverRegion] = useState<string | null>(null);
   // Transient (pointer/focus) vs sticky (click/keyboard) so a tap that
   // both focuses and clicks doesn't toggle the tooltip back off.
   const [hoverPlace, setHoverPlace] = useState<string | null>(null);
   const [pinnedPlace, setPinnedPlace] = useState<string | null>(null);
 
+  // View transform: screen = world * k + (tx, ty). State drives the
+  // render; refs give the native listeners a non-stale view.
+  const [view, setView] = useState({ k: 1, tx: 0, ty: 0 });
+  const viewRef = useRef(view);
+  viewRef.current = view;
+
+  const geoRef = useRef(geo);
+  geoRef.current = geo;
+
+  // Reset whenever the country changes.
+  useEffect(() => {
+    setView({ k: 1, tx: 0, ty: 0 });
+    setPinnedPlace(null);
+    setHoverPlace(null);
+  }, [country.id]);
+
+  // Clamp the pan so the scaled map always covers the viewBox.
+  const clampView = useCallback(
+    (k: number, tx: number, ty: number) => {
+      const g = geoRef.current;
+      if (!g) return { k, tx: 0, ty: 0 };
+      const ck = Math.min(MAX_K, Math.max(MIN_K, k));
+      const cx = Math.min(0, Math.max(g.width * (1 - ck), tx));
+      const cy = Math.min(0, Math.max(g.height * (1 - ck), ty));
+      return { k: ck, tx: cx, ty: cy };
+    },
+    [],
+  );
+
+  const applyView = useCallback(
+    (k: number, tx: number, ty: number) => setView(clampView(k, tx, ty)),
+    [clampView],
+  );
+
+  // Client point -> viewBox coords (respecting xMidYMid-meet letterbox).
+  const toViewBox = useCallback((clientX: number, clientY: number) => {
+    const el = svgRef.current;
+    const g = geoRef.current;
+    if (!el || !g) return null;
+    const r = el.getBoundingClientRect();
+    const s = Math.min(r.width / g.width, r.height / g.height);
+    const ox = (r.width - g.width * s) / 2;
+    const oy = (r.height - g.height * s) / 2;
+    return {
+      x: (clientX - r.left - ox) / s,
+      y: (clientY - r.top - oy) / s,
+      s,
+    };
+  }, []);
+
+  const zoomAround = useCallback(
+    (nextK: number, vbX: number, vbY: number) => {
+      const { k, tx, ty } = viewRef.current;
+      const ck = Math.min(MAX_K, Math.max(MIN_K, nextK));
+      const w0 = (vbX - tx) / k;
+      const h0 = (vbY - ty) / k;
+      applyView(ck, vbX - w0 * ck, vbY - h0 * ck);
+    },
+    [applyView],
+  );
+
+  // Native non-passive wheel + drag-to-pan, bound once per country.
+  useEffect(() => {
+    const el = svgRef.current;
+    const g = geoRef.current;
+    if (!el || !g) return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const p = toViewBox(e.clientX, e.clientY);
+      if (!p) return;
+      const factor = e.deltaY < 0 ? 1.16 : 1 / 1.16;
+      zoomAround(viewRef.current.k * factor, p.x, p.y);
+    };
+
+    let drag: { x: number; y: number; on: boolean } | null = null;
+
+    const onDown = (e: PointerEvent) => {
+      if (viewRef.current.k <= 1) return;
+      drag = { x: e.clientX, y: e.clientY, on: false };
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!drag) return;
+      const p = toViewBox(0, 0);
+      const s = p?.s ?? 1;
+      const dx = (e.clientX - drag.x) / s;
+      const dy = (e.clientY - drag.y) / s;
+      if (!drag.on && Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y) > 3) {
+        drag.on = true;
+        el.setPointerCapture(e.pointerId);
+        el.style.cursor = "grabbing";
+      }
+      if (!drag.on) return;
+      e.preventDefault();
+      drag.x = e.clientX;
+      drag.y = e.clientY;
+      const v = viewRef.current;
+      applyView(v.k, v.tx + dx, v.ty + dy);
+    };
+    const onUp = (e: PointerEvent) => {
+      if (drag?.on && el.hasPointerCapture(e.pointerId))
+        el.releasePointerCapture(e.pointerId);
+      drag = null;
+      el.style.cursor = viewRef.current.k > 1 ? "grab" : "default";
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: false });
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointermove", onMove, { passive: false });
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
+    };
+  }, [country.id, toViewBox, zoomAround, applyView]);
+
   if (!geo) return null;
 
   const { width, height, proj, regions } = geo;
+  const { k, tx, ty } = view;
   const projectX = (lng: number) => lng * proj.sx + proj.ox;
   const projectY = (lat: number) => lat * proj.sy + proj.oy;
+
+  // World point -> on-canvas (post-transform) point.
+  const TX = (x: number) => x * k + tx;
+  const TY = (y: number) => y * k + ty;
 
   // Tooltip card size in viewBox units.
   const TW = 320;
   const TH = 96;
 
+  const zoomBy = (factor: number) =>
+    zoomAround(view.k * factor, width / 2, height / 2);
+  const resetView = () => applyView(1, 0, 0);
+  const atRest = k === 1 && tx === 0 && ty === 0;
+
   return (
-    <div className="flex h-full w-full items-center justify-center p-4 sm:p-6">
+    <div className="relative flex h-full w-full items-center justify-center p-4 sm:p-6">
       <svg
+        ref={svgRef}
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="xMidYMid meet"
-        className="h-full w-full"
+        className="h-full w-full touch-none select-none"
         role="group"
         aria-label={`Map of ${country.name} with notable places`}
+        style={{ cursor: k > 1 ? "grab" : "default" }}
       >
         <defs>
           <filter id="pin-glow" x="-60%" y="-60%" width="220%" height="220%">
@@ -79,8 +227,8 @@ export function CountryMap({
           </filter>
         </defs>
 
-        {/* Regions */}
-        <g>
+        {/* Regions — the only layer that scales with zoom */}
+        <g transform={`translate(${tx} ${ty}) scale(${k})`}>
           {regions.map((r) => {
             const hot = hoverRegion === r.id;
             return (
@@ -94,6 +242,7 @@ export function CountryMap({
                 strokeOpacity={hot ? 0.85 : 0.4}
                 strokeWidth={hot ? 1.6 : 1}
                 strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
                 style={{ transition: "fill .18s, stroke-opacity .18s" }}
                 onMouseEnter={() => setHoverRegion(r.id)}
                 onMouseLeave={() =>
@@ -104,15 +253,19 @@ export function CountryMap({
           })}
         </g>
 
-        {/* Region labels */}
+        {/* Region labels — re-projected but drawn at a CONSTANT size */}
         <g aria-hidden style={{ pointerEvents: "none" }}>
           {regions.map((r) => {
             const hot = hoverRegion === r.id;
+            const lx = TX(r.cx);
+            const ly = TY(r.cy);
+            if (lx < -40 || lx > width + 40 || ly < -20 || ly > height + 20)
+              return null;
             return (
               <text
                 key={r.id}
-                x={r.cx}
-                y={r.cy}
+                x={lx}
+                y={ly}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 style={{
@@ -132,17 +285,19 @@ export function CountryMap({
           })}
         </g>
 
-        {/* Curated place pins */}
+        {/* Curated place pins — re-projected, CONSTANT pin + tooltip size */}
         <g>
           {places.map((p) => {
-            const x = projectX(p.lng);
-            const y = projectY(p.lat);
+            const x = TX(projectX(p.lng));
+            const y = TY(projectY(p.lat));
+            if (x < -20 || x > width + 20 || y < -20 || y > height + 20)
+              return null;
             const on = pinnedPlace === p.id || hoverPlace === p.id;
 
             // Clamp the tooltip horizontally inside the viewBox.
-            const tx = Math.min(Math.max(x - TW / 2, 8), width - TW - 8);
+            const tipX = Math.min(Math.max(x - TW / 2, 8), width - TW - 8);
             const above = y - TH - 22 > 0;
-            const ty = above ? y - TH - 20 : y + 22;
+            const tipY = above ? y - TH - 20 : y + 22;
 
             return (
               <g key={p.id}>
@@ -184,8 +339,8 @@ export function CountryMap({
 
                 {on && (
                   <foreignObject
-                    x={tx}
-                    y={ty}
+                    x={tipX}
+                    y={tipY}
                     width={TW}
                     height={TH}
                     style={{ pointerEvents: "none", overflow: "visible" }}
@@ -231,6 +386,43 @@ export function CountryMap({
           })}
         </g>
       </svg>
+
+      {/* Zoom controls */}
+      <div className="absolute bottom-4 right-4 flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => zoomBy(1.5)}
+          disabled={k >= MAX_K}
+          aria-label="Zoom in"
+          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-surface/80 text-white/75 backdrop-blur-sm transition-all hover:border-gold/50 hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => zoomBy(1 / 1.5)}
+          disabled={k <= MIN_K}
+          aria-label="Zoom out"
+          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-surface/80 text-white/75 backdrop-blur-sm transition-all hover:border-gold/50 hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <button
+          type="button"
+          onClick={resetView}
+          disabled={atRest}
+          aria-label="Reset map view"
+          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-surface/80 text-white/75 backdrop-blur-sm transition-all hover:border-gold/50 hover:text-gold disabled:cursor-not-allowed disabled:opacity-35"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </button>
+      </div>
+
+      {atRest && (
+        <span className="pointer-events-none absolute bottom-5 left-5 rounded-full border border-white/10 bg-surface/55 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-white/45 backdrop-blur-sm">
+          Scroll to zoom · drag to pan
+        </span>
+      )}
     </div>
   );
 }

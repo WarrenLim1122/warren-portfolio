@@ -23,11 +23,11 @@
 Warren's confirmed design preferences. Apply these on every change unless he says otherwise.
 
 1. **No em/en dashes ("—" / "–") in rendered copy.** Restructure with commas, colons, parentheses, or "to" for ranges. Ordinary hyphens in compound words (`buy-side`, `First-Class`) are fine. This applies to `constants.ts` strings and component `description`/`alt`/title props, not code comments.
-2. **WhatsApp, not phone.** Contact points are Email / LinkedIn / WhatsApp. WhatsApp uses `https://wa.me/<digits>` and the `WhatsappIcon` from `components/ui/icons.tsx` (lucide has no WhatsApp glyph; `Linkedin` is deprecated in lucide so `LinkedinIcon` lives there too).
+2. **WhatsApp, not phone.** Contact points are Email / LinkedIn / GitHub / WhatsApp / Instagram (in that order, in both `NAV_CONTACTS` in `App.tsx` and `ITEMS` in `connect-with-us.tsx`). WhatsApp uses `https://wa.me/<digits>`; Instagram uses `PERSONAL_INFO.instagramUrl`. All brand glyphs (`WhatsappIcon`, `GithubIcon`, `InstagramIcon`, plus `LinkedinIcon` since lucide's `Linkedin` is deprecated and it has no WhatsApp/Instagram-brand glyph) are local `currentColor` SVGs in `components/ui/icons.tsx` so the tone-aware + hover-tint system works. The `public/instagram-icon.png` Warren added is intentionally unused (a raster cannot inherit `currentColor`); the SVG glyph is the correct path and may be deleted from `public/`.
 3. **Headshot is large and full colour** (never grayscale).
 4. **Palette = "refined upgrade"** (chosen over all-dark / all-light / emerald): midnight surface, warm ivory, muted champagne accent. Dark/light section rhythm is intentional; the two dark bands (Hero, Recognition) must stay the identical `--color-surface`.
 5. **Aesthetic is the priority.** When integrating third-party component snippets (21st.dev / shadcn / Next.js), adapt the *visual* into this project's stack (`motion/react`, palette tokens, Vite + React Router) — never copy shadcn/Next/`framer-motion` deps in verbatim.
-6. **Nav contact icons:** neutral at rest; hover-tint Email = red, LinkedIn = blue, WhatsApp = green. A sliding "limelight" beam under the hovered icon (champagne) is the intended polish.
+6. **Nav contact icons:** neutral at rest; hover-tint Email = red, LinkedIn = blue, GitHub = grey, WhatsApp = green, Instagram = pink (`#E1306C`). A sliding "limelight" beam under the hovered icon (champagne) is the intended polish.
 7. Brand text is "Warren Lim Zhan Feng"; the journal pill reads "Trading Journal" (route `/journal` unchanged).
 8. **Never touch the `src/journal` submodule** for portfolio work.
 
@@ -220,8 +220,9 @@ renders straight into the Hero. There is no `isUnlocked` state.
 `Portfolio()` tracks `scrolled` (window.scrollY > 40) to swap the fixed
 nav between transparent-on-hero and ivory-blur-on-scroll. The nav holds:
 the brand link ("Warren Lim Zhan Feng"), the `LimelightContactRail`
-(`NAV_CONTACTS`: Email, LinkedIn, GitHub, WhatsApp icons; neutral at
-rest, a sliding champagne "limelight" beam plus per-brand hover tint),
+(`NAV_CONTACTS`: Email, LinkedIn, GitHub, WhatsApp, Instagram icons;
+neutral at rest, a sliding champagne "limelight" beam plus per-brand
+hover tint),
 the `NAV_LINKS` (Experience/Work/Resume anchors), a "Beyond Work" pill
 linking to `/life` (hidden below the `sm` breakpoint), and the "Trading
 Journal" pill linking to `/journal`. `ScrollProgress` renders a hairline
@@ -302,7 +303,7 @@ my-portfolio/
     │       ├── CarouselShell.tsx ← drag/arrow carousel (pointer-capture deferred)
     │       ├── Hero3DStage.tsx
     │       ├── LampBackdrop.tsx  ← hero ambient ceiling wash (wide ice-blue glow)
-    │       ├── icons.tsx         ← LinkedinIcon, GithubIcon, WhatsappIcon (brand glyphs)
+    │       ├── icons.tsx         ← LinkedinIcon, GithubIcon, WhatsappIcon, InstagramIcon (brand glyphs)
     │       └── connect-with-us.tsx ← ContactConnect (glass-disc panel; Email/LinkedIn/GitHub/WhatsApp)
     ├── life/                     ← self-contained "Beyond Work" area (route /life)
     │   ├── LifeApp.tsx           ← entry: tab state + #hash sync + REGISTRY
@@ -355,7 +356,7 @@ All displayed portfolio content is in `src/constants.ts`. Edit that file for tex
 |---|---|
 | Aesthetic photos | drop files in `src/life/photos/<country>/` (filename becomes the location label) |
 | Countries / globe pins | `src/life/gallery.ts` → `COUNTRY_META` (`id` must match the folder name) |
-| Golf milestones / clips | `src/life/life-content.ts` → `GOLF_MILESTONES` (set `media` to `{ type: "youtube", id: "..." }`) |
+| Golf milestones / clips | `src/life/life-content.ts` → `GOLF_MILESTONES` (set `media` to `{ type: "youtube", id: "..." }`; each entry has a `date` string that pops out on the scroll timeline, currently placeholder years for Warren to edit) |
 | Add a section/tab | `src/life/life-content.ts` → `LIFE_TABS` + a component + a line in `REGISTRY` in `LifeApp.tsx` |
 
 ---
@@ -507,7 +508,7 @@ When Warren says a prompt like "update my life folder", "update my gallery page"
 
 ### Adding a country's 2D region map + globe pin (triggered by "add this country", "I added a <country> folder", "do the same for <country>")
 
-The `/life` Gallery is: a sharp 3D globe (world view) → click a country (pin or chip) → the stage swaps to an **accurate 2D region map** of that country (`CountryMap.tsx`, pure inline SVG, no WebGL/API) with curated place pins that reveal a short blurb. Each country needs four things wired. Folder names in `src/life/photos/` are the source of truth for the country id; everything keys off that exact id.
+The `/life` Gallery is a 3-stage flow (`GlobeGallery.tsx`, state `stage: "globe" | "zoomed" | "map"`): (1) **globe** — a sharp auto-rotating 3D globe (world view); (2) click a country (pin or chip) → **zoomed** — `Globe.tsx` `viewMode="focus"` flies the camera in to that country with its pin highlighted, the globe slides to the right (lg) / top (mobile), and a panel animates in on the left asking "See 2D map?"; (3) the button → **map** — the stage swaps to an **accurate 2D region map** of that country (`CountryMap.tsx`, pure inline SVG, no WebGL/API) with curated place pins that reveal a short blurb. The map is **enlargeable**: zoom via wheel-toward-cursor / +/- / reset buttons, drag to pan; only the GEOMETRY scales (`vector-effect:non-scaling-stroke`), while region labels, pins and tooltips are re-projected through the same transform but drawn at a **constant size** so words never squeeze. The globe element is persistent across globe↔zoomed (no remount, so the fly-in animates). `Globe.tsx` `viewMode` is `"world" | "focus" | "country"`. Back steps out one level (map → zoomed → globe). No WebGL / reduced motion → selecting a country goes straight to the 2D map (chips stay a complete keyboard / no-WebGL path). Each country needs four things wired. Folder names in `src/life/photos/` are the source of truth for the country id; everything keys off that exact id.
 
 When Warren adds a folder to `src/life/photos/<id>/` and asks to "add this country", do ALL of the following, exactly as was done for Singapore (do not skip the geometry — a country without it has no 2D map):
 
@@ -557,6 +558,21 @@ Notes: the globe texture is the vendored public-domain NASA Blue Marble at `publ
 - The `/life` Gallery globe (`react-globe.gl` + `three`) builds a ~1.8 MB chunk. **Benign**: it is lazy + code-split, loads only on the Gallery tab when WebGL is available and reduced-motion is off, and is absent from the main and journal bundles. The main `index` chunk is unchanged by `/life`.
 - `/life` ships with placeholder media: gallery countries show a "Coming soon" empty state until photos are added to `src/life/photos/`; golf milestones use picsum stills until clips are wired (`{ type: "youtube", id }`).
 - A `/favicon.ico` 404 in the console is pre-existing and unrelated to any feature.
+
+---
+
+## Latest Session Summary — `/life` flow + Instagram contact
+
+*Recorded 2026-05-19. Newest summary; the summaries below remain valid.*
+
+Four scoped changes to the portfolio repo (the journal submodule was not touched):
+
+1. **Gallery flow reworked** (`GlobeGallery.tsx`, `Globe.tsx`). Selecting a country no longer jumps straight to the 2D map. New `stage` machine: `globe` → `zoomed` (camera fly-in via the new `Globe.tsx` `viewMode="focus"`, globe slides right on lg / top on mobile, an animated "See 2D map?" panel enters on the left) → `map`. The globe stays mounted across globe↔zoomed so the fly-in animates rather than snapping. Back steps out one level. No-WebGL / reduced-motion still goes straight to the map (chips remain the full keyboard path).
+2. **2D maps are enlargeable** (`CountryMap.tsx`). Wheel-toward-cursor zoom (native non-passive listener so the page does not scroll), +/- / reset buttons, drag-to-pan with clamped bounds. Only the region GEOMETRY scales (`vector-effect:non-scaling-stroke`); region labels, place pins and tooltips are re-projected through the same transform but rendered at a **constant size**, so zooming never squeezes the words. View resets on country change.
+3. **Golf timeline moved left + scroll-following** (`GolfJourney.tsx`). The old centred horizontal "Newbie → Now" bar is gone. lg+ now has a sticky **vertical** rail on the far left: a progress fill rises with scroll, the active node lights up, and that chapter's **date pops out** (AnimatePresence, re-pops on every section change). Nodes are clickable (scroll-to-chapter). Mobile shows the date as a chip in each chapter header. New `date` field on `GolfMilestone` / `GOLF_MILESTONES` (placeholder years: 2021/2022/2023/2024/Today — Warren edits to the real dates).
+4. **Instagram contact added everywhere.** `PERSONAL_INFO.instagram` + `instagramUrl` (`https://www.instagram.com/warrenlimzf/`) in `constants.ts`; new `InstagramIcon` `currentColor` glyph in `components/ui/icons.tsx`; appended to `NAV_CONTACTS` (`App.tsx`, pink `#E1306C` tint) and `ITEMS` (`connect-with-us.tsx`). An SVG glyph (not the `public/instagram-icon.png` Warren dropped in) is used so the tone-aware + hover-tint system keeps working; the PNG is unused and can be deleted.
+
+`npm run lint` and `npm run build` both pass. Only the pre-existing benign >500 kB chunk warning remains (lazy `Globe` / journal chunks). The recruiter-facing initial bundle is unchanged (`/life` stays lazy + code-split).
 
 ---
 

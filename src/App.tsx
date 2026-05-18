@@ -16,7 +16,12 @@ import { BrowserRouter, Routes, Route, Link } from "react-router-dom";
 import { Mail } from "lucide-react";
 import { PERSONAL_INFO } from "./constants";
 import { cn } from "./lib/utils";
-import { LinkedinIcon, WhatsappIcon, GithubIcon } from "./components/ui/icons";
+import {
+  LinkedinIcon,
+  WhatsappIcon,
+  GithubIcon,
+  InstagramIcon,
+} from "./components/ui/icons";
 import {
   LimelightContactRail,
   type LimelightItem,
@@ -99,6 +104,14 @@ const NAV_CONTACTS: LimelightItem[] = [
     label: "WhatsApp",
     href: `https://wa.me/${PERSONAL_INFO.phone.replace(/\D/g, "")}`,
     tint: "#25D366",
+    external: true,
+  },
+  {
+    id: "instagram",
+    Icon: InstagramIcon,
+    label: "Instagram",
+    href: PERSONAL_INFO.instagramUrl,
+    tint: "#E1306C",
     external: true,
   },
 ];

@@ -2,8 +2,12 @@
  * Globe — the react-globe.gl primitive. Imported ONLY via lazy() from
  * GlobeGallery so three.js stays out of the main bundle.
  *
- * Two marker modes driven by `viewMode`:
+ * Marker / camera modes driven by `viewMode`:
  *   "world"   — red push-pin per country, auto-rotate on, altitude 1.7
+ *   "focus"   — same country pins, auto-rotate OFF, camera flown in to
+ *               the selected country (altitude = country.zoomAlt). Used
+ *               for the "navigate to the country first" step before the
+ *               2D map is offered.
  *   "country" — blue push-pin per place, auto-rotate off, altitude = country.zoomAlt
  *
  * htmlAltitude is 0 so pins anchor exactly on the surface with no
@@ -117,7 +121,7 @@ export default function GlobeView({
   countries: Country[];
   activeId:  string;
   onSelect:  (id: string) => void;
-  viewMode:  "world" | "country";
+  viewMode:  "world" | "focus" | "country";
   places:    Place[];
 }) {
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
@@ -141,7 +145,7 @@ export default function GlobeView({
   );
 
   const displayData: AnyMarker[] =
-    viewMode === "world" ? countryMarkers : placeMarkers;
+    viewMode === "country" ? placeMarkers : countryMarkers;
 
   // Measure container so the canvas fits exactly.
   useEffect(() => {
@@ -192,7 +196,7 @@ export default function GlobeView({
       autoRotate: boolean;
       autoRotateSpeed: number;
     };
-    if (viewMode === "country") {
+    if (viewMode === "country" || viewMode === "focus") {
       ctrl.autoRotate = false;
       g.pointOfView({ lat: c.lat, lng: c.lng, altitude: c.zoomAlt }, 1400);
     } else {

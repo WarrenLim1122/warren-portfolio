@@ -16,6 +16,8 @@ export interface PersonalInfo {
   linkedinUrl: string;
   /** Placeholder until Warren supplies the real profile link. */
   github: string;
+  instagram: string;
+  instagramUrl: string;
   university: string;
   tagline: string;
   /** Recruiter-facing one-liner — Warren may edit freely. */
@@ -34,6 +36,8 @@ export const PERSONAL_INFO: PersonalInfo = {
   linkedinUrl: "https://www.linkedin.com/in/warrenlimzf",
   // PLACEHOLDER — Warren to confirm/replace with his real GitHub URL.
   github: "https://github.com/WarrenLim1122",
+  instagram: "instagram.com/warrenlimzf",
+  instagramUrl: "https://www.instagram.com/warrenlimzf/",
   university: "Nanyang Technological University",
   tagline:
     "Penultimate Banking and Finance Undergraduate at Nanyang Technological University",

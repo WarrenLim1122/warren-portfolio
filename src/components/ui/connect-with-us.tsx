@@ -21,7 +21,7 @@ import { type CSSProperties } from "react";
 import { Mail } from "lucide-react";
 import { PERSONAL_INFO } from "../../constants";
 import { cn } from "../../lib/utils";
-import { LinkedinIcon, WhatsappIcon, GithubIcon } from "./icons";
+import { LinkedinIcon, WhatsappIcon, GithubIcon, InstagramIcon } from "./icons";
 
 const WA_NUMBER = PERSONAL_INFO.phone.replace(/\D/g, "");
 
@@ -63,6 +63,15 @@ const ITEMS = [
     external: true,
     bg: "#25D366",
     glow: "rgba(37, 211, 102, 0.6)",
+  },
+  {
+    id: "instagram",
+    Icon: InstagramIcon,
+    label: "Instagram",
+    href: PERSONAL_INFO.instagramUrl,
+    external: true,
+    bg: "#E1306C",
+    glow: "rgba(225, 48, 108, 0.6)",
   },
 ] as const;
 

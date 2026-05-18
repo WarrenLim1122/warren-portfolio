@@ -40,6 +40,12 @@ export interface GolfMilestone {
   id: string;
   /** Short chapter index shown beside the title, e.g. "01". */
   index: string;
+  /**
+   * Short date label that pops out on the scroll timeline as this
+   * chapter becomes active. Placeholder years for now; Warren edits
+   * these to the real dates. No em / en dashes (project copy rule).
+   */
+  date: string;
   title: string;
   /** One or two sentences of story. */
   blurb: string;
@@ -67,6 +73,7 @@ export const GOLF_MILESTONES: GolfMilestone[] = [
   {
     id: "first-lesson",
     index: "01",
+    date: "2021",
     title: "The first lesson",
     blurb:
       "A borrowed seven iron, a bucket of range balls, and almost no contact. Humbling, and the start of everything.",
@@ -75,6 +82,7 @@ export const GOLF_MILESTONES: GolfMilestone[] = [
   {
     id: "first-contact",
     index: "02",
+    date: "2022",
     title: "First clean strike",
     blurb:
       "Weeks of mishits, then one shot that actually compressed and flew. That single feeling was enough to keep going.",
@@ -83,6 +91,7 @@ export const GOLF_MILESTONES: GolfMilestone[] = [
   {
     id: "first-round",
     index: "03",
+    date: "2023",
     title: "First full round",
     blurb:
       "Eighteen holes, far too many strokes, and one putt that dropped. Walking off the last green I was hooked for good.",
@@ -91,6 +100,7 @@ export const GOLF_MILESTONES: GolfMilestone[] = [
   {
     id: "first-par",
     index: "04",
+    date: "2024",
     title: "First par",
     blurb:
       "Tee to green to cup without a wasted shot. Small on paper, enormous in the moment.",
@@ -99,6 +109,7 @@ export const GOLF_MILESTONES: GolfMilestone[] = [
   {
     id: "now",
     index: "05",
+    date: "Today",
     title: "The swing today",
     blurb:
       "Repeatable, balanced, and still improving. The same patience that reads a company reads a golf course.",
